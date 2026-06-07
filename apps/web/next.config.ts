@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: ["@arco/remotion", "@arco/project-schema"],
 };
 
 export default nextConfig;

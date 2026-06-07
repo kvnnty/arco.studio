@@ -1,131 +1,83 @@
-# Product & technical decisions (locked)
+# Product & technical decisions
 
-Record of decisions from product discovery. Change deliberately—update this file when pivoting.
-
-## Category & positioning
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Category | SaaS launch **motion system** | Avoid AI video commodity |
-| Buyer | **B2B** (founder = smallest B2B) | Businesses pay for launches |
-| Creative reference | Linear, Raycast, Vercel, Framer | Music + UI + text, not VO ads |
-| Anti-positioning | “AI video generator”, text-to-video | Price war, low defensibility |
-
-## MVP customer
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Primary ICP | **Founder-first** indie SaaS | Fastest sale, matches MVP |
-| Not MVP ICP | Motion-designer-first timeline | Months to ship; AE dependency |
-| Not MVP ICP | B2C creators | Low WTP, CapCut |
-
-## Audio
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| MVP audio | **Music-only** (5–10 curated tracks) | Premium, cheaper, faster pipeline |
-| No MVP | TTS, ElevenLabs, VO sync | Generic feel, complexity |
-| No MVP | AI music generation | Legal + quality risk |
-| No MVP | AI presenters / avatars | Different product category |
-| Storyboard | `headline` / `subheadline` / `duration` | Not `voiceover` script |
-
-See [AUDIO.md](./AUDIO.md).
-
-## Video generation
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Render engine | **Remotion** | Deterministic quality moat |
-| UI source | **Real screenshots** | No hallucinated dashboards |
-| No MVP | Runway/Veo text-to-video | Phase 2 B-roll only if needed |
-| Output | 1080p MP4, 30s default | Launch + website hero |
-
-## Integrations timeline
-
-| Tool | Month 1 | Later |
-|------|---------|-------|
-| URL ingest | Yes | — |
-| Screenshots | Yes | — |
-| Figma | Manual PNG export | Plugin → scene JSON |
-| After Effects | **No** | Plugin reads Arco JSON (Phase 2) |
-| `.aep` import | **Never** as MVP goal | Not feasible solo |
-| Lottie | Optional | Logo stings |
-| Scene JSON export | Yes | AE contract |
-
-See [INTEGRATIONS.md](./INTEGRATIONS.md).
-
-## After Effects (explicit)
-
-| Claim | Reality |
-|-------|---------|
-| Perfect AE integration in 1 month solo | **No** |
-| Month 1 | Arco scene JSON + MP4 out |
-| Month 2–3 | AE plugin: JSON → comps/layers (subset) |
-| Round-trip AE ↔ Arco | Not v1 |
-| Arco becomes mini After Effects | **Anti-goal** |
-
-## Business model
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Start model | **Model A** self-serve $19–99 | Fast validation |
-| Expand | **Model B** $100–500 teams | After PMF |
-| Later | **Model C** agencies | High ARPU |
-| Monetization | Subscription + render credits | Margin on render |
-| First revenue | $29 founding, 5 users in 14 days | Validation |
-
-See [BUSINESS.md](./BUSINESS.md).
-
-## 30-day MVP scope
-
-### In scope
-
-- URL → analysis → text storyboard  
-- Motion template(s) in Remotion  
-- Music picker  
-- Screenshot upload  
-- Preview + MP4 export  
-- scene JSON download  
-
-### Out of scope
-
-- Voiceovers, avatars, text-to-video  
-- AE plugin, Figma plugin  
-- Timeline editor, `.aep`  
-- Team billing (Stripe OK for founding)  
-- 9:16 (unless Week 4 stretch)  
-
-See [MVP-ROADMAP.md](./MVP-ROADMAP.md).
-
-## Quality bar
+## Category (locked)
 
 | Decision | Choice |
 |----------|--------|
-| Pass test | 5s comparison vs Canva/InVideo |
-| Aesthetic | Premium dark, crafted motion |
-| Narrative | On-screen text carries story; music carries emotion |
+| What we are | **Product demo & motion design workflow** |
+| What we're not | AI video generator, CapCut clone, physical product ads |
+| Product center | **Arco Project** (editable), not MP4 export |
+| Scope | **Web + mobile tech** only |
 
-See [OUTPUT-SPEC.md](./OUTPUT-SPEC.md).
+## Input (locked)
 
-## Money hypothesis
+| Decision | Choice |
+|----------|--------|
+| Primary input | **User screen recording** (browse their app) |
+| Secondary | Screenshots, URL brand (v2) |
+| Not primary | Prompt-only video, stock footage |
 
-> Arco wins as a **conversion-driven SaaS marketing asset generator**, not a video tool.
+## AI (locked)
 
-People pay for: designer replacement, launch speed, Stripe-level polish—not AI features.
+| AI does | AI does NOT |
+|---------|-------------|
+| Analyze recording (clicks, pauses) | Invent UI |
+| Suggest markers + treatments | Generate motion from scratch |
+| Draft title copy | Replace preset motion system |
 
----
+**Motion:** hardcoded presets (`smooth-zoom`, `click-ripple`, etc.)
 
-## Open questions (not locked)
+## Audio (locked)
 
-- [ ] First template name: `launch-30` only or + `feature-45`?  
-- [ ] LLM provider for storyboard copy  
-- [ ] Render: local worker vs Lambda first  
-- [ ] Annual pricing when to introduce  
+| Decision | Choice |
+|----------|--------|
+| MVP | Curated **music** optional |
+| No MVP | VO, TTS, avatars |
 
----
+## Editor (locked)
 
-## Related docs
+| MVP | Later |
+|-----|-------|
+| Marker list + sidebar | Full timeline |
+| Preset picker, text, duration | Freeform keyframes |
+| Canva-depth | After Effects-depth |
 
-- [VISION.md](./VISION.md)  
-- [PRODUCT.md](./PRODUCT.md)  
-- [BUSINESS.md](./BUSINESS.md)  
+## Buyers (locked)
+
+| Tier | Segment |
+|------|---------|
+| Revenue | B2B founders, PMM, agencies |
+| Funnel | B2C hackathons, students, indies |
+| Avoid | General B2C video |
+
+## Business (locked)
+
+| Decision | Choice |
+|----------|--------|
+| Money score (MVP) | **8/10** |
+| Start pricing | Pro $39–49, Maker $15, Free 1 export |
+| Quality bar | **95%** or users leave |
+
+## Integrations timeline
+
+| Tool | When |
+|------|------|
+| Remotion render | Week 1 |
+| Manual markers | Week 1–2 |
+| AI click detection | Week 5+ |
+| Figma / AE | Month 3+ |
+| GitHub release hook | Month 6+ |
+
+## MVP scope
+
+### In
+- Upload MP4, markers, 3 presets, preview, export 16:9
+
+### Out
+- Mobile pipeline, 9:16, team, Stripe (week 4), perfect click AI
+
+## Open questions
+
+- [ ] SQLite vs Postgres for projects
+- [ ] Render local vs Lambda first
+- [ ] Sample recording bundled for demo

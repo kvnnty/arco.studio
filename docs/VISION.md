@@ -2,82 +2,77 @@
 
 ## One sentence
 
-**Arco turns a SaaS product URL, screenshots, and design assets into agency-quality launch promo videos—without After Effects skills or AI voiceovers.**
+**Arco turns raw web and mobile app recordings into polished, motion-designed product videos—with AI-suggested zooms, click emphasis, and transitions you customize in a simple editor.**
 
 ## Category
 
-**SaaS launch motion design engine** — not:
+**Product demo & motion design workflow** for web/mobile tech — not:
 
-- generic AI text-to-video (Runway, Luma, Pika)
-- stock/template marketing slideshows (InVideo, Pictory, Fliki)
-- manual motion tool only (Jitter, Canva)
-- code-only renderer with no product layer (Remotion alone)
-- UGC / AI presenter ads (Arcads-style)
+- generic AI text-to-video (Runway, InVideo, Pictory)
+- general video editor (CapCut for everything)
+- physical product promos (ecommerce, bottles, merch)
+- UGC / AI presenter ads
+- browser miniature After Effects
 
-## The gap Arco fills
+**Market category:** Product marketing production — motion-design productivity with AI automating repetitive work.
 
-No dominant product combines all three:
+## The product (center)
 
-| Layer | Incumbents | Gap |
-|-------|------------|-----|
-| AI video clips | Runway, Veo, Luma | No SaaS story structure, weak UI motion control |
-| Marketing templates | Canva, InVideo | Template-level motion, generic feel |
-| Motion precision | After Effects, Rive | High skill / manual; not automated for founders |
-| Programmatic render | Remotion | Engine, not a product; no marketing intelligence |
+The **Arco Project** is the product. **MP4 is an export.**
 
-Arco stitches the **missing orchestration layer**: URL → story → motion templates → music → MP4 (+ editable scene JSON).
+```
+Record app (browser tab / mobile)
+  → Upload to Arco
+  → AI analyzes clicks, pauses, navigation
+  → Suggests markers + motion treatments
+  → User edits (zoom, ripple, callouts, transitions, language)
+  → Export 16:9 / 9:16 / 1:1
+```
 
-## What “clean product promo” means (output bar)
+## Scope
 
-Reference aesthetic: **Linear, Raycast, Vercel, Framer** launch videos.
+| In scope | Out of scope |
+|----------|--------------|
+| Web app screen recordings | T-shirts, bottles, physical goods |
+| Mobile app screen recordings | Wedding / vlog / TikTok general |
+| SaaS, devtools, hackathon demos | Hollywood B-roll-only ads |
+| Click zoom, ripple, spotlight, callouts | Hallucinated UI |
 
-- Music-driven (no narrator required)
-- Motion graphics + real product UI
-- Text callouts (headlines, feature lines, CTA)
-- Minimalist, modern, product-forward
-- Smooth camera (slow pans, UI zoom)
-- Premium dark or neutral backgrounds
-- Professional commercial quality
-- Short scenes emphasizing features and benefits
+## Buyers
 
-## What Arco is NOT (anti-goals)
+- **B2B:** founders, PMM, devtools, agencies (primary revenue)
+- **B2C prosumer:** students, hackathons, indie devs (funnel + virality)
 
-- ❌ “AI video generator from prompt” (commodity, crowded, low margin)
-- ❌ Browser miniature After Effects (multi-year scope)
-- ❌ Perfect `.aep` import/export in v1
-- ❌ AI voiceovers, avatars, presenters in MVP
-- ❌ Text-to-video B-roll generation in MVP
-- ❌ Stock footage slideshows
+## Money potential (summary)
 
-## Success definition (early)
+| Version | Score |
+|---------|-------|
+| Generic AI video generator | 3–4/10 |
+| MVP (recording → enhanced video) | **8/10** |
+| Full vision (editor + templates + multi-export) | **8.5/10** |
 
-Founders pay because Arco:
+See [MONEY.md](./MONEY.md).
 
-- Replaces **$300–$2,000** per video vs freelancer
-- Cuts **days → ~10 minutes** for a launch-ready 30–45s promo
-- Output visibly beats **Canva + screen recording + CapCut**
-- Feels **premium** (music + motion), not **salesy** (generic VO)
-- Increases confidence in **signups / ad performance**
+## Quality bar
 
-## Killer demo (north star)
+**70% = "cool" → leave. 95% = pay.** Creative tools live or die on output.
 
-1. Paste real SaaS URL
-2. Show brand extraction (colors, headline) + screenshots
-3. **~30 seconds later:** play finished video—music, UI motion, text callouts, no narrator
-4. Optional split: generic template tool vs Arco (same screenshots)
-5. Close: time + cost vs agency
+Before/after: **raw screen recording → polished launch-ready demo** — instantly marketable.
 
-> Paste URL → get a clean, music-driven SaaS launch video that looks like it was assembled by a competent motion designer.
+## Killer demo
+
+1. Show raw 60s screen recording
+2. Upload to Arco
+3. Auto markers + zoom/ripple draft
+4. User tweaks headline in sidebar
+5. Export — side-by-side with CapCut same recording
 
 ## Strategic insight
 
-Real competition: **freelance motion designers, agencies, founder “5-tool stack”** — not Runway alone.
+You're not building an AI video company. You're building a **motion-design productivity tool** for product marketers and builders, with AI handling analysis and suggestions.
 
-Win on **motion design quality + workflow**, not raw generative video or AI narration.
+Real competition: **After Effects freelancers, CapCut hours, Screen Studio + manual polish** — not Runway.
 
 ## Related docs
 
-- [DECISIONS.md](./DECISIONS.md) — locked choices
-- [BUSINESS.md](./BUSINESS.md) — B2B models & revenue
-- [COMPETITORS.md](./COMPETITORS.md) — landscape
-- [docs/README.md](./README.md) — full index
+- [PRODUCT.md](./PRODUCT.md) · [MVP-BUILD.md](./MVP-BUILD.md) · [MONEY.md](./MONEY.md) · [DECISIONS.md](./DECISIONS.md)

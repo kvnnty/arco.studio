@@ -1,0 +1,21 @@
+{
+  "name": "@arco/project-schema",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./style-presets": "./src/style-presets.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@arco/typescript-config": "workspace:*",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "version": "1",
+  "meta": {
+    "title": "Arco Demo — Product Recording",
+    "fps": 30,
+    "width": 1920,
+    "height": 1080
+  },
+  "recording": {
+    "src": "placeholder",
+    "durationMs": 12000
+  },
+  "markers": [
+    {
+      "id": "m1",
+      "startMs": 800,
+      "durationMs": 2000,
+      "effects": [{ "type": "title-card" }],
+      "callout": {
+        "text": "Ship faster",
+        "subtext": "Built for modern teams"
+      }
+    },
+    {
+      "id": "m2",
+      "startMs": 3500,
+      "durationMs": 1800,
+      "effects": [
+        { "type": "smooth-zoom", "scale": 1.15 },
+        { "type": "click-ripple", "intensity": 0.85 }
+      ],
+      "callout": { "text": "One-click deploy" }
+    },
+    {
+      "id": "m3",
+      "startMs": 7000,
+      "durationMs": 2000,
+      "effects": [{ "type": "smooth-zoom", "scale": 1.2 }],
+      "callout": { "text": "Real-time analytics" }
+    },
+    {
+      "id": "m4",
+      "startMs": 10000,
+      "durationMs": 1500,
+      "effects": [{ "type": "title-card" }],
+      "callout": { "text": "Start free today" }
+    }
+  ],
+  "brand": {
+    "primary": "#55b3ff",
+    "background": "#07080a"
+  },
+  "audio": {
+    "musicId": "modern-saas",
+    "volume": 0.85
+  },
+  "stylePreset": "startup",
+  "exportFormat": "16:9"
+}

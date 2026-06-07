@@ -1,0 +1,10 @@
+{
+  "extends": "@arco/typescript-config/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "src",
+    "jsx": "react-jsx",
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

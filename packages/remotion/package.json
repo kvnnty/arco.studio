@@ -1,0 +1,30 @@
+{
+  "name": "@arco/remotion",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.tsx",
+    "./composition": "./src/ArcoComposition.tsx"
+  },
+  "scripts": {
+    "dev": "remotion studio src/index.tsx",
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "render:sample": "remotion render src/index.tsx ArcoComposition out/sample.mp4 --props=src/sample/golden-props.json"
+  },
+  "dependencies": {
+    "@arco/project-schema": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.286",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@arco/typescript-config": "workspace:*",
+    "@remotion/cli": "^4.0.286",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5.8.2"
+  }
+}

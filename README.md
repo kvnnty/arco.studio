@@ -1,40 +1,33 @@
 # Arco
 
-**B2B SaaS launch motion system** — turn a product URL and screenshots into a music-driven launch video in minutes. No After Effects. No AI voiceover.
+**Product demo & motion design workflow** — upload web/mobile app recordings, enhance with zooms, ripples, and callouts, edit, export.
 
-## Documentation
-
-**[docs/README.md](./docs/README.md)** — full index (product, business, GTM, technical).
-
-| Start here | Doc |
-|------------|-----|
-| Build MVP | [docs/MVP-ROADMAP.md](./docs/MVP-ROADMAP.md) |
-| Business & money | [docs/BUSINESS.md](./docs/BUSINESS.md) |
-| Locked decisions | [docs/DECISIONS.md](./docs/DECISIONS.md) |
-| First customers | [docs/ICP.md](./docs/ICP.md) + [docs/GTM.md](./docs/GTM.md) |
-
-## Development
+## Build MVP
 
 ```bash
 pnpm install
-pnpm dev
+pnpm --filter @arco/remotion dev    # Remotion Studio — preview composition
 ```
 
-## Apps
+**Docs:** [docs/README.md](./docs/README.md) · **Build plan:** [docs/MVP-BUILD.md](./docs/MVP-BUILD.md)
 
-| App | Path | Description |
-|-----|------|-------------|
-| web | `apps/web` | Next.js landing + waitlist |
-| api | `apps/api` | NestJS API (scaffold) |
+## Packages
 
-## Environment
+| Package | Description |
+|---------|-------------|
+| `@arco/project-schema` | ArcoProject types + Zod validation |
+| `@arco/remotion` | Motion compositions + presets |
+| `@arco/web` | Next.js app (waitlist → editor) |
 
-| Variable | App | Description |
-|----------|-----|-------------|
-| `WAITLIST_WEBHOOK_URL` | web | Optional webhook for waitlist signups |
+## Quick start (Week 1)
 
-## Stack (planned)
+1. `pnpm --filter @arco/remotion dev` — see golden project with placeholder UI
+2. Edit `packages/remotion/src/sample/golden-project.json` markers
+3. Week 2: upload + editor in `apps/web`
 
-- **Remotion** — render engine  
-- **scene JSON** — composition contract ([docs/SCENE-SCHEMA.md](./docs/SCENE-SCHEMA.md))  
-- **Curated music** — no VO in MVP ([docs/AUDIO.md](./docs/AUDIO.md))  
+## Scripts
+
+```bash
+pnpm dev                              # turbo — all apps
+pnpm --filter @arco/remotion render:sample
+```

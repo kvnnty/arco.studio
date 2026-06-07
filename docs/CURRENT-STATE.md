@@ -1,58 +1,35 @@
-# Current state (codebase)
+# Current state
 
-**Last updated:** Full documentation pack (product, business, GTM, technical).
+**Updated:** Recording-first MVP — Week 1 scaffolded.
 
-## Repository
+## Implemented
 
-| Path | Status |
+| Item | Status |
 |------|--------|
-| `apps/web` | Next.js landing, waitlist, Raycast UI |
-| `apps/api` | NestJS scaffold |
-| `packages/typescript-config` | Shared TS |
-| `docs/` | **19 docs** — see [README.md](./README.md) |
-| `apps/web/DESIGN.md` | Visual design system |
+| Docs (refined vision) | ✅ |
+| `@arco/project-schema` | ✅ Zod types, markers, effects |
+| `@arco/remotion` | ✅ Composition, zoom, ripple, title-card |
+| Golden sample project | ✅ `golden-project.json` |
+| `apps/web` waitlist | ✅ |
+| Upload / editor / render | ❌ Week 2–3 |
 
-## Product implementation
-
-| Capability | Status |
-|------------|--------|
-| Waitlist | ✅ `joinWaitlist` + optional webhook |
-| Landing | ✅ Waitlist-only (no demo video yet) |
-| `packages/scene-schema` | ❌ Not started |
-| `packages/remotion` | ❌ Not started |
-| URL ingest | ❌ |
-| Storyboard / LLM | ❌ |
-| Music library | ❌ |
-| MP4 render | ❌ |
-| Stripe / billing | ❌ |
-
-## Locked product direction (see [DECISIONS.md](./DECISIONS.md))
-
-- B2B SaaS founders first (not B2C)
-- Music + text + real UI (no VO in MVP)
-- Remotion render + scene JSON
-- No AE / Figma plugins in month 1
-- Model A pricing → founding $29
-
-## Commands
+## Try Remotion Studio
 
 ```bash
 pnpm install
-pnpm dev
+pnpm --filter @arco/remotion dev
 ```
 
-## Environment
+Opens preview with placeholder UI + 4 markers (zoom, ripple, titles).
 
-| Variable | App | Purpose |
-|----------|-----|---------|
-| `WAITLIST_WEBHOOK_URL` | web | Waitlist POST `{ email }` |
+## Next (Week 2)
 
-## Next build steps
+See [MVP-BUILD.md](./MVP-BUILD.md):
 
-1. [MVP-ROADMAP.md](./MVP-ROADMAP.md) Week 1 — `scene-schema` + `remotion`
-2. Golden demo MP4 for [LANDING.md](./LANDING.md)
-3. [GTM.md](./GTM.md) 14-day founding revenue
+1. Wire `@remotion/player` in `apps/web`
+2. Upload MP4
+3. Marker editor UI
 
-## Documentation map
+## Vision summary
 
-All strategy and build knowledge lives under `docs/`. Entry point: [README.md](./README.md).
+Upload app recording → markers + motion presets → edit → export. Web/mobile tech only.

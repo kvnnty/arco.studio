@@ -1,4 +1,8 @@
-# Scene schema (v1 draft)
+# Scene schema (legacy)
+
+> **Superseded by [PROJECT-SCHEMA.md](./PROJECT-SCHEMA.md)** — recording-first `ArcoProject` model.
+
+# Scene schema (v1 draft — deprecated)
 
 Contract between ingest, web app, Remotion, and future AE plugin. Validate with Zod in `packages/scene-schema`.
 

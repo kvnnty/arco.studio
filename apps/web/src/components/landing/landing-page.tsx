@@ -42,11 +42,25 @@ export function LandingPage() {
             you when Arco is ready—no spam.
           </p>
 
-          <div className="mt-10 w-full">
+          <div className="mt-10 flex flex-wrap items-center gap-4">
             <WaitlistForm />
-            <p className="mt-4 text-[12px] font-medium tracking-[0.02em] text-[#6a6b6c]">
-              We use your email only for Arco updates. Unsubscribe anytime.
-            </p>
+          </div>
+          <p className="mt-4 text-[12px] font-medium tracking-[0.02em] text-[#6a6b6c]">
+            We use your email only for Arco updates. Unsubscribe anytime.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link
+              href="/signup"
+              className="inline-flex rounded-lg bg-[#f9f9f9] px-4 py-2 text-[13px] font-medium text-[#18191a] transition-opacity hover:opacity-90"
+            >
+              Get started
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex text-[13px] font-medium tracking-[0.02em] text-[#55b3ff] transition-opacity hover:opacity-80"
+            >
+              Sign in →
+            </Link>
           </div>
         </div>
 

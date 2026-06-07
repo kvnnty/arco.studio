@@ -1,148 +1,92 @@
 # Product
 
-## Primary ICP (MVP)
+## What Arco is
 
-**Solo / small-team SaaS founders** launching or relaunching a product who:
+**AI-assisted product motion studio** for web & mobile tech:
 
-- Do not know After Effects
-- Need a polished promo for landing page, Product Hunt, LinkedIn, paid ads
-- Have Figma and/or screenshots, not a motion team
-- Prefer **music + motion + text** over AI voiceovers (modern SaaS launch style)
+- User uploads **real recordings** of their app
+- AI proposes **markers** (clicks, moments) and **motion treatments**
+- User refines in a **simple editor** (not After Effects)
+- Export polished **product demo / launch** videos
 
-## Secondary ICP (Phase 2+)
+The **editable project** is the product—not a one-shot MP4.
 
-- Growth marketers at B2B SaaS (repeat ads, feature launches)
-- Small agencies white-labeling SaaS launch videos
-- Motion designers using Arco as **80% draft** → refine in AE
-
-## Critical decision: founder-first vs designer-first
-
-| | Founder-first (MVP) | Designer-first |
-|--|---------------------|----------------|
-| Goal | Video in minutes, no AE | Editable draft for AE polish |
-| UI | Wizard, templates, few knobs | Timeline, layers, comps |
-| Audio | Curated music tracks | Same + later VO if requested |
-| Integration | Figma + screenshots | AE plugin, Lottie, JSON |
-| Time to ship | ~30 days possible | Months |
-
-**MVP: founder-first.** Designer workflow via **exported scene JSON + later AE plugin**.
-
-## Core job-to-be-done
-
-> “I’m launching my SaaS next week. I need a premium promo that looks like Linear/Raycast/Vercel—not a templated AI ad with a narrator.”
-
-## User flow (MVP)
+## Workflow
 
 ```
-URL
-  → product understanding (AI analysis)
-  → storyboard (text scenes, not voice script)
-  → pick motion template
-  → pick music track (curated library)
-  → preview
-  → render MP4
-  → download + optional scene JSON
+1. RECORD — browser tab, OBS, QuickTime, iOS/Android screen record
+2. UPLOAD — clip(s) to Arco
+3. ANALYZE — clicks, cursor, pauses, navigation (AI + CV, phased)
+4. DRAFT — markers + suggested zoom / ripple / spotlight / title cards
+5. EDIT — sidebar: effects, text, timing, transitions, language
+6. EXPORT — 16:9, 9:16, 1:1 (+ optional music, intro/outro)
 ```
 
-## MVP inputs
+## Motion presets (designed once, reused forever)
 
-- Product URL (marketing site)
-- 3–8 screenshots (dashboard, hero, features)
-- Optional: Figma export (frames, text, colors)
-- Brand: logo, primary colors (auto-detect + override)
-- Music: user selects from **5–10 curated tracks**
+AI suggests **where** — presets define **how**:
 
-## MVP outputs
+| Preset | Purpose |
+|--------|---------|
+| `smooth-zoom` | Focus on UI region |
+| `click-ripple` | Emphasize click/tap |
+| `spotlight` | Dim surround, highlight area |
+| `title-card` | Section headline between beats |
+| `feature-callout` | Text + pointer on UI |
+| `transition` | Cut, fade, pan between segments |
 
-- MP4 (1080p, 16:9)
-- **Scene JSON** (composition contract for future AE plugin)
-- **No voiceover** in v1
+## Editor (MVP: Canva-depth, not AE)
 
-## Storyboard model (text-driven, not VO)
+```
+Timeline (simplified)
+  [0:03] Click → Ripple + Zoom     [Edit]
+  [0:08] Title card "Dashboard"      [Edit]
+  [0:12] Spotlight on chart          [Edit]
 
-The motion system carries the message visually. Storyboard slots generate **copy for on-screen text**, not narration.
-
-```json
-{
-  "scenes": [
-    {
-      "id": "hook",
-      "headline": "Stop losing files",
-      "subheadline": null,
-      "durationSeconds": 3
-    },
-    {
-      "id": "feature-1",
-      "headline": "Sync across devices",
-      "subheadline": "Every folder, every team",
-      "durationSeconds": 4
-    },
-    {
-      "id": "cta",
-      "headline": "Start free today",
-      "subheadline": null,
-      "durationSeconds": 3
-    }
-  ]
-}
+Sidebar (selected marker)
+  Effects, duration, callout text, regenerate suggestion
 ```
 
-**Do not generate** (MVP):
+**Later:** keyframes, layers, nested scenes — only if users demand.
 
-```json
-{
-  "voiceover": "Manage your files effortlessly..."
-}
-```
+## ICP
 
-## Scene structure (fixed templates)
+### B2B (primary revenue)
 
-Typical **30s launch** structure:
+- SaaS founders, devtools, startups
+- PMM / growth teams (recurring ship loop)
+- Agencies (volume, higher ARPU)
 
-1. Logo + tagline (text)
-2. Problem / outcome hook (text)
-3. Feature 1–3 (UI + text callout)
-4. Optional metric / social proof (text)
-5. CTA (text)
+### B2C prosumer (funnel)
 
-Templates own motion (easing, stagger, UI pan); user edits **text slots** and assets.
+- Hackathon teams (48h deadline)
+- CS students (capstone presentation)
+- Indie devs (portfolio / Twitter demo)
 
-## Audio (MVP)
+**Not:** general consumers, physical product brands.
 
-See [AUDIO.md](./AUDIO.md).
+## Optional augmentations (not MVP core)
 
-- Curated royalty-safe music library (5–10 tracks)
-- User picks mood: Ambient Tech, Modern SaaS, Corporate Clean, Startup Launch, Energetic Product Reveal
-- **No** music generation, **no** VO, **no** avatars
+- URL → brand colors, intro/outro copy
+- Screenshots as B-roll between recording segments
+- Music bed (curated library, no VO in v1)
 
-## Out of scope (30-day MVP)
+## Anti-goals
 
-- Voiceovers, ElevenLabs, pronunciation, multilingual audio
-- AI presenters / avatars
-- Text-to-video B-roll (Runway/Veo)
-- `.aep` import/export, full timeline editor
-- Round-trip AE editing
-- Music generation
-- Team/agency features (can stub)
+- ❌ Generate video from prompt only
+- ❌ Fake / hallucinated UI
+- ❌ Physical product videos
+- ❌ Full timeline / AE replacement in v1
+- ❌ AI inventing motion graphics from scratch
 
-## Deferred (only if users ask)
+## Success metrics
 
-- Optional VO track
-- AI B-roll between scenes
-- 9:16 vertical export
-- Auto-captions as SRT (on-screen text scenes are MVP)
+| Metric | MVP target |
+|--------|------------|
+| Time to first export | < 20 min |
+| Output vs CapCut | Obviously more launch-ready in 5s |
+| 2+ exports in 60 days | Retention signal |
 
-## Quality bar
+## Related docs
 
-Pass the **5-second test**: side-by-side with InVideo/Canva, Arco looks **crafted** like Linear/Raycast—not slideshow, not “AI ad voice.”
-
-## Messaging
-
-Lead with **launch video system for SaaS**, not “AI video” or “AI voice.”
-
-## Business context
-
-- Buyer: **B2B** (see [BUSINESS.md](./BUSINESS.md))
-- First users: [ICP.md](./ICP.md)
-- Launch plan: [GTM.md](./GTM.md)
-- Locked scope: [DECISIONS.md](./DECISIONS.md)
+- [PROJECT-SCHEMA.md](./PROJECT-SCHEMA.md) · [MVP-BUILD.md](./MVP-BUILD.md) · [ICP.md](./ICP.md)
