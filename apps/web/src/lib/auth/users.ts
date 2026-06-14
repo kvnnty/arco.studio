@@ -1,13 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import bcrypt from "bcryptjs";
-
 export type StoredUser = {
   id: string;
   email: string;
   name: string;
-  passwordHash: string;
   createdAt: string;
 };
 
@@ -37,7 +34,6 @@ async function writeUsers(users: StoredUser[]) {
 export async function createUser(input: {
   email: string;
   name: string;
-  password: string;
 }): Promise<StoredUser> {
   const users = await readUsers();
   const email = input.email.trim().toLowerCase();
@@ -50,7 +46,6 @@ export async function createUser(input: {
     id: crypto.randomUUID(),
     email,
     name: input.name.trim(),
-    passwordHash: await bcrypt.hash(input.password, 10),
     createdAt: new Date().toISOString(),
   };
 
@@ -59,18 +54,13 @@ export async function createUser(input: {
   return user;
 }
 
-export async function verifyUser(
+export async function getUserByEmail(
   email: string,
-  password: string,
 ): Promise<StoredUser | null> {
   const users = await readUsers();
-  const user = users.find(
-    (item) => item.email === email.trim().toLowerCase(),
+  return (
+    users.find((item) => item.email === email.trim().toLowerCase()) ?? null
   );
-  if (!user) return null;
-
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  return valid ? user : null;
 }
 
 export async function getUserById(id: string): Promise<StoredUser | null> {

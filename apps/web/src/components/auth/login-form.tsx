@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { loginAction, type AuthFormState } from "@/app/actions/auth";
+import { magicLinkAction, type AuthFormState } from "@/app/actions/auth";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,20 +26,59 @@ const initialState: AuthFormState = {};
 
 export function LoginForm() {
   const [state, formAction, pending] = useActionState(
-    loginAction,
+    magicLinkAction,
     initialState,
   );
 
+  if (state.sent) {
+    return (
+      <Card className="w-full max-w-md rounded-2xl">
+        <CardHeader>
+          <CardTitle>Check your email</CardTitle>
+          <CardDescription>
+            We sent a secure sign-in link. It expires in 15 minutes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {process.env.NODE_ENV === "development" && state.verifyUrl ? (
+            <Alert>
+              <AlertDescription>
+                Email delivery is not configured yet. Use this link to sign in
+                during development.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {state.verifyUrl ? (
+            <Button
+              className="w-full"
+              render={<Link href={state.verifyUrl} />}
+            >
+              Open sign-in link
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            className="w-full"
+            render={<Link href="/login" />}
+          >
+            Use a different email
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md rounded-2xl">
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
         <CardDescription>
-          Welcome back. Continue building launch videos.
+          No password needed — we&apos;ll email you a secure sign-in link.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={formAction}>
+        <OAuthButtons />
+        <form action={formAction} className="mt-6">
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -49,19 +89,7 @@ export function LoginForm() {
                   type="email"
                   autoComplete="email"
                   required
-                  placeholder="kevin@sploy.io"
-                />
-              </FieldContent>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
+                  placeholder="you@company.com"
                 />
               </FieldContent>
             </Field>
@@ -71,7 +99,7 @@ export function LoginForm() {
               </Alert>
             ) : null}
             <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "Signing in…" : "Sign in"}
+              {pending ? "Sending link…" : "Send magic link"}
             </Button>
           </FieldGroup>
         </form>

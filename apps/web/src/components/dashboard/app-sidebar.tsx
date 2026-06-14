@@ -1,25 +1,22 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
+  Bell,
+  CreditCard,
   Film,
+  FolderOpen,
+  HelpCircle,
   LayoutDashboard,
-  LogOut,
+  Library,
   Plus,
   Settings,
+  Users,
+  Zap,
 } from "lucide-react";
 
-import { signOutAction } from "@/app/actions/auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -33,29 +30,48 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { MOCK_CREDITS } from "@/lib/mock/data";
 
-type AppSidebarProps = {
-  user: {
-    name?: string | null;
-    email?: string | null;
-  };
-};
-
-const navItems = [
-  { title: "Projects", href: "/dashboard", icon: LayoutDashboard },
-  { title: "New project", href: "/editor", icon: Plus },
-  { title: "Settings", href: "/dashboard/settings", icon: Settings },
+const mainNav = [
+  { title: "Home", href: "/dashboard", icon: LayoutDashboard, exact: true },
+  { title: "Projects", href: "/dashboard/projects", icon: FolderOpen },
+  { title: "Assets", href: "/dashboard/assets", icon: Library },
 ];
 
-export function AppSidebar({ user }: AppSidebarProps) {
-  const initials =
-    user.name
-      ?.split(" ")
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() ?? "AR";
+const accountNav = [
+  { title: "Usage", href: "/dashboard/usage", icon: Zap },
+  { title: "Billing", href: "/dashboard/billing", icon: CreditCard },
+  { title: "Team", href: "/dashboard/team", icon: Users },
+  { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
+  { title: "Settings", href: "/dashboard/settings", icon: Settings },
+  { title: "Help", href: "/dashboard/help", icon: HelpCircle },
+];
 
+function NavItem({
+  item,
+}: {
+  item: (typeof mainNav)[number] & { exact?: boolean };
+}) {
+  const pathname = usePathname();
+  const isActive = item.exact
+    ? pathname === item.href
+    : pathname.startsWith(item.href);
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        render={<Link href={item.href} />}
+        tooltip={item.title}
+        isActive={isActive}
+      >
+        <item.icon />
+        <span>{item.title}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -63,7 +79,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>
               <Image
-                src="/arcologo-white.svg"
+                src="/arcologo-black.svg"
                 alt="Arco"
                 width={410}
                 height={85}
@@ -78,19 +94,39 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={<Link href="/dashboard/projects/new" />}
+                  tooltip="New project"
+                  className="bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                >
+                  <Plus />
+                  <span>New project</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
           <SidebarGroupLabel>Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    render={<Link href={item.href} />}
-                    tooltip={item.title}
-                  >
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              {mainNav.map((item) => (
+                <NavItem key={item.href} item={item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Account</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {accountNav.map((item) => (
+                <NavItem key={item.href} item={item} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -98,47 +134,28 @@ export function AppSidebar({ user }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <SidebarMenuButton size="lg" className="w-full">
-                    <Avatar className="size-7">
-                      <AvatarFallback className="text-xs">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1 text-left group-data-[collapsible=icon]:hidden">
-                      <p className="truncate text-sm font-medium">
-                        {user.name ?? "Account"}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
-                  </SidebarMenuButton>
-                }
-              />
-              <DropdownMenuContent align="end" side="right">
-                <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
-                  <Settings />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => void signOutAction()}
-                  className="text-destructive"
-                >
-                  <LogOut />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 group-data-[collapsible=icon]:hidden">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Credits</span>
+            <span className="font-semibold text-primary">
+              {MOCK_CREDITS.balance}
+            </span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary"
+              style={{
+                width: `${(MOCK_CREDITS.balance / MOCK_CREDITS.monthlyAllowance) * 100}%`,
+              }}
+            />
+          </div>
+          <Link
+            href="/dashboard/usage"
+            className="mt-2 block text-xs text-accent-foreground hover:underline"
+          >
+            Buy more credits
+          </Link>
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

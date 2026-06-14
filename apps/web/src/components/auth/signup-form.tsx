@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { signupAction, type AuthFormState } from "@/app/actions/auth";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,6 @@ import {
 import {
   Field,
   FieldContent,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
@@ -30,8 +30,46 @@ export function SignupForm() {
     initialState,
   );
 
+  if (state.sent) {
+    return (
+      <Card className="w-full max-w-md rounded-2xl">
+        <CardHeader>
+          <CardTitle>Check your email</CardTitle>
+          <CardDescription>
+            Your account is ready. We sent a sign-in link to complete setup.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {process.env.NODE_ENV === "development" && state.verifyUrl ? (
+            <Alert>
+              <AlertDescription>
+                Email delivery is not configured yet. Use this link to sign in
+                during development.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {state.verifyUrl ? (
+            <Button
+              className="w-full"
+              render={<Link href={state.verifyUrl} />}
+            >
+              Open sign-in link
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            className="w-full"
+            render={<Link href="/login" />}
+          >
+            Back to sign in
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md rounded-2xl">
       <CardHeader>
         <CardTitle>Create account</CardTitle>
         <CardDescription>
@@ -39,7 +77,8 @@ export function SignupForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={formAction}>
+        <OAuthButtons />
+        <form action={formAction} className="mt-6">
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="name">Name</FieldLabel>
@@ -49,7 +88,7 @@ export function SignupForm() {
                   name="name"
                   autoComplete="name"
                   required
-                  placeholder="Kevin"
+                  placeholder="Your name"
                 />
               </FieldContent>
             </Field>
@@ -62,22 +101,8 @@ export function SignupForm() {
                   type="email"
                   autoComplete="email"
                   required
-                  placeholder="kevin@sploy.io"
+                  placeholder="you@company.com"
                 />
-              </FieldContent>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  minLength={8}
-                />
-                <FieldDescription>At least 8 characters.</FieldDescription>
               </FieldContent>
             </Field>
             {state.error ? (

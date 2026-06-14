@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { Film, Plus } from "lucide-react";
+import { Film, FolderOpen, Plus, Upload, Video, Zap } from "lucide-react";
 
 import { auth } from "@/auth";
-import { listProjectsForUser } from "@/lib/projects/store";
-import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
+import { StatsCard } from "@/components/dashboard/stats-card";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,78 +14,167 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  MOCK_ACTIVITY,
+  MOCK_CREDITS,
+  mergeProjectsWithMock,
+} from "@/lib/mock/data";
+import { listProjectsForUser } from "@/lib/projects/store";
 
-export default async function DashboardPage() {
+export default async function DashboardHomePage() {
   const session = await auth();
-  const projects = session?.user?.id
+  const rawProjects = session?.user?.id
     ? await listProjectsForUser(session.user.id)
     : [];
+  const projects = mergeProjectsWithMock(rawProjects);
+  const recentProjects = projects.slice(0, 3);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.02em]">
-            Projects
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Upload a recording, let Arco add the motion, then export for launch.
-          </p>
-        </div>
-        <Button render={<Link href="/editor" />}>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+      <PageHeader
+        title={`Welcome back${session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}`}
+        description="Here's what's happening in your workspace."
+      >
+        <Button render={<Link href="/dashboard/projects/new" />}>
           <Plus data-icon="inline-start" />
           New project
         </Button>
+      </PageHeader>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title="Total projects"
+          value={projects.length}
+          icon={FolderOpen}
+          description="in workspace"
+        />
+        <StatsCard
+          title="Videos generated"
+          value={projects.filter((p) => p.status === "completed").length}
+          icon={Video}
+          description="all time"
+        />
+        <StatsCard
+          title="Credits remaining"
+          value={MOCK_CREDITS.balance}
+          icon={Zap}
+          trend={{
+            value: `${MOCK_CREDITS.usedThisMonth} used`,
+            positive: false,
+          }}
+        />
+        <StatsCard
+          title="Processing"
+          value={projects.filter((p) => p.status === "processing").length}
+          icon={Film}
+          description="active jobs"
+        />
       </div>
 
-      {projects.length === 0 ? (
-        <Card className="border-dashed">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Film className="size-4 text-muted-foreground" />
-              No projects yet
-            </CardTitle>
-            <CardDescription>
-              Create your first launch video — upload a screen recording and Arco
-              handles the motion design.
-            </CardDescription>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="rounded-2xl lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Recent projects</CardTitle>
+              <CardDescription>Your latest work</CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link href="/dashboard/projects" />}
+            >
+              View all
+            </Button>
           </CardHeader>
           <CardContent>
-            <Button render={<Link href="/editor" />}>Create first project</Button>
+            {recentProjects.length === 0 ? (
+              <EmptyState
+                icon={Film}
+                title="No projects yet"
+                description="Create your first launch video — upload a screen recording and Arco handles the motion design."
+                action={{
+                  label: "Create first project",
+                  href: "/dashboard/projects/new",
+                }}
+                className="border-none shadow-none"
+              />
+            ) : (
+              <div className="space-y-3">
+                {recentProjects.map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/dashboard/projects/${project.id}`}
+                    className="flex items-center justify-between rounded-xl border p-4 transition-colors hover:bg-muted/30"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{project.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {project.markerCount} scenes · {project.exportFormat}
+                      </p>
+                    </div>
+                    <ProjectStatusBadge status={project.status} />
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <Link key={project.id} href="/editor">
-              <Card className="h-full transition-colors hover:bg-muted/30">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="line-clamp-1 text-base">
-                      {project.title}
-                    </CardTitle>
-                    <Badge variant="outline" className="shrink-0 capitalize">
-                      {project.platform}
-                    </Badge>
-                  </div>
-                  <CardDescription>
-                    {project.markerCount} scenes · {project.exportFormat}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground">
-                    Updated{" "}
-                    {new Date(project.updatedAt).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-base">Quick actions</CardTitle>
+            <CardDescription>Get started fast</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button
+              className="w-full justify-start"
+              render={<Link href="/dashboard/projects/new" />}
+            >
+              <Plus data-icon="inline-start" />
+              New project
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              render={<Link href="/dashboard/projects/new?step=upload" />}
+            >
+              <Upload data-icon="inline-start" />
+              Upload recording
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-base">Recent activity</CardTitle>
+          <CardDescription>Latest events in your workspace</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {MOCK_ACTIVITY.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex items-start justify-between gap-4 text-sm"
+              >
+                <div>
+                  <span className="font-medium">{activity.action}</span>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    — {activity.target}
+                  </span>
+                </div>
+                <time className="shrink-0 text-xs text-muted-foreground">
+                  {new Date(activity.timestamp).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </time>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

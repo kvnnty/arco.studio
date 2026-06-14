@@ -147,7 +147,7 @@ export function EditorWorkspace({
         <div className="flex min-w-0 items-center gap-4">
           <Link href="/dashboard" className="shrink-0">
             <Image
-              src="/arcologo-white.svg"
+              src="/arcologo-black.svg"
               alt="Arco"
               width={410}
               height={85}
