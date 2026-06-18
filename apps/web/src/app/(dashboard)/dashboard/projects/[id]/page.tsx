@@ -146,7 +146,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <Download data-icon="inline-start" />
                 Download export
               </Button>
-              <Button variant="outline" className="w-full" render={<Link href="/editor" />}>
+              <Button
+                variant="outline"
+                className="w-full"
+                render={<Link href={`/editor?projectId=${project.id}`} />}
+              >
                 Open in editor
               </Button>
             </CardContent>

@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type CreateProjectScreenProps = {
-  onContinue: (name: string, platform: ProjectPlatform) => void;
+  onContinue: (name: string, platform: ProjectPlatform) => void | Promise<void>;
+  loading?: boolean;
 };
 
 const platforms: {
@@ -46,7 +47,10 @@ const platforms: {
   },
 ];
 
-export function CreateProjectScreen({ onContinue }: CreateProjectScreenProps) {
+export function CreateProjectScreen({
+  onContinue,
+  loading = false,
+}: CreateProjectScreenProps) {
   const [name, setName] = useState("My launch video");
   const [platform, setPlatform] = useState<ProjectPlatform>("web");
 
@@ -114,10 +118,10 @@ export function CreateProjectScreen({ onContinue }: CreateProjectScreenProps) {
 
       <Button
         className="mt-10 w-fit"
-        disabled={!name.trim()}
-        onClick={() => onContinue(name.trim(), platform)}
+        disabled={!name.trim() || loading}
+        onClick={() => void onContinue(name.trim(), platform)}
       >
-        Continue to upload
+        {loading ? "Creating project…" : "Continue to upload"}
       </Button>
     </div>
   );

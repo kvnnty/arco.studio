@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
-import { magicLinkAction, type AuthFormState } from "@/app/actions/auth";
+import {
+  magicLinkAction,
+  passwordLoginAction,
+  type AuthFormState,
+} from "@/app/actions/auth";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,14 +25,25 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 const initialState: AuthFormState = {};
 
+type LoginTab = "password" | "magic";
+
 export function LoginForm() {
-  const [state, formAction, pending] = useActionState(
+  const [tab, setTab] = useState<LoginTab>("password");
+  const [passwordState, passwordAction, passwordPending] = useActionState(
+    passwordLoginAction,
+    initialState,
+  );
+  const [magicState, magicAction, magicPending] = useActionState(
     magicLinkAction,
     initialState,
   );
+
+  const state = tab === "password" ? passwordState : magicState;
+  const pending = tab === "password" ? passwordPending : magicPending;
 
   if (state.sent) {
     return (
@@ -73,37 +88,101 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
         <CardDescription>
-          No password needed — we&apos;ll email you a secure sign-in link.
+          Sign in with your password or request a magic link.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <OAuthButtons />
-        <form action={formAction} className="mt-6">
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  placeholder="you@company.com"
-                />
-              </FieldContent>
-            </Field>
-            {state.error ? (
-              <Alert variant="destructive">
-                <AlertDescription>{state.error}</AlertDescription>
-              </Alert>
-            ) : null}
-            <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "Sending link…" : "Send magic link"}
-            </Button>
-          </FieldGroup>
-        </form>
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            variant={tab === "password" ? "default" : "outline"}
+            onClick={() => setTab("password")}
+          >
+            Password
+          </Button>
+          <Button
+            type="button"
+            variant={tab === "magic" ? "default" : "outline"}
+            onClick={() => setTab("magic")}
+          >
+            Magic link
+          </Button>
+        </div>
+
+        {tab === "password" ? (
+          <form action={passwordAction} className="mt-6">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="you@company.com"
+                  />
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    placeholder="Your password"
+                  />
+                </FieldContent>
+              </Field>
+              {state.error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{state.error}</AlertDescription>
+                </Alert>
+              ) : null}
+              <Button type="submit" className="w-full" disabled={pending}>
+                {pending ? "Signing in…" : "Sign in with password"}
+              </Button>
+            </FieldGroup>
+          </form>
+        ) : (
+          <form action={magicAction} className="mt-6">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="magic-email">Email</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="magic-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="you@company.com"
+                  />
+                </FieldContent>
+              </Field>
+              {state.error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{state.error}</AlertDescription>
+                </Alert>
+              ) : null}
+              <Button type="submit" className="w-full" disabled={pending}>
+                {pending ? "Sending link…" : "Email me a magic link"}
+              </Button>
+            </FieldGroup>
+          </form>
+        )}
+
+        <p
+          className={cn(
+            "mt-6 text-center text-sm text-muted-foreground",
+            tab === "magic" && "mt-4",
+          )}
+        >
           No account?{" "}
           <Link href="/signup" className="text-accent-foreground hover:underline">
             Create one

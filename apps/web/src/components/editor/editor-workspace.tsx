@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { syncProjectSummary } from "@/app/actions/projects";
+import { syncProject } from "@/app/actions/projects";
 import { ExportDialog } from "@/components/editor/export-dialog";
 import { JourneyStepper } from "@/components/editor/journey-stepper";
 import { SceneInspector } from "@/components/editor/scene-inspector";
@@ -26,6 +26,8 @@ import {
   type EditorSession,
 } from "@/lib/editor/create-project";
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 type EditorWorkspaceProps = {
   session: EditorSession;
   onSessionChange: (session: EditorSession) => void;
@@ -36,6 +38,8 @@ export function EditorWorkspace({
   onSessionChange,
 }: EditorWorkspaceProps) {
   const [session, setSession] = useState(initialSession);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialSession.project.markers[0]?.id ?? null,
   );
@@ -60,13 +64,29 @@ export function EditorWorkspace({
 
   useEffect(() => {
     saveEditorSession(session);
-    void syncProjectSummary({
-      id: session.projectId,
-      title: session.project.meta.title,
-      platform: session.platform,
-      exportFormat: session.project.exportFormat ?? "16:9",
-      markerCount: session.project.markers.length,
-    });
+
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    setSaveStatus("saving");
+
+    saveTimerRef.current = setTimeout(() => {
+      void syncProject({
+        projectId: session.projectId,
+        project: session.project,
+        platform: session.platform,
+        recordingSrc: session.recordingUrl,
+      })
+        .then(() => setSaveStatus("saved"))
+        .catch(() => setSaveStatus("error"));
+    }, 500);
+
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
   }, [session]);
 
   const updateProject = useCallback(
@@ -175,6 +195,15 @@ export function EditorWorkspace({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            {saveStatus === "saving"
+              ? "Saving…"
+              : saveStatus === "saved"
+                ? "Saved"
+                : saveStatus === "error"
+                  ? "Save failed"
+                  : null}
+          </span>
           <Button
             variant="ghost"
             size="sm"

@@ -128,19 +128,36 @@ export function setEffect(
   };
 }
 
+export function inferJourneyStep(project: ArcoProject): JourneyStep {
+  if (project.markers.length > 0) {
+    return "edit";
+  }
+
+  const hasRecording =
+    project.recording.src &&
+    project.recording.src !== "pending" &&
+    project.recording.durationMs > 0;
+
+  if (hasRecording) {
+    return "analyzing";
+  }
+
+  return "upload";
+}
+
 export function saveEditorSession(session: EditorSession): void {
+  const recordingUrl =
+    session.recordingUrl ||
+    (session.project.recording.src !== "pending"
+      ? session.project.recording.src
+      : "");
+
   sessionStorage.setItem(
     SESSION_KEY,
     JSON.stringify({
-      project: {
-        ...session.project,
-        recording: {
-          ...session.project.recording,
-          src: "blob",
-        },
-      },
+      project: session.project,
       platform: session.platform,
-      recordingUrl: session.recordingUrl,
+      recordingUrl,
       journeyStep: session.journeyStep,
       projectName: session.projectName,
       projectId: session.projectId,
@@ -154,20 +171,43 @@ export function loadEditorSession(): EditorSession | null {
 
   try {
     const parsed = JSON.parse(raw) as EditorSession;
-    if (!parsed.recordingUrl?.startsWith("blob:")) return null;
+    const recordingUrl =
+      parsed.recordingUrl ||
+      (parsed.project.recording.src !== "pending"
+        ? parsed.project.recording.src
+        : "");
+
+    if (!recordingUrl || recordingUrl === "pending") {
+      if (parsed.journeyStep === "upload" || parsed.journeyStep === "create") {
+        return {
+          ...parsed,
+          projectId: parsed.projectId,
+          journeyStep: parsed.journeyStep,
+          projectName: parsed.projectName ?? parsed.project.meta.title,
+          recordingUrl: "",
+          project: {
+            ...parsed.project,
+            stylePreset: parsed.project.stylePreset ?? "startup",
+            exportFormat: parsed.project.exportFormat ?? "16:9",
+          },
+        };
+      }
+      return null;
+    }
 
     return {
       ...parsed,
-      projectId: parsed.projectId ?? createProjectId(),
-      journeyStep: parsed.journeyStep ?? "edit",
+      projectId: parsed.projectId,
+      journeyStep: parsed.journeyStep ?? inferJourneyStep(parsed.project),
       projectName: parsed.projectName ?? parsed.project.meta.title,
+      recordingUrl,
       project: {
         ...parsed.project,
         stylePreset: parsed.project.stylePreset ?? "startup",
         exportFormat: parsed.project.exportFormat ?? "16:9",
         recording: {
           ...parsed.project.recording,
-          src: parsed.recordingUrl,
+          src: recordingUrl,
         },
       },
     };

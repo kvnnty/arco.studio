@@ -20,12 +20,18 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        if (user.accessToken) {
+          token.accessToken = user.accessToken;
+        }
       }
       return token;
     },
     session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id as string;
+      }
+      if (token.accessToken) {
+        session.accessToken = token.accessToken as string;
       }
       return session;
     },

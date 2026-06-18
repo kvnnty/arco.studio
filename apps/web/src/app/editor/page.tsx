@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { EditorPage } from "@/components/editor/editor-page";
 
 export const metadata = {
@@ -6,5 +8,15 @@ export const metadata = {
 };
 
 export default function EditorRoute() {
-  return <EditorPage />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+          Loading…
+        </div>
+      }
+    >
+      <EditorPage />
+    </Suspense>
+  );
 }

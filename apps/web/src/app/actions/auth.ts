@@ -3,6 +3,8 @@
 import { AuthError } from "next-auth";
 
 import { signIn, signOut } from "@/auth";
+import { apiRegister } from "@/lib/api/client";
+import { ensureApiAuthForEmail } from "@/lib/auth/api-provision";
 import { createMagicLink } from "@/lib/auth/magic-link";
 import { createUser, getUserByEmail } from "@/lib/auth/users";
 
@@ -33,6 +35,74 @@ export async function magicLinkAction(
       : undefined;
 
   return { sent: true, verifyUrl };
+}
+
+export async function passwordSignupAction(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const name = String(formData.get("name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
+  if (!name || !email || !password) {
+    return { error: "Name, email, and password are required." };
+  }
+
+  if (password.length < 6) {
+    return { error: "Password must be at least 6 characters." };
+  }
+
+  try {
+    await apiRegister({ email, password, name });
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error ? error.message : "Could not create account.",
+    };
+  }
+
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: "/dashboard",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: "Account created but sign-in failed. Try logging in." };
+    }
+    throw error;
+  }
+
+  return {};
+}
+
+export async function passwordLoginAction(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
+  if (!email || !password) {
+    return { error: "Email and password are required." };
+  }
+
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: "/dashboard",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: "Invalid email or password." };
+    }
+    throw error;
+  }
+
+  return {};
 }
 
 export async function signupAction(
@@ -71,8 +141,26 @@ export async function verifyMagicLinkAction(token: string) {
     return { error: "This link is invalid or has expired." };
   }
 
+  let authResult;
   try {
-    await signIn("email", { email, redirectTo: "/dashboard" });
+    authResult = await ensureApiAuthForEmail(email);
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Could not connect to your account.",
+    };
+  }
+
+  try {
+    await signIn("credentials", {
+      email: authResult.user.email,
+      userId: authResult.user.id,
+      name: authResult.user.name ?? "",
+      accessToken: authResult.access_token,
+      redirectTo: "/dashboard",
+    });
   } catch (error) {
     if (error instanceof AuthError) {
       return { error: "Could not sign in. Please request a new link." };

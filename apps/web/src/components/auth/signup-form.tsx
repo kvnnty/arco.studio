@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { signupAction, type AuthFormState } from "@/app/actions/auth";
+import { passwordSignupAction, type AuthFormState } from "@/app/actions/auth";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -26,47 +26,9 @@ const initialState: AuthFormState = {};
 
 export function SignupForm() {
   const [state, formAction, pending] = useActionState(
-    signupAction,
+    passwordSignupAction,
     initialState,
   );
-
-  if (state.sent) {
-    return (
-      <Card className="w-full max-w-md rounded-2xl">
-        <CardHeader>
-          <CardTitle>Check your email</CardTitle>
-          <CardDescription>
-            Your account is ready. We sent a sign-in link to complete setup.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {process.env.NODE_ENV === "development" && state.verifyUrl ? (
-            <Alert>
-              <AlertDescription>
-                Email delivery is not configured yet. Use this link to sign in
-                during development.
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          {state.verifyUrl ? (
-            <Button
-              className="w-full"
-              render={<Link href={state.verifyUrl} />}
-            >
-              Open sign-in link
-            </Button>
-          ) : null}
-          <Button
-            variant="outline"
-            className="w-full"
-            render={<Link href="/login" />}
-          >
-            Back to sign in
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="w-full max-w-md rounded-2xl">
@@ -102,6 +64,20 @@ export function SignupForm() {
                   autoComplete="email"
                   required
                   placeholder="you@company.com"
+                />
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                  placeholder="At least 6 characters"
                 />
               </FieldContent>
             </Field>

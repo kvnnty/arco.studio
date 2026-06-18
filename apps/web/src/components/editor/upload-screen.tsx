@@ -19,12 +19,32 @@ import { cn } from "@/lib/utils";
 type UploadScreenProps = {
   projectName: string;
   onUpload: (file: File) => Promise<void>;
+  uploadProgress?: number | null;
+  uploadStage?: "uploading" | "processing" | null;
 };
 
-export function UploadScreen({ projectName, onUpload }: UploadScreenProps) {
+export function UploadScreen({
+  projectName,
+  onUpload,
+  uploadProgress = null,
+  uploadStage = null,
+}: UploadScreenProps) {
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isBusy = loading || uploadStage !== null;
+
+  const statusLabel =
+    uploadStage === "uploading"
+      ? uploadProgress !== null
+        ? `Uploading… ${uploadProgress}%`
+        : "Uploading to cloud…"
+      : uploadStage === "processing"
+        ? "Saving project…"
+        : loading
+          ? "Processing video…"
+          : "Drop your screen recording here";
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -38,8 +58,12 @@ export function UploadScreen({ projectName, onUpload }: UploadScreenProps) {
 
       try {
         await onUpload(file);
-      } catch {
-        setError("Could not process that video. Try another file.");
+      } catch (uploadError) {
+        setError(
+          uploadError instanceof Error
+            ? uploadError.message
+            : "Could not upload that video. Try again.",
+        );
       } finally {
         setLoading(false);
       }
@@ -87,19 +111,25 @@ export function UploadScreen({ projectName, onUpload }: UploadScreenProps) {
             >
               <Upload className="size-8 text-muted-foreground" />
               <CardHeader className="px-0 pb-0 pt-4">
-                <CardTitle className="text-sm">
-                  {loading ? "Processing video…" : "Drop sploy-demo.mp4 here"}
-                </CardTitle>
+                <CardTitle className="text-sm">{statusLabel}</CardTitle>
                 <CardDescription>
-                  MP4, WebM, or MOV · or record directly in browser (coming soon)
+                  MP4, WebM, or MOV · up to 500MB
                 </CardDescription>
               </CardHeader>
+              {uploadStage === "uploading" && uploadProgress !== null ? (
+                <div className="mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              ) : null}
               <Button
                 type="button"
                 variant="secondary"
                 size="sm"
                 className="mt-4"
-                disabled={loading}
+                disabled={isBusy}
               >
                 Choose file
               </Button>
@@ -107,7 +137,7 @@ export function UploadScreen({ projectName, onUpload }: UploadScreenProps) {
                 type="file"
                 accept="video/*"
                 className="sr-only"
-                disabled={loading}
+                disabled={isBusy}
                 onChange={(event) => {
                   const file = event.target.files?.[0];
                   if (file) void handleFile(file);
@@ -116,7 +146,7 @@ export function UploadScreen({ projectName, onUpload }: UploadScreenProps) {
             </label>
           </Card>
           <FieldDescription>
-            Your video stays in the browser until export.
+            Your recording is saved to cloud storage so you can return anytime.
           </FieldDescription>
         </FieldContent>
       </Field>

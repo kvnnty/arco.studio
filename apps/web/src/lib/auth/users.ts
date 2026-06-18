@@ -6,6 +6,8 @@ export type StoredUser = {
   email: string;
   name: string;
   createdAt: string;
+  apiPassword?: string;
+  apiUserId?: string;
 };
 
 const DATA_DIR = path.join(process.cwd(), ".data");
@@ -66,4 +68,21 @@ export async function getUserByEmail(
 export async function getUserById(id: string): Promise<StoredUser | null> {
   const users = await readUsers();
   return users.find((user) => user.id === id) ?? null;
+}
+
+export async function updateUserApiCredentials(
+  email: string,
+  input: { apiPassword: string; apiUserId: string },
+): Promise<void> {
+  const users = await readUsers();
+  const normalized = email.trim().toLowerCase();
+  const index = users.findIndex((user) => user.email === normalized);
+  if (index === -1) return;
+
+  users[index] = {
+    ...users[index],
+    apiPassword: input.apiPassword,
+    apiUserId: input.apiUserId,
+  };
+  await writeUsers(users);
 }

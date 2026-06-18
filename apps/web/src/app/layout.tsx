@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SessionProvider } from "@/components/providers/session-provider";
 
 import "./globals.css";
 
@@ -32,7 +33,9 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${geistMono.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
       >
-        <TooltipProvider>{children}</TooltipProvider>
+        <SessionProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </SessionProvider>
       </body>
     </html>
   );

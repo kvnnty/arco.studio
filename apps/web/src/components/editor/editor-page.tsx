@@ -2,17 +2,24 @@
 
 import type { Marker } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
+import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import {
+  createEditorProject,
+  loadEditorProject,
+  syncProject,
+} from "@/app/actions/projects";
 import { AnalysisScreen } from "@/components/editor/analysis-screen";
 import { CreateProjectScreen } from "@/components/editor/create-project-screen";
 import { DraftReadyScreen } from "@/components/editor/draft-ready-screen";
 import { EditorWorkspace } from "@/components/editor/editor-workspace";
 import { UploadScreen } from "@/components/editor/upload-screen";
 import { buildDraftProject } from "@/lib/editor/analyze-recording";
+import { uploadRecordingWithProgress } from "@/lib/api/client";
 import {
   createEmptyProject,
-  createProjectId,
   getVideoMetadata,
   loadEditorSession,
   saveEditorSession,
@@ -22,20 +29,78 @@ import {
 } from "@/lib/editor/create-project";
 
 export function EditorPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data: authSession, status: authStatus } = useSession();
+
   const [session, setSession] = useState<EditorSession | null>(null);
   const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadStage, setUploadStage] = useState<
+    "uploading" | "processing" | null
+  >(null);
   const [pendingUpload, setPendingUpload] = useState<{
-    file: File;
     url: string;
     durationMs: number;
     width: number;
     height: number;
   } | null>(null);
 
+  const projectIdParam = searchParams.get("projectId");
+
   useEffect(() => {
-    setSession(loadEditorSession());
-    setReady(true);
-  }, []);
+    if (authStatus === "loading") return;
+
+    let cancelled = false;
+
+    async function hydrate() {
+      setLoadError(null);
+
+      if (projectIdParam) {
+        const loaded = await loadEditorProject(projectIdParam);
+        if (cancelled) return;
+
+        if (!loaded) {
+          setLoadError("Project not found or you do not have access.");
+          setSession(null);
+          setReady(true);
+          return;
+        }
+
+        saveEditorSession(loaded);
+        setSession(loaded);
+        if (loaded.journeyStep === "analyzing" && loaded.recordingUrl) {
+          setPendingUpload({
+            url: loaded.recordingUrl,
+            durationMs: loaded.project.recording.durationMs,
+            width: loaded.project.meta.width,
+            height: loaded.project.meta.height,
+          });
+        }
+        setReady(true);
+        return;
+      }
+
+      const cached = loadEditorSession();
+      if (cancelled) return;
+
+      if (cached?.projectId) {
+        router.replace(`/editor?projectId=${cached.projectId}`);
+        return;
+      }
+
+      setSession(cached);
+      setReady(true);
+    }
+
+    void hydrate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authStatus, projectIdParam, router]);
 
   const goToStep = useCallback(
     (step: JourneyStep, nextSession: EditorSession) => {
@@ -47,47 +112,75 @@ export function EditorPage() {
   );
 
   const handleCreateContinue = useCallback(
-    (name: string, platform: ProjectPlatform) => {
-      const placeholder: EditorSession = {
-        projectId: createProjectId(),
-        project: createEmptyProject(name, "pending", 1000),
-        platform,
-        recordingUrl: "",
-        journeyStep: "upload",
-        projectName: name,
-      };
-      goToStep("upload", placeholder);
+    async (name: string, platform: ProjectPlatform) => {
+      setCreating(true);
+      setLoadError(null);
+
+      try {
+        const { id } = await createEditorProject({ title: name, platform });
+        router.replace(`/editor?projectId=${id}`);
+      } catch {
+        setLoadError("Could not create project. Please sign in and try again.");
+      } finally {
+        setCreating(false);
+      }
     },
-    [goToStep],
+    [router],
   );
 
   const handleUpload = useCallback(
     async (file: File) => {
       if (!session) return;
-      const recordingUrl = URL.createObjectURL(file);
+
+      const accessToken = authSession?.accessToken;
+      if (!accessToken) {
+        throw new Error("You must be signed in to upload recordings.");
+      }
+
+      setUploadProgress(0);
+      setUploadStage("uploading");
+
       const metadata = await getVideoMetadata(file);
+
+      const uploadResult = await uploadRecordingWithProgress(
+        accessToken,
+        file,
+        (percent) => setUploadProgress(percent),
+      );
+
+      setUploadStage("processing");
+      setUploadProgress(null);
+
       const project = createEmptyProject(
         session.projectName,
-        recordingUrl,
+        uploadResult.url,
         metadata.durationMs,
         metadata.width,
         metadata.height,
       );
 
+      await syncProject({
+        projectId: session.projectId,
+        project,
+        platform: session.platform,
+        recordingSrc: uploadResult.url,
+      });
+
       const analyzingSession: EditorSession = {
         ...session,
         project,
-        recordingUrl,
+        recordingUrl: uploadResult.url,
         journeyStep: "analyzing",
       };
+
       setPendingUpload({
-        file,
-        url: recordingUrl,
+        url: uploadResult.url,
         ...metadata,
       });
+      setUploadStage(null);
       goToStep("analyzing", analyzingSession);
     },
-    [session, goToStep],
+    [session, authSession?.accessToken, goToStep],
   );
 
   const handleAnalysisComplete = useCallback(
@@ -107,11 +200,21 @@ export function EditorPage() {
 
       draftProject.markers = markers;
 
-      goToStep("draft", {
+      const draftSession: EditorSession = {
         ...session,
         project: draftProject,
         recordingUrl: pendingUpload.url,
+        journeyStep: "draft",
+      };
+
+      void syncProject({
+        projectId: session.projectId,
+        project: draftProject,
+        platform: session.platform,
+        recordingSrc: pendingUpload.url,
       });
+
+      goToStep("draft", draftSession);
     },
     [session, pendingUpload, goToStep],
   );
@@ -125,13 +228,20 @@ export function EditorPage() {
     (preset: EditorSession["project"]["stylePreset"]) => {
       if (!session || !preset) return;
       const updated = applyStylePreset(session.project, preset);
-      setSession({ ...session, project: updated });
-      saveEditorSession({ ...session, project: updated });
+      const nextSession = { ...session, project: updated };
+      setSession(nextSession);
+      saveEditorSession(nextSession);
+      void syncProject({
+        projectId: session.projectId,
+        project: updated,
+        platform: session.platform,
+        recordingSrc: session.recordingUrl,
+      });
     },
     [session],
   );
 
-  if (!ready) {
+  if (!ready || authStatus === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
         Loading…
@@ -139,8 +249,28 @@ export function EditorPage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="text-sm text-destructive">{loadError}</p>
+        <button
+          type="button"
+          className="text-sm text-accent-foreground hover:underline"
+          onClick={() => router.push("/editor")}
+        >
+          Start a new project
+        </button>
+      </div>
+    );
+  }
+
   if (!session || session.journeyStep === "create") {
-    return <CreateProjectScreen onContinue={handleCreateContinue} />;
+    return (
+      <CreateProjectScreen
+        onContinue={handleCreateContinue}
+        loading={creating}
+      />
+    );
   }
 
   if (session.journeyStep === "upload") {
@@ -148,6 +278,8 @@ export function EditorPage() {
       <UploadScreen
         projectName={session.projectName}
         onUpload={handleUpload}
+        uploadProgress={uploadProgress}
+        uploadStage={uploadStage}
       />
     );
   }
