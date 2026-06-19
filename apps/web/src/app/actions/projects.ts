@@ -6,10 +6,15 @@ import { auth } from "@/auth";
 import {
   apiCreateProject,
   apiGetProject,
+  apiListProjects,
   apiUpdateProject,
   parseProjectData,
   type ApiProjectRecord,
 } from "@/lib/api/client";
+import {
+  toDashboardProject,
+  type DashboardProject,
+} from "@/lib/dashboard/projects";
 import {
   createEmptyProject,
   inferJourneyStep,
@@ -61,6 +66,28 @@ function toEditorSession(
     journeyStep: inferJourneyStep(project),
     projectName: record.title || project.meta.title,
   };
+}
+
+export async function listDashboardProjects(): Promise<DashboardProject[]> {
+  const session = await auth();
+  if (!session?.accessToken) return [];
+
+  const records = await apiListProjects(session.accessToken);
+  return records.map(toDashboardProject);
+}
+
+export async function getDashboardProject(
+  id: string,
+): Promise<DashboardProject | null> {
+  const session = await auth();
+  if (!session?.accessToken) return null;
+
+  try {
+    const record = await apiGetProject(session.accessToken, id);
+    return toDashboardProject(record);
+  } catch {
+    return null;
+  }
 }
 
 export async function createEditorProject(input: {

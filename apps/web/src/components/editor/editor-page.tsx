@@ -184,7 +184,7 @@ export function EditorPage() {
   );
 
   const handleAnalysisComplete = useCallback(
-    (markers: Marker[]) => {
+    (result: { markers: Marker[]; stylePreset: EditorSession["project"]["stylePreset"] }) => {
       if (!session || !pendingUpload) return;
 
       const draftProject = buildDraftProject(
@@ -195,10 +195,9 @@ export function EditorPage() {
             durationMs: pendingUpload.durationMs,
           },
         },
-        session.project.stylePreset ?? "startup",
+        result.stylePreset ?? session.project.stylePreset ?? "startup",
+        result.markers,
       );
-
-      draftProject.markers = markers;
 
       const draftSession: EditorSession = {
         ...session,
@@ -287,6 +286,8 @@ export function EditorPage() {
   if (session.journeyStep === "analyzing") {
     return (
       <AnalysisScreen
+        projectTitle={session.projectName}
+        platform={session.platform}
         durationMs={session.project.recording.durationMs}
         onComplete={handleAnalysisComplete}
       />

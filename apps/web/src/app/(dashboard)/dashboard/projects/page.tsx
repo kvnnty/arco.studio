@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Film, Plus } from "lucide-react";
 
-import { auth } from "@/auth";
+import { listDashboardProjects } from "@/app/actions/projects";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
@@ -14,15 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { mergeProjectsWithMock } from "@/lib/mock/data";
-import { listProjectsForUser } from "@/lib/projects/store";
 
 export default async function ProjectsPage() {
-  const session = await auth();
-  const rawProjects = session?.user?.id
-    ? await listProjectsForUser(session.user.id)
-    : [];
-  const projects = mergeProjectsWithMock(rawProjects);
+  const projects = await listDashboardProjects();
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -30,7 +24,7 @@ export default async function ProjectsPage() {
         title="Projects"
         description="Upload a recording, let Arco add the motion, then export for launch."
       >
-        <Button render={<Link href="/dashboard/projects/new" />}>
+        <Button render={<Link href="/editor" />}>
           <Plus data-icon="inline-start" />
           New project
         </Button>
@@ -43,7 +37,7 @@ export default async function ProjectsPage() {
           description="Create your first launch video — upload a screen recording and Arco handles the motion design."
           action={{
             label: "Create first project",
-            href: "/dashboard/projects/new",
+            href: "/editor",
           }}
         />
       ) : (

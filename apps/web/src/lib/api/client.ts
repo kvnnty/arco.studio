@@ -85,6 +85,12 @@ export type ApiProjectRecord = {
   markerCount: number;
   createdAt: string;
   updatedAt: string;
+  renderJobs?: Array<{
+    id: string;
+    status: string;
+    outputUrl: string | null;
+    format: string;
+  }>;
 };
 
 export function parseProjectData(raw: string | ArcoProject): ArcoProject {
@@ -128,6 +134,12 @@ export async function apiGetProject(
   projectId: string,
 ): Promise<ApiProjectRecord> {
   return apiFetch<ApiProjectRecord>(`/projects/${projectId}`, { token });
+}
+
+export async function apiListProjects(
+  token: string,
+): Promise<ApiProjectRecord[]> {
+  return apiFetch<ApiProjectRecord[]>("/projects", { token });
 }
 
 export async function apiCreateProject(
@@ -207,5 +219,57 @@ export async function uploadRecordingWithProgress(
     const formData = new FormData();
     formData.append("file", file);
     xhr.send(formData);
+  });
+}
+
+export type RenderJobRecord = {
+  id: string;
+  projectId: string;
+  status: string;
+  format: string;
+  outputUrl: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type GenerateDraftResponse = {
+  markers: import("@arco/project-schema").Marker[];
+  stylePreset: import("@arco/project-schema").StylePreset;
+  source: "llm" | "heuristic";
+};
+
+export async function apiCreateRender(
+  token: string,
+  input: { projectId: string; format: string },
+): Promise<RenderJobRecord> {
+  return apiFetch<RenderJobRecord>("/renders", {
+    token,
+    method: "POST",
+    body: input,
+  });
+}
+
+export async function apiGetRender(
+  token: string,
+  jobId: string,
+): Promise<RenderJobRecord> {
+  return apiFetch<RenderJobRecord>(`/renders/${jobId}`, { token });
+}
+
+export async function apiGenerateDraft(
+  token: string,
+  input: {
+    title: string;
+    durationMs: number;
+    platform?: string;
+    intent?: string;
+    productUrl?: string;
+  },
+): Promise<GenerateDraftResponse> {
+  return apiFetch<GenerateDraftResponse>("/ai/generate-draft", {
+    token,
+    method: "POST",
+    body: input,
   });
 }

@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { UploadsModule } from './uploads/uploads.module.js';
 import { RendersModule } from './renders/renders.module.js';
+import { AiModule } from './ai/ai.module.js';
 import { HealthController } from './health/health.controller.js';
 
 @Module({
@@ -19,6 +20,7 @@ import { HealthController } from './health/health.controller.js';
     ProjectsModule,
     UploadsModule,
     RendersModule,
+    AiModule,
   ],
   controllers: [HealthController],
 })

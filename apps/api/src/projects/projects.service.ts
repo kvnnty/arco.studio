@@ -27,11 +27,37 @@ export class ProjectsService {
     return this.prisma.project.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
+      include: {
+        renderJobs: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            outputUrl: true,
+            format: true,
+          },
+        },
+      },
     });
   }
 
   async findOne(id: string, userId: string) {
-    const project = await this.prisma.project.findUnique({ where: { id } });
+    const project = await this.prisma.project.findUnique({
+      where: { id },
+      include: {
+        renderJobs: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            outputUrl: true,
+            format: true,
+          },
+        },
+      },
+    });
     if (!project) {
       throw new NotFoundException('Project not found');
     }

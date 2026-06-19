@@ -5,10 +5,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateRenderDto } from './dto/create-render.dto.js';
+import { RenderProcessorService } from './render-processor.service.js';
 
 @Injectable()
 export class RendersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly renderProcessor: RenderProcessorService,
+  ) {}
 
   async create(userId: string, dto: CreateRenderDto) {
     const project = await this.prisma.project.findUnique({
@@ -21,13 +25,17 @@ export class RendersService {
       throw new ForbiddenException('Access denied');
     }
 
-    return this.prisma.renderJob.create({
+    const job = await this.prisma.renderJob.create({
       data: {
         projectId: dto.projectId,
-        format: dto.format ?? 'mp4',
+        format: dto.format ?? project.exportFormat ?? '16:9',
         status: 'queued',
       },
     });
+
+    this.renderProcessor.queueJob(job.id);
+
+    return job;
   }
 
   async findOne(id: string, userId: string) {

@@ -278,6 +278,7 @@ export function EditorWorkspace({
       <ExportDialog
         open={exportOpen}
         onOpenChange={setExportOpen}
+        projectId={session.projectId}
         format={project.exportFormat ?? "16:9"}
         onFormatChange={handleExportFormat}
         projectTitle={project.meta.title}

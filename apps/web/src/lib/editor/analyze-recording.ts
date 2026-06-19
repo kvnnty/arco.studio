@@ -1,9 +1,10 @@
-import type { ArcoProject, Marker } from "@arco/project-schema";
+import type { Marker, StylePreset } from "@arco/project-schema";
 import {
   DEFAULT_FOCUS,
   effectsFromClickEffect,
 } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
+import { generateDraftAction } from "@/app/actions/ai";
 import { createMarkerId } from "./create-project";
 
 export type AnalysisStep = {
@@ -15,7 +16,7 @@ export type AnalysisStep = {
 export const ANALYSIS_STEPS: AnalysisStep[] = [
   { id: "clicks", label: "Detecting mouse clicks", durationMs: 900 },
   { id: "cursor", label: "Tracking cursor movement", durationMs: 800 },
-  { id: "pauses", label: "Finding pauses & transitions", durationMs: 700 },
+  { id: "pauses", label: "Finding pauses & transitions", durationMs: 800 },
   { id: "navigation", label: "Mapping navigation changes", durationMs: 800 },
   { id: "draft", label: "Building motion draft", durationMs: 900 },
 ];
@@ -101,34 +102,57 @@ export function generateDraftMarkers(durationMs: number): Marker[] {
 }
 
 export function buildDraftProject(
-  project: ArcoProject,
-  stylePreset: ArcoProject["stylePreset"] = "startup",
-): ArcoProject {
+  project: import("@arco/project-schema").ArcoProject,
+  stylePreset: StylePreset = "startup",
+  markers?: Marker[],
+): import("@arco/project-schema").ArcoProject {
   const withStyle = applyStylePreset(project, stylePreset ?? "startup");
   return {
     ...withStyle,
-    markers: generateDraftMarkers(project.recording.durationMs),
+    markers: markers ?? generateDraftMarkers(project.recording.durationMs),
     audio: { musicId: "modern-saas", volume: 0.85 },
   };
 }
 
+export type DraftAnalysisResult = {
+  markers: Marker[];
+  stylePreset: StylePreset;
+  source: "llm" | "heuristic";
+};
+
 export async function runAnalysis(
   onStep: (stepIndex: number, detectedMarkers: Marker[]) => void,
-  durationMs: number,
-): Promise<Marker[]> {
+  input: {
+    title: string;
+    durationMs: number;
+    platform?: string;
+  },
+): Promise<DraftAnalysisResult> {
+  const draftPromise = generateDraftAction({
+    title: input.title,
+    durationMs: input.durationMs,
+    platform: input.platform,
+  }).catch(() => ({
+    markers: generateDraftMarkers(input.durationMs),
+    stylePreset: "startup" as StylePreset,
+    source: "heuristic" as const,
+  }));
+
   let markers: Marker[] = [];
 
   for (let i = 0; i < ANALYSIS_STEPS.length; i++) {
     await new Promise((resolve) =>
       setTimeout(resolve, ANALYSIS_STEPS[i]!.durationMs),
     );
-    if (i >= 3) {
-      markers = generateDraftMarkers(durationMs).slice(0, i - 1);
+
+    const draft = await draftPromise;
+    if (i >= 2) {
+      markers = draft.markers.slice(0, Math.max(1, i - 1));
     }
     onStep(i, markers);
   }
 
-  return generateDraftMarkers(durationMs);
+  return draftPromise;
 }
 
 export function getDefaultFocus() {

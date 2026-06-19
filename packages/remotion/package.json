@@ -11,10 +11,13 @@
     "dev": "remotion studio src/index.tsx",
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "render:sample": "remotion render src/index.tsx ArcoComposition out/sample.mp4 --props=src/sample/golden-props.json"
+    "render:sample": "remotion render src/index.tsx ArcoComposition out/sample.mp4 --props=src/sample/golden-props.json",
+    "render:file": "tsx src/render-file.ts"
   },
   "dependencies": {
     "@arco/project-schema": "workspace:*",
+    "@remotion/bundler": "^4.0.286",
+    "@remotion/renderer": "^4.0.286",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "remotion": "^4.0.286",
@@ -25,6 +28,7 @@
     "@remotion/cli": "^4.0.286",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Film, FolderOpen, Plus, Upload, Video, Zap } from "lucide-react";
 
+import { listDashboardProjects } from "@/app/actions/projects";
 import { auth } from "@/auth";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -17,16 +18,11 @@ import {
 import {
   MOCK_ACTIVITY,
   MOCK_CREDITS,
-  mergeProjectsWithMock,
 } from "@/lib/mock/data";
-import { listProjectsForUser } from "@/lib/projects/store";
 
 export default async function DashboardHomePage() {
   const session = await auth();
-  const rawProjects = session?.user?.id
-    ? await listProjectsForUser(session.user.id)
-    : [];
-  const projects = mergeProjectsWithMock(rawProjects);
+  const projects = await listDashboardProjects();
   const recentProjects = projects.slice(0, 3);
 
   return (
@@ -35,7 +31,7 @@ export default async function DashboardHomePage() {
         title={`Welcome back${session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}`}
         description="Here's what's happening in your workspace."
       >
-        <Button render={<Link href="/dashboard/projects/new" />}>
+        <Button render={<Link href="/editor" />}>
           <Plus data-icon="inline-start" />
           New project
         </Button>
@@ -94,7 +90,7 @@ export default async function DashboardHomePage() {
                 description="Create your first launch video — upload a screen recording and Arco handles the motion design."
                 action={{
                   label: "Create first project",
-                  href: "/dashboard/projects/new",
+                  href: "/editor",
                 }}
                 className="border-none shadow-none"
               />
@@ -128,7 +124,7 @@ export default async function DashboardHomePage() {
           <CardContent className="space-y-2">
             <Button
               className="w-full justify-start"
-              render={<Link href="/dashboard/projects/new" />}
+              render={<Link href="/editor" />}
             >
               <Plus data-icon="inline-start" />
               New project
@@ -136,7 +132,7 @@ export default async function DashboardHomePage() {
             <Button
               variant="outline"
               className="w-full justify-start"
-              render={<Link href="/dashboard/projects/new?step=upload" />}
+              render={<Link href="/editor" />}
             >
               <Upload data-icon="inline-start" />
               Upload recording

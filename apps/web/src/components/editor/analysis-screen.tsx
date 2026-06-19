@@ -8,6 +8,7 @@ import { JourneyStepper } from "@/components/editor/journey-stepper";
 import {
   ANALYSIS_STEPS,
   runAnalysis,
+  type DraftAnalysisResult,
 } from "@/lib/editor/analyze-recording";
 import { formatMs } from "@/lib/editor/format-time";
 import { Badge } from "@/components/ui/badge";
@@ -15,29 +16,43 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 type AnalysisScreenProps = {
+  projectTitle: string;
+  platform: string;
   durationMs: number;
-  onComplete: (markers: Marker[]) => void;
+  onComplete: (result: DraftAnalysisResult) => void;
 };
 
-export function AnalysisScreen({ durationMs, onComplete }: AnalysisScreenProps) {
+export function AnalysisScreen({
+  projectTitle,
+  platform,
+  durationMs,
+  onComplete,
+}: AnalysisScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [detected, setDetected] = useState<Marker[]>([]);
 
   useEffect(() => {
     let cancelled = false;
 
-    void runAnalysis((index, markers) => {
-      if (cancelled) return;
-      setStepIndex(index);
-      setDetected(markers);
-    }, durationMs).then((markers) => {
-      if (!cancelled) onComplete(markers);
+    void runAnalysis(
+      (index, markers) => {
+        if (cancelled) return;
+        setStepIndex(index);
+        setDetected(markers);
+      },
+      {
+        title: projectTitle,
+        durationMs,
+        platform,
+      },
+    ).then((result) => {
+      if (!cancelled) onComplete(result);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [durationMs, onComplete]);
+  }, [durationMs, onComplete, platform, projectTitle]);
 
   const progress = ((stepIndex + 1) / ANALYSIS_STEPS.length) * 100;
   const currentStep = ANALYSIS_STEPS[stepIndex];

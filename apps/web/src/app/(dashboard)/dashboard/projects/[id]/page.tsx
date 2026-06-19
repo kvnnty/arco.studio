@@ -8,6 +8,7 @@ import {
   Play,
 } from "lucide-react";
 
+import { getDashboardProject } from "@/app/actions/projects";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -20,10 +21,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getMockProject } from "@/lib/mock/data";
-import { listProjectsForUser } from "@/lib/projects/store";
-import { auth } from "@/auth";
-import { mergeProjectsWithMock } from "@/lib/mock/data";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -31,21 +28,62 @@ type PageProps = {
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const session = await auth();
-  const rawProjects = session?.user?.id
-    ? await listProjectsForUser(session.user.id)
-    : [];
-  const projects = mergeProjectsWithMock(rawProjects);
-  const project =
-    projects.find((p) => p.id === id) ?? getMockProject(id);
+  const project = await getDashboardProject(id);
 
   if (!project) notFound();
 
   const timelineSteps = [
-    { label: "Recording uploaded", done: true, time: "Jun 10, 10:00 AM" },
-    { label: "Scenes analyzed", done: true, time: "Jun 10, 10:02 AM" },
-    { label: "Motion applied", done: project.status !== "draft", time: project.status !== "draft" ? "Jun 11, 2:30 PM" : undefined },
-    { label: "Export ready", done: project.status === "completed", time: project.status === "completed" ? "Jun 11, 2:45 PM" : undefined },
+    {
+      label: "Recording uploaded",
+      done: Boolean(project.recordingSrc),
+      time: project.recordingSrc
+        ? new Date(project.createdAt).toLocaleString(undefined, {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          })
+        : undefined,
+    },
+    {
+      label: "Scenes analyzed",
+      done: project.markerCount > 0,
+      time:
+        project.markerCount > 0
+          ? new Date(project.updatedAt).toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })
+          : undefined,
+    },
+    {
+      label: "Motion applied",
+      done: project.markerCount > 0,
+      time:
+        project.markerCount > 0
+          ? new Date(project.updatedAt).toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })
+          : undefined,
+    },
+    {
+      label: "Export ready",
+      done: project.status === "completed",
+      time:
+        project.status === "completed"
+          ? new Date(project.updatedAt).toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })
+          : undefined,
+    },
   ];
 
   return (
@@ -75,7 +113,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           <CardHeader>
             <CardTitle className="text-base">Preview</CardTitle>
             <CardDescription>
-              Video preview will appear here once processing completes.
+              {project.recordingSrc
+                ? "Open the editor to preview your recording with motion."
+                : "Upload a recording in the editor to get started."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -86,15 +126,19 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 </div>
                 <p className="text-sm font-medium">
                   {project.status === "completed"
-                    ? "Preview available"
-                    : "Preview unavailable"}
+                    ? "Export ready"
+                    : project.recordingSrc
+                      ? "Preview in editor"
+                      : "No recording yet"}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {project.status === "processing"
                     ? "Processing your video…"
-                    : project.status === "draft"
-                      ? "Complete the wizard to generate"
-                      : "Ready to download"}
+                    : project.status === "completed"
+                      ? "Download your MP4 below"
+                      : project.recordingSrc
+                        ? "Continue editing in the editor"
+                        : "Start in the editor"}
                 </p>
               </div>
             </div>
@@ -142,10 +186,27 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               <CardTitle className="text-base">Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" disabled={project.status !== "completed"}>
-                <Download data-icon="inline-start" />
-                Download export
-              </Button>
+              {project.latestExportUrl ? (
+                <Button
+                  className="w-full"
+                  render={
+                    <a
+                      href={project.latestExportUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                    />
+                  }
+                >
+                  <Download data-icon="inline-start" />
+                  Download export
+                </Button>
+              ) : (
+                <Button className="w-full" disabled>
+                  <Download data-icon="inline-start" />
+                  Download export
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="w-full"
@@ -161,7 +222,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       <Card className="rounded-2xl">
         <CardHeader>
           <CardTitle className="text-base">Timeline</CardTitle>
-          <CardDescription>Processing progress for this project</CardDescription>
+          <CardDescription>Progress for this project</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-0">
