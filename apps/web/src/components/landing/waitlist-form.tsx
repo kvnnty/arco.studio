@@ -17,7 +17,7 @@ function WaitlistSubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="h-11 shrink-0 rounded-full border-0 bg-white/[0.815] px-6 text-[15px] font-semibold tracking-[0.03em] text-[#18191a] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] transition-[opacity,background-color] hover:bg-white disabled:opacity-60"
+      className="h-11 shrink-0 disabled:opacity-60"
     >
       {pending ? "Joining…" : "Join waitlist"}
     </Button>
@@ -30,7 +30,7 @@ export function WaitlistForm() {
   if (state.status === "success") {
     return (
       <p
-        className="text-[15px] font-medium tracking-[0.02em] text-[#5fc992]"
+        className="text-[15px] font-medium tracking-[0.02em] text-green-500"
         role="status"
       >
         You’re on the list. We’ll be in touch.
@@ -55,12 +55,12 @@ export function WaitlistForm() {
           aria-describedby={
             state.status === "error" ? "waitlist-error" : undefined
           }
-          className="h-11 w-full rounded-lg border border-white/[0.08] bg-[#07080a] px-4 text-[15px] font-medium tracking-[0.02em] text-[#f9f9f9] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none placeholder:text-[#6a6b6c] focus-visible:border-[hsl(202,100%,67%)] focus-visible:ring-[3px] focus-visible:ring-[hsla(202,100%,67%,0.15)]"
+          className="h-11 w-full rounded-lg border border-border bg-input px-4 text-[15px] font-medium tracking-[0.02em] text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
         />
         {state.status === "error" ? (
           <p
             id="waitlist-error"
-            className="text-[13px] font-medium tracking-[0.02em] text-[#ff6363]"
+            className="text-[13px] font-medium tracking-[0.02em] text-destructive"
             role="alert"
           >
             {state.message}

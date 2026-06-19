@@ -5,23 +5,15 @@ import { WaitlistForm } from "./waitlist-form";
 
 export function LandingPage() {
   return (
-    <div className="relative min-h-screen bg-[#07080a] text-[#f9f9f9]">
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 opacity-80"
-        aria-hidden
-      >
-        <div className="absolute left-1/2 top-[-14rem] h-[36rem] w-[min(92vw,44rem)] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(85,179,255,0.12),transparent_58%)]" />
-        <div className="absolute bottom-[-18%] right-[-8%] h-[22rem] w-[22rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,99,99,0.06),transparent_62%)]" />
-      </div>
-
+    <div className="relative min-h-screen">
       <main className="mx-auto flex min-h-screen max-w-2xl flex-col px-6 pb-16 pt-20 sm:px-8 sm:pt-28">
         <Link
           href="/"
-          className="inline-flex w-fit transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,100%,67%/0.35)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080a]"
+          className="inline-flex w-fit transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080a]"
           aria-label="Arco home"
         >
           <Image
-            src="/arcologo-white.svg"
+            src="/arcologo-black.svg"
             alt="Arco"
             width={410}
             height={85}
@@ -49,15 +41,12 @@ export function LandingPage() {
             We use your email only for Arco updates. Unsubscribe anytime.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link
-              href="/signup"
-              className="inline-flex rounded-lg bg-[#f9f9f9] px-4 py-2 text-[13px] font-medium text-[#18191a] transition-opacity hover:opacity-90"
-            >
+            <Link href="/signup" className="inline-flex rounded-lg bg-primary px-6 py-3 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90">
               Get started
             </Link>
             <Link
               href="/login"
-              className="inline-flex text-[13px] font-medium tracking-[0.02em] text-[#55b3ff] transition-opacity hover:opacity-80"
+              className="inline-flex rounded-lg bg-secondary px-6 py-3 text-[13px] font-medium text-secondary-foreground transition-opacity hover:opacity-90"
             >
               Sign in →
             </Link>
