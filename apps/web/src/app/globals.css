@@ -43,6 +43,18 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-marketing-bg: var(--marketing-bg);
+  --color-marketing-foreground: var(--marketing-foreground);
+  --color-marketing-surface: var(--marketing-surface);
+  --color-marketing-border: var(--marketing-border);
+  --color-marketing-border-strong: var(--marketing-border-strong);
+  --color-marketing-muted: var(--marketing-muted);
+  --color-marketing-subtle: var(--marketing-subtle);
+  --color-marketing-hover: var(--marketing-hover);
+  --color-marketing-elevated: var(--marketing-elevated);
+  --color-marketing-code-bg: var(--marketing-code-bg);
+  --color-marketing-code-text: var(--marketing-code-text);
+  --color-marketing-header-bg: var(--marketing-header-bg);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -85,8 +97,25 @@
   --sidebar-ring: oklch(0.705 0.015 286.067);
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
+
+  /* Marketing tokens (light) — override under .dark .marketing-site when dark mode ships */
+  --marketing-bg: var(--background);
+  --marketing-foreground: var(--foreground);
+  --marketing-surface: #fafafa;
+  --marketing-border: var(--border);
+  --marketing-border-strong: oklch(0.85 0.004 286.32);
+  --marketing-muted: var(--muted-foreground);
+  --marketing-subtle: oklch(0.65 0.016 285.938);
+  --marketing-hover: oklch(0.967 0.001 286.375);
+  --marketing-elevated: oklch(1 0 0);
+  --marketing-header-bg: oklch(1 0 0 / 0.85);
+  --marketing-code-bg: oklch(0.975 0.002 286.375);
+  --marketing-code-text: oklch(0.25 0.006 285.885);
+  --marketing-grid-line: oklch(0.9 0.004 286.32 / 0.8);
+  --marketing-glow-color: hsl(66 100% 50% / 0.06);
 }
 
+/* Reserved for future dark mode — add class="dark" to <html> to enable */
 .dark {
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
@@ -121,12 +150,30 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+.dark .marketing-site {
+  --marketing-bg: #07080a;
+  --marketing-foreground: #fafafa;
+  --marketing-surface: #0f1012;
+  --marketing-border: rgb(255 255 255 / 0.08);
+  --marketing-border-strong: rgb(255 255 255 / 0.12);
+  --marketing-muted: #9c9c9d;
+  --marketing-subtle: #6a6b6c;
+  --marketing-hover: rgb(255 255 255 / 0.04);
+  --marketing-elevated: rgb(255 255 255 / 0.03);
+  --marketing-header-bg: rgb(7 8 10 / 0.85);
+  --marketing-code-bg: #0a0b0d;
+  --marketing-code-text: #e4e4e7;
+  --marketing-grid-line: rgb(255 255 255 / 0.06);
+  --marketing-glow-color: hsl(66 100% 50% / 0.08);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   html {
     @apply font-sans;
+    color-scheme: light;
     font-feature-settings:
       "calt" 1,
       "kern" 1,
@@ -154,4 +201,83 @@
 
 @utility text-balance {
   text-wrap: balance;
+}
+
+/* Marketing site — uses CSS variables above for easy light/dark switching */
+.marketing-site {
+  background-color: var(--marketing-bg);
+  color: var(--marketing-foreground);
+}
+
+.marketing-container {
+  @apply mx-auto w-full max-w-[1200px] px-6 sm:px-8;
+}
+
+.marketing-container-narrow {
+  @apply mx-auto w-full max-w-[800px] px-6 sm:px-8;
+}
+
+.marketing-container-blog {
+  @apply mx-auto w-full max-w-[750px] px-6 sm:px-8;
+}
+
+.marketing-container-faq {
+  @apply mx-auto w-full max-w-[850px] px-6 sm:px-8;
+}
+
+.marketing-heading {
+  @apply text-balance font-semibold tracking-[-0.02em];
+  font-feature-settings: "liga" 0, "ss02" 1, "ss08" 1;
+}
+
+.marketing-grid-bg {
+  background-image:
+    linear-gradient(to right, var(--marketing-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--marketing-grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 70%);
+}
+
+.marketing-glow {
+  background: radial-gradient(
+    ellipse 60% 40% at 50% -10%,
+    var(--marketing-glow-color),
+    transparent 70%
+  );
+}
+
+.prose-marketing h2 {
+  @apply mt-12 scroll-mt-24 text-2xl first:mt-0;
+  text-wrap: balance;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-feature-settings: "liga" 0, "ss02" 1, "ss08" 1;
+}
+
+.prose-marketing h3 {
+  @apply mt-8 scroll-mt-24 text-xl;
+  text-wrap: balance;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-feature-settings: "liga" 0, "ss02" 1, "ss08" 1;
+}
+
+.prose-marketing p {
+  @apply mt-4 text-[15px] leading-relaxed text-[var(--marketing-muted)];
+}
+
+.prose-marketing ul {
+  @apply mt-4 list-disc space-y-2 pl-5 text-[15px] text-[var(--marketing-muted)];
+}
+
+.prose-marketing ol {
+  @apply mt-4 list-decimal space-y-2 pl-5 text-[15px] text-[var(--marketing-muted)];
+}
+
+.prose-marketing li {
+  @apply leading-relaxed;
+}
+
+.prose-marketing a {
+  @apply text-primary underline-offset-4 hover:underline;
 }

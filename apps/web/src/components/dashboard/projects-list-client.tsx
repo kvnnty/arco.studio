@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Download, Film, Plus, Search } from "lucide-react";
+import { Download, Film, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type { DashboardProject } from "@/lib/dashboard/projects";

@@ -1,6 +1,6 @@
 "use server";
 
-import type { ArcoProject, Marker, StylePreset } from "@arco/project-schema";
+import type { Marker, StylePreset } from "@arco/project-schema";
 
 import { auth } from "@/auth";
 import {
