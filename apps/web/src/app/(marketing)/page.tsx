@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
+import { AboutSection } from "@/components/marketing/about-section";
 import { CtaBand } from "@/components/marketing/cta-band";
 import { FeatureGrid } from "@/components/marketing/feature-grid";
 import { Hero } from "@/components/marketing/hero";
 import { LogoCloud } from "@/components/marketing/logo-cloud";
+import { HeroPreview } from "@/components/marketing/motion/hero-preview";
+import { MotionReveal } from "@/components/marketing/motion/motion-reveal";
+import { PricingCards } from "@/components/marketing/pricing-cards";
 import { SectionHeader } from "@/components/marketing/section-header";
 import { TestimonialGrid } from "@/components/marketing/testimonial-grid";
+import { WorkflowSteps } from "@/components/marketing/workflow-steps";
 import {
   coreFeatures,
   heroFeatures,
@@ -13,6 +20,7 @@ import {
   testimonials,
   workflowSteps,
 } from "@/lib/marketing/features";
+import { pricingPlans } from "@/lib/marketing/pricing";
 import { siteConfig } from "@/lib/marketing/site-config";
 
 export const metadata: Metadata = {
@@ -30,21 +38,7 @@ export default function HomePage() {
         features={heroFeatures}
       />
 
-      <div className="marketing-container pb-8">
-        <div className="relative overflow-hidden rounded-2xl border border-[var(--marketing-border)] bg-[var(--marketing-surface)] aspect-video">
-          <div className="marketing-glow absolute inset-0" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary/10">
-                <div className="size-0 border-y-8 border-y-transparent border-l-[14px] border-l-primary ml-1" />
-              </div>
-              <p className="text-[14px] text-[var(--marketing-muted)]">
-                Product demo preview
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <HeroPreview />
 
       <LogoCloud logos={logoCloud} />
 
@@ -61,27 +55,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-[var(--marketing-border)] py-24 sm:py-32">
+      <section className="border-y border-marketing-border bg-marketing-surface py-24 sm:py-32">
         <div className="marketing-container">
-          <SectionHeader
-            eyebrow="How it works"
-            title="Three steps to a polished demo"
-          />
-          <div className="mt-16 grid gap-8 sm:grid-cols-3">
-            {workflowSteps.map((step) => (
-              <div key={step.step}>
-                <span className="text-[13px] font-semibold text-primary">{step.step}</span>
-                <h3 className="mt-2 text-[18px] font-semibold">{step.title}</h3>
-                <p className="mt-2 text-[14px] leading-relaxed text-[var(--marketing-muted)]">
-                  {step.description}
-                </p>
-              </div>
-            ))}
-          </div>
+          <SectionHeader eyebrow="How it works" title="Three steps to a polished demo" />
+          <WorkflowSteps steps={workflowSteps} />
         </div>
       </section>
 
-      <section className="py-24 sm:py-32">
+      <section className="border-y border-marketing-border py-24 sm:py-32">
         <div className="marketing-container">
           <SectionHeader
             eyebrow="Testimonials"
@@ -94,29 +75,33 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-[var(--marketing-border)] py-24 sm:py-32">
-        <div className="marketing-container-narrow">
+      <section className="py-24 sm:py-32">
+        <div className="marketing-container">
           <SectionHeader
-            align="left"
-            eyebrow="About Arco"
-            title="Built for teams that ship"
-            description="Arco started with a simple idea: every SaaS needs polished product videos, but few teams have motion design resources in-house."
+            eyebrow="Pricing"
+            title="Simple pricing for every stage"
+            description="Start free with one export. Upgrade when you're ready to ship demos every week."
           />
-          <div className="mt-8 space-y-4 text-[16px] leading-relaxed text-[var(--marketing-muted)]">
-            <p>
-              We automate the motion layer so product, growth, and design teams can
-              record once and publish launch-ready demos in minutes.
-            </p>
-            <p>
-              Questions, partnerships, or enterprise requests:
-              {" "}
-              <a href="mailto:hello@arco.app" className="text-primary hover:underline">
-                hello@arco.app
-              </a>
-            </p>
+          <div className="mt-16">
+            <PricingCards
+              plans={pricingPlans}
+              showBillingToggle={false}
+              featureLimit={3}
+            />
           </div>
+          <MotionReveal variant="fade-in" delay={0.2} className="mt-12 text-center">
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-marketing-muted transition-colors hover:text-foreground"
+            >
+              View full pricing details
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </MotionReveal>
         </div>
       </section>
+
+      <AboutSection />
 
       <CtaBand
         title="Ready to ship your first demo?"

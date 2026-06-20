@@ -2,18 +2,27 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { transitionMedium } from "@/lib/motion/presets";
 import { mainNav } from "@/lib/marketing/site-config";
 import { cn } from "@/lib/utils";
 
 export function MarketingHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const reduced = useReducedMotion();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-marketing-border bg-marketing-header-bg backdrop-blur-xl">
+    <motion.header
+      className="sticky top-0 z-50 border-b border-marketing-border bg-marketing-header-bg backdrop-blur-xl"
+      initial={reduced ? false : { y: -8, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={transitionMedium}
+    >
       <div className="marketing-container flex h-16 items-center justify-between">
         <Link
           href="/"
@@ -31,14 +40,20 @@ export function MarketingHeader() {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
-          {mainNav.map((item) => (
-            <Link
+          {mainNav.map((item, i) => (
+            <motion.div
               key={item.href}
-              href={item.href}
-              className="text-[13px] font-medium text-[var(--marketing-muted)] transition-colors hover:text-foreground"
+              initial={reduced ? false : { opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...transitionMedium, delay: 0.05 + i * 0.04 }}
             >
-              {item.label}
-            </Link>
+              <Link
+                href={item.href}
+                className="text-[13px] font-medium text-marketing-muted transition-colors hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            </motion.div>
           ))}
         </nav>
 
@@ -98,6 +113,6 @@ export function MarketingHeader() {
           </div>
         </nav>
       </div>
-    </header>
+    </motion.header>
   );
 }

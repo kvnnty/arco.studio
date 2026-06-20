@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+
+import { MarketingBoundaryLines } from "@/components/marketing/marketing-boundary-lines";
 import type { LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -96,6 +98,7 @@ export function ErrorPage({
         className,
       )}
     >
+      <MarketingBoundaryLines />
       <div className="marketing-glow pointer-events-none absolute inset-0" />
       <div className="marketing-grid-bg pointer-events-none absolute inset-0 opacity-40" />
 

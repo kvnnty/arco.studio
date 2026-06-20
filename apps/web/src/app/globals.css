@@ -189,6 +189,14 @@
     html {
       scroll-behavior: auto;
     }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
@@ -205,12 +213,31 @@
 
 /* Marketing site — uses CSS variables above for easy light/dark switching */
 .marketing-site {
+  --marketing-content-max-width: 1200px;
   background-color: var(--marketing-bg);
   color: var(--marketing-foreground);
 }
 
+.marketing-boundary-lines {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+}
+
+.marketing-boundary-lines__inner {
+  width: 100%;
+  max-width: var(--marketing-content-max-width);
+  height: 100%;
+  border-left: 1px solid var(--marketing-border);
+  border-right: 1px solid var(--marketing-border);
+}
+
 .marketing-container {
-  @apply mx-auto w-full max-w-[1200px] px-6 sm:px-8;
+  @apply mx-auto w-full px-6 sm:px-8;
+  max-width: var(--marketing-content-max-width);
 }
 
 .marketing-container-narrow {

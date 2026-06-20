@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "turbo dev",
-    "studio": "pnpm --filter @arco/remotion dev",
+    "studio": "pnpm --filter @arco/remotion studio",
     "build": "turbo build",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""

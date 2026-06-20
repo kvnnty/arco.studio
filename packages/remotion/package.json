@@ -8,7 +8,7 @@
     "./composition": "./src/ArcoComposition.tsx"
   },
   "scripts": {
-    "dev": "remotion studio src/index.tsx",
+    "studio": "remotion studio src/index.tsx",
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "render:sample": "remotion render src/index.tsx ArcoComposition out/sample.mp4 --props=src/sample/golden-props.json",

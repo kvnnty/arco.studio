@@ -3,6 +3,9 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
+import { MotionReveal } from "@/components/marketing/motion/motion-reveal";
+import { MotionStagger, MotionStaggerItem } from "@/components/marketing/motion/motion-stagger";
+import { MotionText } from "@/components/marketing/motion/motion-text";
 import type { BlogPost } from "@/lib/marketing/blog";
 
 import { BlogCard, FeaturedBlogCard } from "./blog-card";
@@ -37,12 +40,16 @@ export function BlogIndex({ posts }: BlogIndexProps) {
   return (
     <div className="py-16 sm:py-24">
       <div className="marketing-container">
-        <header className="max-w-2xl">
-          <h1 className="marketing-heading text-[2.5rem] sm:text-[3.5rem]">Blog</h1>
-          <p className="mt-4 text-[17px] leading-relaxed text-[var(--marketing-muted)]">
+        <MotionReveal className="max-w-2xl">
+          <MotionText
+            as="h1"
+            text="Blog"
+            className="marketing-heading text-[2.5rem] sm:text-[3.5rem]"
+          />
+          <p className="mt-4 text-[17px] leading-relaxed text-marketing-muted">
             Product updates, growth insights, and engineering notes from the Arco team.
           </p>
-        </header>
+        </MotionReveal>
 
         <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1 sm:max-w-sm">
@@ -85,16 +92,18 @@ export function BlogIndex({ posts }: BlogIndexProps) {
         </div>
 
         {featured && !query && !category ? (
-          <div className="mt-12">
+          <MotionReveal className="mt-12">
             <FeaturedBlogCard post={featured} />
-          </div>
+          </MotionReveal>
         ) : null}
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <MotionStagger className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" stagger={0.08}>
           {filtered.map((post) => (
-            <BlogCard key={post.slug} post={post} />
+            <MotionStaggerItem key={post.slug}>
+              <BlogCard post={post} />
+            </MotionStaggerItem>
           ))}
-        </div>
+        </MotionStagger>
 
         {filtered.length === 0 ? (
           <p className="mt-12 text-center text-[15px] text-[var(--marketing-muted)]">

@@ -1,129 +1,157 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useState } from "react";
 
+import { MotionCard } from "@/components/marketing/motion/motion-card";
+import { MotionStagger, MotionStaggerItem } from "@/components/marketing/motion/motion-stagger";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { springSnappy } from "@/lib/motion/presets";
 import type { PricingPlan } from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
 type PricingCardsProps = {
   plans: PricingPlan[];
+  showBillingToggle?: boolean;
+  featureLimit?: number;
 };
 
-export function PricingCards({ plans }: PricingCardsProps) {
+export function PricingCards({
+  plans,
+  showBillingToggle = true,
+  featureLimit,
+}: PricingCardsProps) {
   const [annual, setAnnual] = useState(false);
+  const reduced = useReducedMotion();
 
   return (
     <div>
-      <div className="mb-12 flex items-center justify-center gap-3">
-        <span
-          className={cn(
-            "text-[14px] font-medium",
-            !annual ? "text-foreground" : "text-[var(--marketing-muted)]",
-          )}
-        >
-          Monthly
-        </span>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={annual}
-          aria-label="Toggle annual billing"
-          className={cn(
-            "relative h-7 w-12 rounded-full border border-[var(--marketing-border)] transition-colors",
-            annual ? "bg-primary" : "bg-[var(--marketing-surface)]",
-          )}
-          onClick={() => setAnnual(!annual)}
-        >
+      {showBillingToggle ? (
+      <MotionStagger className="mb-12 flex items-center justify-center gap-3" stagger={0.05}>
+        <MotionStaggerItem>
           <span
             className={cn(
-              "absolute top-0.5 left-0.5 size-6 rounded-full bg-foreground transition-transform",
-              annual && "translate-x-5 bg-primary-foreground",
+              "text-[14px] font-medium",
+              !annual ? "text-foreground" : "text-marketing-muted",
             )}
-          />
-        </button>
-        <span
-          className={cn(
-            "text-[14px] font-medium",
-            annual ? "text-foreground" : "text-[var(--marketing-muted)]",
-          )}
-        >
-          Annual
-          <span className="ml-1.5 text-[12px] text-primary">Save 17%</span>
-        </span>
-      </div>
+          >
+            Monthly
+          </span>
+        </MotionStaggerItem>
+        <MotionStaggerItem>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={annual}
+            aria-label="Toggle annual billing"
+            className={cn(
+              "relative h-7 w-12 rounded-full border border-marketing-border transition-colors",
+              annual ? "bg-primary" : "bg-marketing-surface",
+            )}
+            onClick={() => setAnnual(!annual)}
+          >
+            <motion.span
+              className="absolute top-0.5 left-0.5 size-6 rounded-full bg-foreground"
+              animate={{
+                x: annual ? 20 : 0,
+                backgroundColor: annual ? "var(--primary-foreground)" : undefined,
+              }}
+              transition={reduced ? { duration: 0 } : springSnappy}
+            />
+          </button>
+        </MotionStaggerItem>
+        <MotionStaggerItem>
+          <span
+            className={cn(
+              "text-[14px] font-medium",
+              annual ? "text-foreground" : "text-marketing-muted",
+            )}
+          >
+            Annual
+            <span className="ml-1.5 text-[12px] text-primary">Save 17%</span>
+          </span>
+        </MotionStaggerItem>
+      </MotionStagger>
+      ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <MotionStagger className="grid gap-6 lg:grid-cols-3" stagger={0.1}>
         {plans.map((plan) => {
           const price = annual ? plan.annualPrice : plan.monthlyPrice;
           const isFree = price === 0;
+          const features = featureLimit
+            ? plan.features.slice(0, featureLimit)
+            : plan.features;
 
           return (
-            <div
-              key={plan.id}
-              className={cn(
-                "relative flex flex-col rounded-2xl border p-6 sm:p-8",
-                plan.popular
-                  ? "border-primary/40 bg-[var(--marketing-surface)] ring-1 ring-primary/20"
-                  : "border-[var(--marketing-border)] bg-[var(--marketing-surface)]",
-              )}
-            >
-              {plan.popular ? (
-                <Badge className="absolute -top-3 left-6">Most popular</Badge>
-              ) : null}
-
-              <h3 className="text-[18px] font-semibold">{plan.name}</h3>
-              <p className="mt-2 text-[14px] text-[var(--marketing-muted)]">
-                {plan.description}
-              </p>
-
-              <div className="mt-6 flex items-baseline gap-1">
-                {isFree ? (
-                  <span className="text-[3rem] font-semibold leading-none tracking-tight">
-                    Free
-                  </span>
-                ) : (
-                  <>
-                    <span className="text-[3rem] font-semibold leading-none tracking-tight">
-                      ${price}
-                    </span>
-                    <span className="text-[14px] text-[var(--marketing-muted)]">/mo</span>
-                  </>
+            <MotionStaggerItem key={plan.id}>
+              <MotionCard
+                className={cn(
+                  "relative flex h-full flex-col rounded-2xl border p-6 sm:p-8",
+                  plan.popular
+                    ? "border-primary/40 bg-marketing-surface ring-1 ring-primary/20"
+                    : "border-marketing-border bg-marketing-surface",
                 )}
-              </div>
-
-              {plan.id === "pro" && !annual ? (
-                <p className="mt-2 text-[12px] text-primary">
-                  $9 first month launch offer
-                </p>
-              ) : null}
-
-              <ul className="mt-8 flex-1 space-y-3">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2.5 text-[14px] text-[var(--marketing-muted)]"
-                  >
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                className="mt-8 w-full"
-                variant={plan.popular ? "default" : "outline"}
-                render={<Link href={plan.href} />}
               >
-                {plan.cta}
-              </Button>
-            </div>
+                {plan.popular ? (
+                  <Badge className="absolute -top-3 left-6">Most popular</Badge>
+                ) : null}
+
+                <h3 className="text-[18px] font-semibold">{plan.name}</h3>
+                <p className="mt-2 text-[14px] text-marketing-muted">{plan.description}</p>
+
+                <div className="mt-6 flex items-baseline gap-1">
+                  {isFree ? (
+                    <span className="text-[3rem] font-semibold leading-none tracking-tight">
+                      Free
+                    </span>
+                  ) : (
+                    <>
+                      <motion.span
+                        key={price}
+                        className="text-[3rem] font-semibold leading-none tracking-tight"
+                        initial={reduced ? false : { opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={reduced ? { duration: 0 } : springSnappy}
+                      >
+                        ${price}
+                      </motion.span>
+                      <span className="text-[14px] text-marketing-muted">/mo</span>
+                    </>
+                  )}
+                </div>
+
+                {plan.id === "pro" && !annual ? (
+                  <p className="mt-2 text-[12px] text-primary">$9 first month launch offer</p>
+                ) : null}
+
+                <ul className="mt-8 flex-1 space-y-3">
+                  {features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-2.5 text-[14px] text-marketing-muted"
+                    >
+                      <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  className="mt-8 w-full"
+                  variant={plan.popular ? "default" : "outline"}
+                  render={<Link href={plan.href} />}
+                >
+                  {plan.cta}
+                </Button>
+              </MotionCard>
+            </MotionStaggerItem>
           );
         })}
-      </div>
+      </MotionStagger>
     </div>
   );
 }
