@@ -1,4 +1,4 @@
-import type { ProjectStatus } from "@/lib/mock/data";
+import type { ProjectStatus } from "@/lib/dashboard/types";
 import type { ApiProjectRecord } from "@/lib/api/client";
 
 export type DashboardProject = {
@@ -22,6 +22,8 @@ export function deriveProjectStatus(record: ApiProjectRecord): ProjectStatus {
 
   if (
     latestRender?.status === "processing" ||
+    latestRender?.status === "rendering" ||
+    latestRender?.status === "uploading" ||
     latestRender?.status === "queued"
   ) {
     return "processing";

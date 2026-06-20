@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { ProjectStatus } from "@/lib/mock/data";
+import type { ProjectStatus } from "@/lib/dashboard/types";
 
 const statusConfig: Record<
   ProjectStatus,

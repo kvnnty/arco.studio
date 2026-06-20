@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { ProjectStatus } from "@/lib/mock/data";
+import type { ProjectStatus } from "@/lib/dashboard/types";
 
 type PageProps = {
   params: Promise<{ id: string }>;

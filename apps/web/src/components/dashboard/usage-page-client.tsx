@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { UsageChart } from "@/components/dashboard/usage-chart";
-import { MOCK_USAGE_DATA } from "@/lib/mock/data";
+import { buildWeeklyExportChart } from "@/lib/dashboard/usage-chart";
 
 const TYPE_LABELS: Record<string, string> = {
   export: "Video exports",
@@ -27,12 +27,18 @@ const TYPE_LABELS: Record<string, string> = {
 type UsagePageClientProps = {
   status: BillingStatus;
   counts: Record<string, number>;
+  events: Array<{ type: string; createdAt: string }>;
 };
 
-export function UsagePageClient({ status, counts }: UsagePageClientProps) {
+export function UsagePageClient({
+  status,
+  counts,
+  events,
+}: UsagePageClientProps) {
   const used = status.exportsUsedThisPeriod;
   const allowance = status.exportAllowance;
   const percent = allowance > 0 ? Math.round((used / allowance) * 100) : 0;
+  const chartData = buildWeeklyExportChart(events);
 
   const breakdown = Object.entries(counts)
     .filter(([type]) => type !== "export_refund")
@@ -127,7 +133,7 @@ export function UsagePageClient({ status, counts }: UsagePageClientProps) {
         </CardContent>
       </Card>
 
-      <UsageChart data={MOCK_USAGE_DATA} />
+      <UsageChart data={chartData} />
     </div>
   );
 }

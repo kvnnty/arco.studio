@@ -10,5 +10,5 @@ export default async function UsagePage() {
     getBillingUsageAction(),
   ]);
 
-  return <UsagePageClient status={status} counts={usage.counts} />;
+  return <UsagePageClient status={status} counts={usage.counts} events={usage.events} />;
 }

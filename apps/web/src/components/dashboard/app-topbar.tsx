@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { MOCK_NOTIFICATIONS } from "@/lib/mock/data";
 import { signOutAction } from "@/app/actions/auth";
 import { LogOut, Settings, User } from "lucide-react";
 
@@ -42,27 +41,19 @@ export function AppTopbar({
       .slice(0, 2)
       .toUpperCase() ?? "AR";
 
-  const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
-
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger />
       <Separator orientation="vertical" className="mr-1 h-4" />
-      <WorkspaceSwitcher />
+      <WorkspaceSwitcher name={user.name} email={user.email} />
       <div className="flex-1" />
       <ExportsBadge remaining={exportsRemaining} planActive={planActive} />
       <Button
         variant="ghost"
         size="icon-sm"
-        className="relative"
         render={<Link href="/dashboard/notifications" />}
       >
         <Bell className="size-4" />
-        {unreadCount > 0 ? (
-          <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-            {unreadCount}
-          </span>
-        ) : null}
       </Button>
       <Button
         variant="ghost"

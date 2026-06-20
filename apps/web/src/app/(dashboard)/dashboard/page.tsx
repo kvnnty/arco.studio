@@ -16,14 +16,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  MOCK_ACTIVITY,
-} from "@/lib/mock/data";
+import { buildProjectActivity } from "@/lib/dashboard/activity";
 
 export default async function DashboardHomePage() {
   const session = await auth();
   const projects = await listDashboardProjects();
   const recentProjects = projects.slice(0, 3);
+  const activity = buildProjectActivity(projects, 8);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -151,36 +150,38 @@ export default async function DashboardHomePage() {
         </Card>
       </div>
 
-      <Card className="rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-base">Recent activity</CardTitle>
-          <CardDescription>Sample events — real activity feed coming soon</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {MOCK_ACTIVITY.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start justify-between gap-4 text-sm"
-              >
-                <div>
-                  <span className="font-medium">{activity.action}</span>
-                  <span className="text-muted-foreground">
-                    {" "}
-                    — {activity.target}
-                  </span>
+      {activity.length > 0 ? (
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-base">Recent activity</CardTitle>
+            <CardDescription>From your projects and exports</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {activity.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start justify-between gap-4 text-sm"
+                >
+                  <div>
+                    <span className="font-medium">{item.action}</span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      — {item.target}
+                    </span>
+                  </div>
+                  <time className="shrink-0 text-xs text-muted-foreground">
+                    {new Date(item.timestamp).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </time>
                 </div>
-                <time className="shrink-0 text-xs text-muted-foreground">
-                  {new Date(activity.timestamp).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </time>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

@@ -18,6 +18,7 @@
 | Chat SSE | `POST /ai/chat/stream` |
 | Scene drag-reorder | Thumbnail strip |
 | Error toasts | Sonner in dashboard + export flows |
+| Dashboard data | Real projects, activity, assets, notifications (no mocks) |
 
 ## Core loop
 
@@ -40,4 +41,4 @@ Stripe test mode required for checkout. See [`DEPLOY.md`](./DEPLOY.md).
 - Landing page polish
 - Vision / click detection
 - Team tier Stripe products
-- Real activity feed
+- Persistent notification inbox (DB-backed)

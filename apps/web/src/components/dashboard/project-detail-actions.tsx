@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { createRenderJob, getRenderJob } from "@/app/actions/renders";
-import type { ProjectStatus } from "@/lib/mock/data";
+import type { ProjectStatus } from "@/lib/dashboard/types";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {

@@ -175,13 +175,13 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 | [x] | Dashboard home | |
 | [x] | Project list | API-backed with posters + search |
 | [x] | Project detail page | Preview, live export, timeline |
-| [~] | Recent activity feed | Sample data labeled on dashboard |
+| [x] | Recent activity feed | Derived from projects + exports |
 | [x] | Credits / usage stats | Live export allowance from API |
-| [~] | Usage chart page | Chart mock; export stats live |
-| [~] | Assets library page | Mock data |
-| [~] | Notifications | Mock data |
+| [~] | Usage chart page | Weekly exports from usage events |
+| [~] | Assets library page | Project recordings + exports |
+| [~] | Notifications | Derived from export/render status |
 | [x] | Billing & plans | Stripe Launch Offer + portal |
-| [~] | Team / members | Mock data |
+| [~] | Team / members | Coming soon empty state |
 | [x] | Settings — profile | |
 | [x] | Help page | |
 | [ ] | Workspace switcher (real) | UI only |
