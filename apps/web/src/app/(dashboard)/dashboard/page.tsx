@@ -31,7 +31,7 @@ export default async function DashboardHomePage() {
         title={`Welcome back${session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}`}
         description="Here's what's happening in your workspace."
       >
-        <Button render={<Link href="/editor" />}>
+        <Button render={<Link href="/dashboard/projects/new" />}>
           <Plus data-icon="inline-start" />
           New project
         </Button>
@@ -90,7 +90,7 @@ export default async function DashboardHomePage() {
                 description="Create your first launch video — upload a screen recording and Arco handles the motion design."
                 action={{
                   label: "Create first project",
-                  href: "/editor",
+                  href: "/dashboard/projects/new",
                 }}
                 className="border-none shadow-none"
               />
@@ -124,7 +124,7 @@ export default async function DashboardHomePage() {
           <CardContent className="space-y-2">
             <Button
               className="w-full justify-start"
-              render={<Link href="/editor" />}
+              render={<Link href="/dashboard/projects/new" />}
             >
               <Plus data-icon="inline-start" />
               New project
@@ -132,7 +132,7 @@ export default async function DashboardHomePage() {
             <Button
               variant="outline"
               className="w-full justify-start"
-              render={<Link href="/editor" />}
+              render={<Link href="/dashboard/projects/new" />}
             >
               <Upload data-icon="inline-start" />
               Upload recording

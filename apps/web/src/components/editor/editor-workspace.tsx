@@ -271,6 +271,15 @@ export function EditorWorkspace({
             marker={selectedMarker}
             onChange={updateMarker}
             cameraMode={cameraMode}
+            projectTitle={project.meta.title}
+            durationMs={project.recording.durationMs}
+            markerCount={project.markers.length}
+            markerIndex={
+              selectedMarker
+                ? project.markers.findIndex((m) => m.id === selectedMarker.id)
+                : 0
+            }
+            brief={project.brief}
           />
         </aside>
       </div>

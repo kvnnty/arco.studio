@@ -273,3 +273,32 @@ export async function apiGenerateDraft(
     body: input,
   });
 }
+
+export type RegenerateMarkerResponse = {
+  callout: { text: string; subtext?: string };
+  label?: string;
+  source: "llm" | "heuristic";
+};
+
+export async function apiRegenerateMarker(
+  token: string,
+  input: {
+    title: string;
+    durationMs: number;
+    markerIndex: number;
+    markerCount: number;
+    intent?: string;
+    productUrl?: string;
+    marker: {
+      label?: string;
+      callout?: { text: string; subtext?: string };
+      startMs: number;
+    };
+  },
+): Promise<RegenerateMarkerResponse> {
+  return apiFetch<RegenerateMarkerResponse>("/ai/regenerate-marker", {
+    token,
+    method: "POST",
+    body: input,
+  });
+}

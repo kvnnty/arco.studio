@@ -4,7 +4,7 @@ import Link from "next/link";
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
-      <div className="hidden w-1/2 flex-col justify-between border-r bg-muted/40 p-12 lg:flex">
+      <div className="hidden w-1/2 flex-col justify-between gap-4 p-6 lg:flex">
         <Link href="/">
           <Image
             src="/arcologo-black.svg"
@@ -14,14 +14,16 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             className="h-8 w-28"
           />
         </Link>
-        <div>
-          <blockquote className="text-2xl font-medium tracking-tight text-balance">
-            Turn screen recordings into motion-designed promotional videos.
-          </blockquote>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Upload once. Arco adds zooms, ripples, and titles — export a
-            launch-ready demo in minutes.
-          </p>
+        <div className="bg-primary flex-1 p-6 flex items-end">
+          <div>
+            <blockquote className="text-5xl font-bold tracking-tight leading-tight text-balance">
+              Turn screen recordings into motion-designed promotional videos.
+            </blockquote>
+            <p className="mt-4">
+              Upload once. Arco adds zooms, ripples, and titles — export a
+              launch-ready demo in minutes.
+            </p>
+          </div>
         </div>
         <p className="text-xs text-muted-foreground">
           © {new Date().getFullYear()} Arco. All rights reserved.

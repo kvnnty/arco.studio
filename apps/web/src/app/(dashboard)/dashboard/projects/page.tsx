@@ -24,7 +24,7 @@ export default async function ProjectsPage() {
         title="Projects"
         description="Upload a recording, let Arco add the motion, then export for launch."
       >
-        <Button render={<Link href="/editor" />}>
+        <Button render={<Link href="/dashboard/projects/new" />}>
           <Plus data-icon="inline-start" />
           New project
         </Button>
@@ -37,7 +37,7 @@ export default async function ProjectsPage() {
           description="Create your first launch video — upload a screen recording and Arco handles the motion design."
           action={{
             label: "Create first project",
-            href: "/editor",
+            href: "/dashboard/projects/new",
           }}
         />
       ) : (

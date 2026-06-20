@@ -7,6 +7,7 @@ import {
 import { STYLE_PRESETS } from "@arco/project-schema/style-presets";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { ClickEffects } from "./components/ClickRipple";
+import { MusicBed } from "./components/MusicBed";
 import { RecordingLayer } from "./components/RecordingLayer";
 import { TitleCard } from "./components/TitleCard";
 
@@ -39,6 +40,7 @@ export const ArcoComposition: React.FC<ArcoCompositionProps> = ({
   return (
     <AbsoluteFill>
       <RecordingLayer project={project} frame={frame} />
+      <MusicBed project={project} />
       {project.markers.map((marker) => (
         <ClickEffects
           key={`effects-${marker.id}`}

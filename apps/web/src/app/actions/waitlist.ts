@@ -1,27 +1,23 @@
 "use server";
 
+import { formatZodError, safeParseFormData } from "@/lib/validations/form-data";
+import { waitlistSchema } from "@/lib/validations/waitlist";
+
 export type WaitlistState =
   | { status: "idle" }
   | { status: "success" }
   | { status: "error"; message: string };
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export async function joinWaitlist(
   _prev: WaitlistState,
   formData: FormData,
 ): Promise<WaitlistState> {
-  const email = String(formData.get("email") ?? "").trim();
+  const parsed = safeParseFormData(waitlistSchema, formData);
+  if (!parsed.success) {
+    return { status: "error", message: formatZodError(parsed.error) };
+  }
 
-  if (!email) {
-    return { status: "error", message: "Enter your email." };
-  }
-  if (!emailPattern.test(email)) {
-    return {
-      status: "error",
-      message: "That doesn’t look like a valid email.",
-    };
-  }
+  const { email } = parsed.data;
 
   const webhook = process.env.WAITLIST_WEBHOOK_URL;
   if (webhook) {

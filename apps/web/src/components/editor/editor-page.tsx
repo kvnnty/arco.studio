@@ -17,10 +17,8 @@ import { DraftReadyScreen } from "@/components/editor/draft-ready-screen";
 import { EditorWorkspace } from "@/components/editor/editor-workspace";
 import { UploadScreen } from "@/components/editor/upload-screen";
 import { buildDraftProject } from "@/lib/editor/analyze-recording";
-import { uploadRecordingWithProgress } from "@/lib/api/client";
+import { uploadProjectRecording } from "@/lib/editor/upload-project-recording";
 import {
-  createEmptyProject,
-  getVideoMetadata,
   loadEditorSession,
   saveEditorSession,
   type EditorSession,
@@ -140,42 +138,30 @@ export function EditorPage() {
       setUploadProgress(0);
       setUploadStage("uploading");
 
-      const metadata = await getVideoMetadata(file);
-
-      const uploadResult = await uploadRecordingWithProgress(
+      const result = await uploadProjectRecording({
         accessToken,
+        projectId: session.projectId,
+        projectName: session.projectName,
+        platform: session.platform,
         file,
-        (percent) => setUploadProgress(percent),
-      );
+        onUploadProgress: (percent) => setUploadProgress(percent),
+      });
 
       setUploadStage("processing");
       setUploadProgress(null);
 
-      const project = createEmptyProject(
-        session.projectName,
-        uploadResult.url,
-        metadata.durationMs,
-        metadata.width,
-        metadata.height,
-      );
-
-      await syncProject({
-        projectId: session.projectId,
-        project,
-        platform: session.platform,
-        recordingSrc: uploadResult.url,
-      });
-
       const analyzingSession: EditorSession = {
         ...session,
-        project,
-        recordingUrl: uploadResult.url,
+        project: result.project,
+        recordingUrl: result.recordingUrl,
         journeyStep: "analyzing",
       };
 
       setPendingUpload({
-        url: uploadResult.url,
-        ...metadata,
+        url: result.recordingUrl,
+        durationMs: result.durationMs,
+        width: result.width,
+        height: result.height,
       });
       setUploadStage(null);
       goToStep("analyzing", analyzingSession);
@@ -289,6 +275,8 @@ export function EditorPage() {
         projectTitle={session.projectName}
         platform={session.platform}
         durationMs={session.project.recording.durationMs}
+        intent={session.project.brief?.intent}
+        productUrl={session.project.brief?.productUrl}
         onComplete={handleAnalysisComplete}
       />
     );

@@ -1,11 +1,15 @@
 "use client";
 
-import type { ClickEffect, Marker, TransitionType } from "@arco/project-schema";
+import type { ArcoProject, ClickEffect, Marker, TransitionType } from "@arco/project-schema";
 import {
   clickEffectFromMarker,
   setMarkerClickEffect,
 } from "@arco/project-schema";
+import { Sparkles } from "lucide-react";
+import { useState } from "react";
 
+import { regenerateMarkerAction } from "@/app/actions/ai";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Toggle } from "@/components/ui/toggle";
@@ -25,6 +29,11 @@ type SceneInspectorProps = {
   marker: Marker | null;
   onChange: (marker: Marker) => void;
   cameraMode: boolean;
+  projectTitle: string;
+  durationMs: number;
+  markerCount: number;
+  markerIndex: number;
+  brief?: ArcoProject["brief"];
 };
 
 const clickEffects: { id: ClickEffect; label: string }[] = [
@@ -49,7 +58,15 @@ export function SceneInspector({
   marker,
   onChange,
   cameraMode,
+  projectTitle,
+  durationMs,
+  markerCount,
+  markerIndex,
+  brief,
 }: SceneInspectorProps) {
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenError, setRegenError] = useState<string | null>(null);
+
   if (!marker) {
     return (
       <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
@@ -63,6 +80,39 @@ export function SceneInspector({
   const showTitleCard = hasEffect(marker, "title-card");
   const zoomScale = zoom?.scale ?? 1.15;
   const transition = marker.transition?.type ?? "fade";
+
+  const handleRegenerateCopy = async () => {
+    setRegenerating(true);
+    setRegenError(null);
+
+    try {
+      const result = await regenerateMarkerAction({
+        title: projectTitle,
+        durationMs,
+        markerIndex,
+        markerCount,
+        intent: brief?.intent,
+        productUrl: brief?.productUrl,
+        marker: {
+          label: marker.label,
+          callout: marker.callout,
+          startMs: marker.startMs,
+        },
+      });
+
+      onChange({
+        ...marker,
+        label: result.label ?? result.callout.text,
+        callout: result.callout,
+      });
+    } catch (error) {
+      setRegenError(
+        error instanceof Error ? error.message : "Could not regenerate copy.",
+      );
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
@@ -121,6 +171,21 @@ export function SceneInspector({
                 />
               </FieldContent>
             </Field>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled={regenerating}
+              onClick={() => void handleRegenerateCopy()}
+            >
+              <Sparkles data-icon="inline-start" />
+              {regenerating ? "Regenerating…" : "Regenerate copy"}
+            </Button>
+            {regenError ? (
+              <p className="text-xs text-destructive">{regenError}</p>
+            ) : null}
 
             <Field>
               <FieldLabel htmlFor={`start-${marker.id}`}>Start time</FieldLabel>

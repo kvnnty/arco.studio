@@ -19,6 +19,8 @@ type AnalysisScreenProps = {
   projectTitle: string;
   platform: string;
   durationMs: number;
+  intent?: string;
+  productUrl?: string;
   onComplete: (result: DraftAnalysisResult) => void;
 };
 
@@ -26,6 +28,8 @@ export function AnalysisScreen({
   projectTitle,
   platform,
   durationMs,
+  intent,
+  productUrl,
   onComplete,
 }: AnalysisScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
@@ -44,6 +48,8 @@ export function AnalysisScreen({
         title: projectTitle,
         durationMs,
         platform,
+        intent,
+        productUrl,
       },
     ).then((result) => {
       if (!cancelled) onComplete(result);
@@ -52,7 +58,7 @@ export function AnalysisScreen({
     return () => {
       cancelled = true;
     };
-  }, [durationMs, onComplete, platform, projectTitle]);
+  }, [durationMs, intent, onComplete, platform, projectTitle, productUrl]);
 
   const progress = ((stepIndex + 1) / ANALYSIS_STEPS.length) * 100;
   const currentStep = ANALYSIS_STEPS[stepIndex];

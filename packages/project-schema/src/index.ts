@@ -100,6 +100,12 @@ export const arcoProjectSchema = z.object({
       volume: z.number().min(0).max(1).default(0.85),
     })
     .optional(),
+  brief: z
+    .object({
+      intent: z.string().max(2000).optional(),
+      productUrl: z.string().max(500).optional(),
+    })
+    .optional(),
   stylePreset: stylePresetSchema.default("startup"),
   exportFormat: exportFormatSchema.default("16:9"),
 });

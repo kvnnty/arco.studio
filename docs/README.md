@@ -4,7 +4,7 @@
 
 ## Start building
 
-1. **[LAUNCHVIDEO-REFERENCE.md](./LAUNCHVIDEO-REFERENCE.md)** — competitor flow + combined Arco MVP
+1. **[MOTIONFLARE-REFERENCE.md](./MOTIONFLARE-REFERENCE.md)** — competitor flow + combined Arco MVP (formerly LaunchVideo)
 2. **[FEATURE-CHECKLIST.md](./FEATURE-CHECKLIST.md)** — product features to ship
 3. [BUILD-CHECKLIST.md](./BUILD-CHECKLIST.md) — engineering tasks
 4. [MVP-BUILD.md](./MVP-BUILD.md) — week-by-week plan

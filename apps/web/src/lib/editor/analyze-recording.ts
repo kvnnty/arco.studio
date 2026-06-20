@@ -126,12 +126,16 @@ export async function runAnalysis(
     title: string;
     durationMs: number;
     platform?: string;
+    intent?: string;
+    productUrl?: string;
   },
 ): Promise<DraftAnalysisResult> {
   const draftPromise = generateDraftAction({
     title: input.title,
     durationMs: input.durationMs,
     platform: input.platform,
+    intent: input.intent,
+    productUrl: input.productUrl,
   }).catch(() => ({
     markers: generateDraftMarkers(input.durationMs),
     stylePreset: "startup" as StylePreset,

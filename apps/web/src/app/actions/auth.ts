@@ -7,6 +7,13 @@ import { apiRegister } from "@/lib/api/client";
 import { ensureApiAuthForEmail } from "@/lib/auth/api-provision";
 import { createMagicLink } from "@/lib/auth/magic-link";
 import { createUser, getUserByEmail } from "@/lib/auth/users";
+import {
+  magicLinkSchema,
+  passwordLoginSchema,
+  passwordSignupSchema,
+  signupSchema,
+} from "@/lib/validations/auth";
+import { formatZodError, safeParseFormData } from "@/lib/validations/form-data";
 
 export type AuthFormState = {
   error?: string;
@@ -18,10 +25,12 @@ export async function magicLinkAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  if (!email) {
-    return { error: "Email is required." };
+  const parsed = safeParseFormData(magicLinkSchema, formData);
+  if (!parsed.success) {
+    return { error: formatZodError(parsed.error) };
   }
+
+  const { email } = parsed.data;
 
   const user = await getUserByEmail(email);
   if (!user) {
@@ -41,17 +50,12 @@ export async function passwordSignupAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-
-  if (!name || !email || !password) {
-    return { error: "Name, email, and password are required." };
+  const parsed = safeParseFormData(passwordSignupSchema, formData);
+  if (!parsed.success) {
+    return { error: formatZodError(parsed.error) };
   }
 
-  if (password.length < 6) {
-    return { error: "Password must be at least 6 characters." };
-  }
+  const { name, email, password } = parsed.data;
 
   try {
     await apiRegister({ email, password, name });
@@ -82,12 +86,12 @@ export async function passwordLoginAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-
-  if (!email || !password) {
-    return { error: "Email and password are required." };
+  const parsed = safeParseFormData(passwordLoginSchema, formData);
+  if (!parsed.success) {
+    return { error: formatZodError(parsed.error) };
   }
+
+  const { email, password } = parsed.data;
 
   try {
     await signIn("credentials", {
@@ -109,12 +113,12 @@ export async function signupAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
-
-  if (!name || !email) {
-    return { error: "Name and email are required." };
+  const parsed = safeParseFormData(signupSchema, formData);
+  if (!parsed.success) {
+    return { error: formatZodError(parsed.error) };
   }
+
+  const { name, email } = parsed.data;
 
   try {
     await createUser({ name, email });

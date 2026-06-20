@@ -4,7 +4,7 @@ User-facing features to ship. Check off as each becomes **real** (not mock UI).
 
 **Status key:** `[x]` shipped · `[~]` partial / mock · `[ ]` not built · `[-]` explicitly out of scope
 
-**Combined MVP target:** [LAUNCHVIDEO-REFERENCE.md](./LAUNCHVIDEO-REFERENCE.md) — LaunchVideo UX + Arco real recordings.
+**Combined MVP target:** [MOTIONFLARE-REFERENCE.md](./MOTIONFLARE-REFERENCE.md) — Motionflare UX + Arco real recordings.
 
 **Related:** [PRODUCT.md](./PRODUCT.md) · [BUILD-CHECKLIST.md](./BUILD-CHECKLIST.md) (how to build)
 
