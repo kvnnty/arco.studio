@@ -1,4 +1,9 @@
-export type ProjectStatus = "draft" | "processing" | "completed";
+export type ProjectStatus =
+  | "draft"
+  | "analyzing"
+  | "processing"
+  | "completed"
+  | "failed";
 
 export type MockProject = {
   id: string;
@@ -290,7 +295,13 @@ export function mergeProjectsWithMock(
     createdAt: string;
   }>,
 ): MockProject[] {
-  const statusCycle: ProjectStatus[] = ["draft", "processing", "completed"];
+  const statusCycle: ProjectStatus[] = [
+    "draft",
+    "analyzing",
+    "processing",
+    "completed",
+    "failed",
+  ];
   return projects.map((p, i) => ({
     ...p,
     status: statusCycle[i % statusCycle.length] ?? "draft",

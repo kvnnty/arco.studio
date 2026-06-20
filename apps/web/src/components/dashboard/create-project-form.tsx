@@ -40,6 +40,13 @@ const FORMATS: { id: ExportFormat; label: string }[] = [
 
 const PRESETS = Object.values(STYLE_PRESETS);
 
+const EXAMPLE_BRANDS = [
+  { name: "Linear", url: "https://linear.app", hint: "Linear launch video" },
+  { name: "Notion", url: "https://notion.so", hint: "Notion launch video" },
+  { name: "Cursor", url: "https://cursor.com", hint: "Cursor launch video" },
+  { name: "Framer", url: "https://framer.com", hint: "Framer launch video" },
+] as const;
+
 export function CreateProjectForm() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -145,6 +152,24 @@ export function CreateProjectForm() {
               onChange={(event) => setProductUrl(event.target.value)}
               placeholder="https://yourproduct.com"
             />
+            <div className="mt-2 flex flex-wrap gap-2">
+              {EXAMPLE_BRANDS.map((brand) => (
+                <Button
+                  key={brand.url}
+                  type="button"
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => {
+                    setProductUrl(brand.url);
+                    if (name === "My launch video") {
+                      setName(brand.hint);
+                    }
+                  }}
+                >
+                  {brand.name}
+                </Button>
+              ))}
+            </div>
           </FieldContent>
         </Field>
 

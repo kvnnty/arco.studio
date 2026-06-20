@@ -21,6 +21,16 @@ export class UploadsService {
     return this.s3.uploadObject(key, file.buffer, file.mimetype);
   }
 
+  async uploadThumbnail(
+    userId: string,
+    file: Express.Multer.File,
+  ): Promise<{ key: string; url: string }> {
+    const ext = extname(file.originalname) || '.jpg';
+    const key = `thumbnails/${userId}/${randomUUID()}${ext}`;
+
+    return this.s3.uploadObject(key, file.buffer, file.mimetype);
+  }
+
   async streamObject(key: string) {
     try {
       return await this.s3.getObjectStream(key);
@@ -35,6 +45,16 @@ export class UploadsService {
     }
     if (!file.mimetype.startsWith('video/')) {
       throw new BadRequestException('Only video files are allowed');
+    }
+    return file;
+  }
+
+  validateImageFile(file: Express.Multer.File | undefined): Express.Multer.File {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+    if (!file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('Only image files are allowed');
     }
     return file;
   }

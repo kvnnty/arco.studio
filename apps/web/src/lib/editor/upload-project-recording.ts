@@ -2,7 +2,14 @@ import type { ArcoProject, ExportFormat, StylePreset } from "@arco/project-schem
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 
 import { syncProject } from "@/app/actions/projects";
-import { uploadRecordingWithProgress } from "@/lib/api/client";
+import {
+  uploadRecordingWithProgress,
+  uploadThumbnail,
+} from "@/lib/api/client";
+import {
+  captureVideoFrame,
+  dataUrlToBlob,
+} from "@/lib/editor/capture-frame";
 import {
   createEmptyProject,
   getVideoMetadata,
@@ -26,7 +33,39 @@ export type UploadProjectRecordingResult = {
   durationMs: number;
   width: number;
   height: number;
+  thumbnailUrl?: string;
 };
+
+async function captureAndUploadThumbnail(
+  accessToken: string,
+  recordingUrl: string,
+  file: File,
+): Promise<string | undefined> {
+  try {
+    const objectUrl = URL.createObjectURL(file);
+    const dataUrl = await captureVideoFrame(objectUrl, 1000);
+    URL.revokeObjectURL(objectUrl);
+
+    const blob = await dataUrlToBlob(dataUrl);
+    const thumbFile = new File([blob], "thumbnail.jpg", {
+      type: "image/jpeg",
+    });
+    const result = await uploadThumbnail(accessToken, thumbFile);
+    return result.url;
+  } catch {
+    try {
+      const dataUrl = await captureVideoFrame(recordingUrl, 1000);
+      const blob = await dataUrlToBlob(dataUrl);
+      const thumbFile = new File([blob], "thumbnail.jpg", {
+        type: "image/jpeg",
+      });
+      const result = await uploadThumbnail(accessToken, thumbFile);
+      return result.url;
+    } catch {
+      return undefined;
+    }
+  }
+}
 
 export async function uploadProjectRecording(
   input: UploadProjectRecordingInput,
@@ -37,6 +76,12 @@ export async function uploadProjectRecording(
     input.accessToken,
     input.file,
     input.onUploadProgress,
+  );
+
+  const thumbnailUrl = await captureAndUploadThumbnail(
+    input.accessToken,
+    uploadResult.url,
+    input.file,
   );
 
   let project = createEmptyProject(
@@ -64,11 +109,13 @@ export async function uploadProjectRecording(
     project,
     platform: input.platform as "web" | "mobile" | "both",
     recordingSrc: uploadResult.url,
+    thumbnailUrl,
   });
 
   return {
     project,
     recordingUrl: uploadResult.url,
+    thumbnailUrl,
     ...metadata,
   };
 }

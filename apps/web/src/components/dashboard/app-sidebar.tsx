@@ -30,7 +30,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { MOCK_CREDITS } from "@/lib/mock/data";
+
+import type { BillingStatus } from "@/lib/api/client";
 
 const mainNav = [
   { title: "Home", href: "/dashboard", icon: LayoutDashboard, exact: true },
@@ -41,7 +42,7 @@ const mainNav = [
 const accountNav = [
   { title: "Usage", href: "/dashboard/usage", icon: Zap },
   { title: "Billing", href: "/dashboard/billing", icon: CreditCard },
-  { title: "Team", href: "/dashboard/team", icon: Users },
+  { title: "Team", href: "/dashboard/team", icon: Users, soon: true },
   { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
   { title: "Help", href: "/dashboard/help", icon: HelpCircle },
@@ -50,7 +51,7 @@ const accountNav = [
 function NavItem({
   item,
 }: {
-  item: (typeof mainNav)[number] & { exact?: boolean };
+  item: (typeof mainNav)[number] & { exact?: boolean; soon?: boolean };
 }) {
   const pathname = usePathname();
   const isActive = item.exact
@@ -66,12 +67,19 @@ function NavItem({
       >
         <item.icon />
         <span>{item.title}</span>
+        {item.soon ? (
+          <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+            Soon
+          </span>
+        ) : null}
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
 }
 
-export function AppSidebar() {
+export function AppSidebar({ billing }: { billing?: BillingStatus | null }) {
+  const isActive = billing?.canUseProduct ?? false;
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -135,26 +143,35 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 group-data-[collapsible=icon]:hidden">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Credits</span>
-            <span className="font-semibold text-primary">
-              {MOCK_CREDITS.balance}
-            </span>
-          </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary"
-              style={{
-                width: `${(MOCK_CREDITS.balance / MOCK_CREDITS.monthlyAllowance) * 100}%`,
-              }}
-            />
-          </div>
-          <Link
-            href="/dashboard/usage"
-            className="mt-2 block text-xs text-accent-foreground hover:underline"
-          >
-            Buy more credits
-          </Link>
+          {isActive ? (
+            <>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Exports left</span>
+                <span className="font-semibold text-primary">
+                  {billing?.exportsRemaining ?? 0}
+                </span>
+              </div>
+              <Link
+                href="/dashboard/usage"
+                className="mt-2 block text-xs text-accent-foreground hover:underline"
+              >
+                View usage
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Pro access</span>
+                <span className="font-semibold text-primary">Required</span>
+              </div>
+              <Link
+                href="/dashboard/billing?welcome=1"
+                className="mt-2 block text-xs text-accent-foreground hover:underline"
+              >
+                Launch Offer — $9 first month
+              </Link>
+            </>
+          )}
         </div>
       </SidebarFooter>
       <SidebarRail />

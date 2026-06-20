@@ -1,35 +1,43 @@
 # Current state
 
-**Updated:** Recording-first MVP — Week 1 scaffolded.
+**Updated:** Phase 5 — paid-only billing + ship polish (June 2026).
 
 ## Implemented
 
-| Item | Status |
+| Area | Status |
 |------|--------|
-| Docs (refined vision) | ✅ |
-| `@arco/project-schema` | ✅ Zod types, markers, effects |
-| `@arco/remotion` | ✅ Composition, zoom, ripple, title-card |
-| Golden sample project | ✅ `golden-project.json` |
-| `apps/web` waitlist | ✅ |
-| Upload / editor / render | ❌ Week 2–3 |
+| Auth + API JWT bridge | Done |
+| Durable projects (API + S3 + sync) | Done |
+| Dashboard create flow | `/dashboard/projects/new` + example brand chips |
+| Brand from URL | `POST /brand/analyze-url` + chat analyze pipeline |
+| Customize panel | Logo, colors, music, volume |
+| Export MP4 | Render worker + stages (queued → rendering → uploading) |
+| **Stripe billing** | Launch Offer $9 → $29/mo Pro, no free tier |
+| **Subscription gate** | API + dashboard paywall until checkout |
+| **Export allowance** | 15 exports/period, tracked in DB |
+| Chat SSE | `POST /ai/chat/stream` |
+| Scene drag-reorder | Thumbnail strip |
+| Error toasts | Sonner in dashboard + export flows |
 
-## Try Remotion Studio
+## Core loop
+
+```
+Sign up → Billing (Launch Offer $9) → Create → Editor → Export MP4 → Download
+```
+
+## Local dev
 
 ```bash
 pnpm install
-pnpm --filter @arco/remotion dev
+pnpm --filter @arco/api dev
+pnpm --filter @arco/web dev
 ```
 
-Opens preview with placeholder UI + 4 markers (zoom, ripple, titles).
+Stripe test mode required for checkout. See [`DEPLOY.md`](./DEPLOY.md).
 
-## Next (Week 2)
+## Next (not in this slice)
 
-See [MVP-BUILD.md](./MVP-BUILD.md):
-
-1. Wire `@remotion/player` in `apps/web`
-2. Upload MP4
-3. Marker editor UI
-
-## Vision summary
-
-Upload app recording → markers + motion presets → edit → export. Web/mobile tech only.
+- Landing page polish
+- Vision / click detection
+- Team tier Stripe products
+- Real activity feed

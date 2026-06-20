@@ -53,17 +53,36 @@ export function WorkspaceSwitcher() {
   );
 }
 
-export function CreditsBadge({ balance }: { balance: number }) {
+export function ExportsBadge({
+  remaining,
+  planActive,
+}: {
+  remaining: number;
+  planActive: boolean;
+}) {
   return (
     <Button
       variant="outline"
       size="sm"
       className="gap-1.5 rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10"
-      render={<Link href="/dashboard/usage" />}
+      render={
+        <Link href={planActive ? "/dashboard/usage" : "/dashboard/billing?welcome=1"} />
+      }
     >
       <Zap className="size-3.5 text-primary" />
-      <span className="font-medium">{balance}</span>
-      <span className="text-muted-foreground">credits</span>
+      {planActive ? (
+        <>
+          <span className="font-medium">{remaining}</span>
+          <span className="text-muted-foreground">exports</span>
+        </>
+      ) : (
+        <span className="font-medium">Subscribe</span>
+      )}
     </Button>
   );
+}
+
+/** @deprecated Use ExportsBadge */
+export function CreditsBadge({ balance }: { balance: number }) {
+  return <ExportsBadge remaining={balance} planActive={true} />;
 }

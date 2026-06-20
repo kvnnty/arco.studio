@@ -29,4 +29,8 @@ export class UpdateProjectDto {
   @Min(0)
   @IsOptional()
   markerCount?: number;
+
+  @IsString()
+  @IsOptional()
+  thumbnailUrl?: string;
 }

@@ -8,6 +8,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { SubscriptionGuard } from '../billing/subscription.guard.js';
 import { RendersService } from './renders.service.js';
 import { CreateRenderDto } from './dto/create-render.dto.js';
 
@@ -16,6 +17,7 @@ import { CreateRenderDto } from './dto/create-render.dto.js';
 export class RendersController {
   constructor(private readonly rendersService: RendersService) {}
 
+  @UseGuards(SubscriptionGuard)
   @Post()
   create(
     @Request() req: { user: { id: string } },

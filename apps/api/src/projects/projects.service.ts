@@ -36,6 +36,7 @@ export class ProjectsService {
             status: true,
             outputUrl: true,
             format: true,
+            errorMessage: true,
           },
         },
       },
@@ -54,6 +55,7 @@ export class ProjectsService {
             status: true,
             outputUrl: true,
             format: true,
+            errorMessage: true,
           },
         },
       },
@@ -85,6 +87,9 @@ export class ProjectsService {
           recordingSrc: dto.recordingSrc,
         }),
         ...(dto.markerCount !== undefined && { markerCount: dto.markerCount }),
+        ...(dto.thumbnailUrl !== undefined && {
+          thumbnailUrl: dto.thumbnailUrl,
+        }),
       },
     });
   }

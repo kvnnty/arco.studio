@@ -4,6 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { BillingService } from '../billing/billing.service.js';
 import { CreateRenderDto } from './dto/create-render.dto.js';
 import { RenderProcessorService } from './render-processor.service.js';
 
@@ -12,6 +13,7 @@ export class RendersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly renderProcessor: RenderProcessorService,
+    private readonly billing: BillingService,
   ) {}
 
   async create(userId: string, dto: CreateRenderDto) {
@@ -25,6 +27,8 @@ export class RendersService {
       throw new ForbiddenException('Access denied');
     }
 
+    await this.billing.assertCanExport(userId);
+
     const job = await this.prisma.renderJob.create({
       data: {
         projectId: dto.projectId,
@@ -32,6 +36,8 @@ export class RendersService {
         status: 'queued',
       },
     });
+
+    await this.billing.reserveExport(userId, job.id);
 
     this.renderProcessor.queueJob(job.id);
 

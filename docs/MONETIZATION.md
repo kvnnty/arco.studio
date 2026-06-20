@@ -4,26 +4,21 @@
 
 ## Model
 
-**Tiered subscription + render credits** (variable render cost).
+**Paid-only subscription** — no free tier. Prevents multi-account credit abuse.
 
-**Buyer:** B2B prosumer → small SaaS teams (not B2C).
+**Launch Offer:** $9 first billing cycle (full Pro), then **$29/month**. Cancel anytime. 14-day money-back via Stripe refunds.
 
-## Pricing tiers
-
-### Public (post-founding)
+### Public
 
 | Tier | Price | Includes |
 |------|-------|----------|
-| Starter | $19/mo | 3 videos/mo, 1080p, music library |
-| Pro | $49/mo | 15 videos/mo, brand kit, HD |
-| Studio | $99–199/mo | High limits, team, drafts (later) |
+| Pro (Launch Offer) | $9 first month, then $29/mo | 15 exports/mo, full editor, brand kit, 1080p all formats |
+| Team | Coming soon | Seats, shared brand, priority render |
+| Enterprise | Custom | SSO, invoice billing, custom limits |
 
-### Founding (first 50)
+### Founding note
 
-| Founding | $29/mo |
-|----------|--------|
-| Videos | 10 / month |
-| Support | Direct founder access |
+Original founding tier ($29/mo flat) is superseded by Launch Offer pricing for new signups.
 
 ### Model B (Phase 2 — teams)
 

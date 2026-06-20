@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Bell, HelpCircle } from "lucide-react";
 
-import { CreditsBadge, WorkspaceSwitcher } from "@/components/dashboard/workspace-switcher";
+import { ExportsBadge, WorkspaceSwitcher } from "@/components/dashboard/workspace-switcher";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { MOCK_CREDITS, MOCK_NOTIFICATIONS } from "@/lib/mock/data";
+import { MOCK_NOTIFICATIONS } from "@/lib/mock/data";
 import { signOutAction } from "@/app/actions/auth";
 import { LogOut, Settings, User } from "lucide-react";
 
@@ -25,9 +25,15 @@ type AppTopbarProps = {
     name?: string | null;
     email?: string | null;
   };
+  exportsRemaining?: number;
+  planActive?: boolean;
 };
 
-export function AppTopbar({ user }: AppTopbarProps) {
+export function AppTopbar({
+  user,
+  exportsRemaining = 0,
+  planActive = false,
+}: AppTopbarProps) {
   const initials =
     user.name
       ?.split(" ")
@@ -44,7 +50,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
       <Separator orientation="vertical" className="mr-1 h-4" />
       <WorkspaceSwitcher />
       <div className="flex-1" />
-      <CreditsBadge balance={MOCK_CREDITS.balance} />
+      <ExportsBadge remaining={exportsRemaining} planActive={planActive} />
       <Button
         variant="ghost"
         size="icon-sm"

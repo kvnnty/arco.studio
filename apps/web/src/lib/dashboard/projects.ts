@@ -12,6 +12,9 @@ export type DashboardProject = {
   createdAt: string;
   recordingSrc: string | null;
   latestExportUrl: string | null;
+  latestRenderJobId: string | null;
+  latestRenderError: string | null;
+  thumbnailUrl: string | null;
 };
 
 export function deriveProjectStatus(record: ApiProjectRecord): ProjectStatus {
@@ -24,16 +27,20 @@ export function deriveProjectStatus(record: ApiProjectRecord): ProjectStatus {
     return "processing";
   }
 
+  if (latestRender?.status === "failed") {
+    return "failed";
+  }
+
   if (latestRender?.status === "completed" && latestRender.outputUrl) {
     return "completed";
   }
 
-  if (record.recordingSrc && record.markerCount > 0) {
-    return "draft";
+  if (record.recordingSrc && record.markerCount === 0) {
+    return "analyzing";
   }
 
-  if (record.recordingSrc) {
-    return "processing";
+  if (record.recordingSrc && record.markerCount > 0) {
+    return "draft";
   }
 
   return "draft";
@@ -53,5 +60,8 @@ export function toDashboardProject(record: ApiProjectRecord): DashboardProject {
     createdAt: record.createdAt,
     recordingSrc: record.recordingSrc,
     latestExportUrl: latestRender?.outputUrl ?? null,
+    latestRenderJobId: latestRender?.id ?? null,
+    latestRenderError: latestRender?.errorMessage ?? null,
+    thumbnailUrl: record.thumbnailUrl ?? null,
   };
 }

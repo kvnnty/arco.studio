@@ -70,7 +70,7 @@ export async function passwordSignupAction(
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/dashboard",
+      redirectTo: "/dashboard/billing?welcome=1",
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -163,7 +163,7 @@ export async function verifyMagicLinkAction(token: string) {
       userId: authResult.user.id,
       name: authResult.user.name ?? "",
       accessToken: authResult.access_token,
-      redirectTo: "/dashboard",
+      redirectTo: "/dashboard/billing?welcome=1",
     });
   } catch (error) {
     if (error instanceof AuthError) {

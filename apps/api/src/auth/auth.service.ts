@@ -30,6 +30,8 @@ export class AuthService {
         email: dto.email,
         name: dto.name,
         passwordHash,
+        planStatus: 'inactive',
+        exportAllowance: Number(process.env.EXPORT_ALLOWANCE_PRO ?? 15),
       },
     });
 

@@ -125,6 +125,7 @@ export async function syncProject(input: {
   project: ArcoProject;
   platform: ProjectPlatform;
   recordingSrc: string;
+  thumbnailUrl?: string;
 }) {
   const session = await auth();
   if (!session?.accessToken) return;
@@ -137,6 +138,7 @@ export async function syncProject(input: {
     projectData: input.project,
     recordingSrc: input.recordingSrc || undefined,
     markerCount: input.project.markers.length,
+    thumbnailUrl: input.thumbnailUrl,
   });
 }
 

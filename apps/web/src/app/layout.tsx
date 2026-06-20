@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Inter, Figtree } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "@/components/providers/session-provider";
 
 import "./globals.css";
@@ -38,6 +39,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           <TooltipProvider>{children}</TooltipProvider>
+          <Toaster />
         </SessionProvider>
       </body>
     </html>

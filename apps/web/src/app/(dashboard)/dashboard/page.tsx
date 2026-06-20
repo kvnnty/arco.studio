@@ -5,6 +5,7 @@ import { listDashboardProjects } from "@/app/actions/projects";
 import { auth } from "@/auth";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { ProjectPoster } from "@/components/dashboard/project-poster";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import {
   MOCK_ACTIVITY,
-  MOCK_CREDITS,
 } from "@/lib/mock/data";
 
 export default async function DashboardHomePage() {
@@ -51,19 +51,20 @@ export default async function DashboardHomePage() {
           description="all time"
         />
         <StatsCard
-          title="Credits remaining"
-          value={MOCK_CREDITS.balance}
-          icon={Zap}
-          trend={{
-            value: `${MOCK_CREDITS.usedThisMonth} used`,
-            positive: false,
-          }}
+          title="Ready to export"
+          value={projects.filter((p) => p.status === "draft" && p.markerCount > 0).length}
+          icon={Film}
+          description="with scenes"
         />
         <StatsCard
-          title="Processing"
-          value={projects.filter((p) => p.status === "processing").length}
-          icon={Film}
-          description="active jobs"
+          title="In progress"
+          value={
+            projects.filter((p) =>
+              ["analyzing", "processing"].includes(p.status),
+            ).length
+          }
+          icon={Zap}
+          description="analyzing or exporting"
         />
       </div>
 
@@ -100,9 +101,18 @@ export default async function DashboardHomePage() {
                   <Link
                     key={project.id}
                     href={`/dashboard/projects/${project.id}`}
-                    className="flex items-center justify-between rounded-xl border p-4 transition-colors hover:bg-muted/30"
+                    className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-muted/30"
                   >
-                    <div className="min-w-0">
+                    <div className="hidden w-24 shrink-0 sm:block">
+                      <ProjectPoster
+                        title={project.title}
+                        recordingSrc={project.recordingSrc}
+                        exportUrl={project.latestExportUrl}
+                        thumbnailUrl={project.thumbnailUrl}
+                        compact
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{project.title}</p>
                       <p className="text-xs text-muted-foreground">
                         {project.markerCount} scenes · {project.exportFormat}
@@ -144,7 +154,7 @@ export default async function DashboardHomePage() {
       <Card className="rounded-2xl">
         <CardHeader>
           <CardTitle className="text-base">Recent activity</CardTitle>
-          <CardDescription>Latest events in your workspace</CardDescription>
+          <CardDescription>Sample events — real activity feed coming soon</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

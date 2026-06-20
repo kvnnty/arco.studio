@@ -83,6 +83,7 @@ export type ApiProjectRecord = {
   projectData: string;
   recordingSrc: string | null;
   markerCount: number;
+  thumbnailUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   renderJobs?: Array<{
@@ -90,6 +91,7 @@ export type ApiProjectRecord = {
     status: string;
     outputUrl: string | null;
     format: string;
+    errorMessage?: string | null;
   }>;
 };
 
@@ -169,6 +171,7 @@ export async function apiUpdateProject(
     projectData?: ArcoProject;
     recordingSrc?: string;
     markerCount?: number;
+    thumbnailUrl?: string;
   },
 ): Promise<ApiProjectRecord> {
   return apiFetch<ApiProjectRecord>(`/projects/${projectId}`, {
@@ -222,6 +225,20 @@ export async function uploadRecordingWithProgress(
   });
 }
 
+export async function uploadThumbnail(
+  token: string,
+  file: File,
+): Promise<{ key: string; url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return apiFetch<{ key: string; url: string }>("/uploads/thumbnail", {
+    token,
+    method: "POST",
+    formData,
+  });
+}
+
 export type RenderJobRecord = {
   id: string;
   projectId: string;
@@ -265,6 +282,12 @@ export async function apiGenerateDraft(
     platform?: string;
     intent?: string;
     productUrl?: string;
+    brandContext?: {
+      title?: string;
+      description?: string;
+      tone?: string;
+      colors?: { primary: string; background: string };
+    };
   },
 ): Promise<GenerateDraftResponse> {
   return apiFetch<GenerateDraftResponse>("/ai/generate-draft", {
@@ -301,4 +324,192 @@ export async function apiRegenerateMarker(
     method: "POST",
     body: input,
   });
+}
+
+export type RefineProjectResponse = {
+  markers: Array<{ callout: { text: string; subtext?: string }; label?: string }>;
+  source: "llm" | "heuristic";
+};
+
+export async function apiRefineProject(
+  token: string,
+  input: {
+    title: string;
+    instruction: string;
+    intent?: string;
+    productUrl?: string;
+    markers: Array<{
+      label?: string;
+      callout?: { text: string; subtext?: string };
+      startMs: number;
+    }>;
+  },
+): Promise<RefineProjectResponse> {
+  return apiFetch<RefineProjectResponse>("/ai/refine-project", {
+    token,
+    method: "POST",
+    body: input,
+  });
+}
+
+export type ChatResponse = {
+  action: Record<string, unknown>;
+  message: string;
+  source: "llm" | "heuristic";
+};
+
+export async function apiChat(
+  token: string,
+  input: {
+    projectId: string;
+    message: string;
+    history?: Array<{ role: "user" | "assistant"; content: string }>;
+    project: {
+      title: string;
+      stylePreset?: string;
+      durationMs: number;
+      intent?: string;
+      productUrl?: string;
+      markers: Array<{
+        id: string;
+        startMs: number;
+        durationMs: number;
+        label?: string;
+        callout?: { text: string; subtext?: string };
+      }>;
+      selectedMarkerIndex?: number;
+      playheadMs?: number;
+    };
+  },
+): Promise<ChatResponse> {
+  return apiFetch<ChatResponse>("/ai/chat", {
+    token,
+    method: "POST",
+    body: input,
+  });
+}
+
+export type BrandKitResponse = {
+  url: string;
+  title?: string;
+  description?: string;
+  screenshotUrl?: string;
+  logoUrl?: string;
+  colors: { primary: string; background: string };
+  tone?: "technical" | "consumer" | "enterprise";
+  source: "scrape" | "fallback";
+};
+
+export async function apiAnalyzeBrandUrl(
+  token: string,
+  url: string,
+): Promise<BrandKitResponse> {
+  return apiFetch<BrandKitResponse>("/brand/analyze-url", {
+    token,
+    method: "POST",
+    body: { url },
+  });
+}
+
+export type BillingStatus = {
+  planStatus: string;
+  plan: string | null;
+  exportAllowance: number;
+  exportsUsedThisPeriod: number;
+  exportsRemaining: number;
+  periodEnd: string | null;
+  hadLaunchOffer: boolean;
+  canUseProduct: boolean;
+};
+
+export type BillingUsage = {
+  events: Array<{
+    id: string;
+    type: string;
+    metadata: string;
+    createdAt: string;
+  }>;
+  counts: Record<string, number>;
+};
+
+export async function apiGetBillingStatus(token: string): Promise<BillingStatus> {
+  return apiFetch<BillingStatus>("/billing/status", { token });
+}
+
+export async function apiGetBillingUsage(token: string): Promise<BillingUsage> {
+  return apiFetch<BillingUsage>("/billing/usage", { token });
+}
+
+export async function apiCreateBillingCheckout(
+  token: string,
+): Promise<{ url: string }> {
+  return apiFetch<{ url: string }>("/billing/checkout-session", {
+    token,
+    method: "POST",
+    body: {},
+  });
+}
+
+export async function apiCreateBillingPortal(
+  token: string,
+): Promise<{ url: string }> {
+  return apiFetch<{ url: string }>("/billing/portal-session", {
+    token,
+    method: "POST",
+    body: {},
+  });
+}
+
+export async function apiChatStream(
+  token: string,
+  input: Parameters<typeof apiChat>[1],
+  onChunk: (chunk: { token?: string; action?: Record<string, unknown>; error?: string }) => void,
+): Promise<void> {
+  const response = await fetch(`${getApiUrl()}/ai/chat/stream`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    let message = response.statusText;
+    try {
+      const payload = (await response.json()) as { message?: string };
+      if (payload.message) message = payload.message;
+    } catch {
+      // ignore
+    }
+    throw new ApiError(response.status, message);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error("No response stream");
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const payload = line.slice(6).trim();
+      if (payload === "[DONE]") return;
+      try {
+        onChunk(JSON.parse(payload) as { token?: string; action?: Record<string, unknown>; error?: string });
+      } catch {
+        // ignore malformed chunks
+      }
+    }
+  }
 }

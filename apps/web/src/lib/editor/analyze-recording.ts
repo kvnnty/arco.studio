@@ -118,6 +118,7 @@ export type DraftAnalysisResult = {
   markers: Marker[];
   stylePreset: StylePreset;
   source: "llm" | "heuristic";
+  brandKit?: import("@/app/actions/brand").BrandKit;
 };
 
 export async function runAnalysis(
@@ -128,6 +129,12 @@ export async function runAnalysis(
     platform?: string;
     intent?: string;
     productUrl?: string;
+    brandContext?: {
+      title?: string;
+      description?: string;
+      tone?: string;
+      colors?: { primary: string; background: string };
+    };
   },
 ): Promise<DraftAnalysisResult> {
   const draftPromise = generateDraftAction({
@@ -136,6 +143,7 @@ export async function runAnalysis(
     platform: input.platform,
     intent: input.intent,
     productUrl: input.productUrl,
+    brandContext: input.brandContext,
   }).catch(() => ({
     markers: generateDraftMarkers(input.durationMs),
     stylePreset: "startup" as StylePreset,

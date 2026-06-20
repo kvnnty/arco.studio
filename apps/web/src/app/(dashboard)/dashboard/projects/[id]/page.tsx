@@ -1,15 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowLeft,
-  Clock,
-  Download,
-  MoreHorizontal,
-  Play,
-} from "lucide-react";
+import { ArrowLeft, Clock, MoreHorizontal } from "lucide-react";
 
 import { getDashboardProject } from "@/app/actions/projects";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { ProjectDetailActions } from "@/components/dashboard/project-detail-actions";
+import { ProjectPoster } from "@/components/dashboard/project-poster";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,10 +17,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import type { ProjectStatus } from "@/lib/mock/data";
 
 type PageProps = {
   params: Promise<{ id: string }>;
 };
+
+function exportStepDone(status: ProjectStatus): boolean {
+  return status === "completed";
+}
+
+function exportStepActive(status: ProjectStatus): boolean {
+  return status === "processing";
+}
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { id } = await params;
@@ -59,21 +64,10 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           : undefined,
     },
     {
-      label: "Motion applied",
-      done: project.markerCount > 0,
-      time:
-        project.markerCount > 0
-          ? new Date(project.updatedAt).toLocaleString(undefined, {
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-            })
-          : undefined,
-    },
-    {
-      label: "Export ready",
-      done: project.status === "completed",
+      label: "Export",
+      done: exportStepDone(project.status),
+      active: exportStepActive(project.status),
+      failed: project.status === "failed",
       time:
         project.status === "completed"
           ? new Date(project.updatedAt).toLocaleString(undefined, {
@@ -113,35 +107,18 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           <CardHeader>
             <CardTitle className="text-base">Preview</CardTitle>
             <CardDescription>
-              {project.recordingSrc
-                ? "Open the editor to preview your recording with motion."
+              {project.recordingSrc || project.latestExportUrl
+                ? "Recording or latest export preview."
                 : "Upload a recording in the editor to get started."}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex aspect-video items-center justify-center rounded-xl border border-dashed bg-muted/30">
-              <div className="text-center">
-                <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted">
-                  <Play className="size-5 text-muted-foreground" />
-                </div>
-                <p className="text-sm font-medium">
-                  {project.status === "completed"
-                    ? "Export ready"
-                    : project.recordingSrc
-                      ? "Preview in editor"
-                      : "No recording yet"}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {project.status === "processing"
-                    ? "Processing your video…"
-                    : project.status === "completed"
-                      ? "Download your MP4 below"
-                      : project.recordingSrc
-                        ? "Continue editing in the editor"
-                        : "Start in the editor"}
-                </p>
-              </div>
-            </div>
+            <ProjectPoster
+              title={project.title}
+              recordingSrc={project.recordingSrc}
+              exportUrl={project.latestExportUrl}
+              thumbnailUrl={project.thumbnailUrl}
+            />
           </CardContent>
         </Card>
 
@@ -181,41 +158,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {project.latestExportUrl ? (
-                <Button
-                  className="w-full"
-                  render={
-                    <a
-                      href={project.latestExportUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download
-                    />
-                  }
-                >
-                  <Download data-icon="inline-start" />
-                  Download export
-                </Button>
-              ) : (
-                <Button className="w-full" disabled>
-                  <Download data-icon="inline-start" />
-                  Download export
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                className="w-full"
-                render={<Link href={`/editor?projectId=${project.id}`} />}
-              >
-                Open in editor
-              </Button>
-            </CardContent>
-          </Card>
+          <ProjectDetailActions
+            projectId={project.id}
+            exportFormat={project.exportFormat}
+            initialStatus={project.status}
+            latestExportUrl={project.latestExportUrl}
+            latestRenderJobId={project.latestRenderJobId}
+            latestRenderError={project.latestRenderError}
+          />
         </div>
       </div>
 
@@ -233,10 +183,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     className={`flex size-6 items-center justify-center rounded-full text-xs font-medium ${
                       step.done
                         ? "bg-primary text-primary-foreground"
-                        : "border border-border bg-muted text-muted-foreground"
+                        : step.failed
+                          ? "border border-destructive bg-destructive/10 text-destructive"
+                          : step.active
+                            ? "border border-[#55b3ff] bg-[#55b3ff]/10 text-[#55b3ff]"
+                            : "border border-border bg-muted text-muted-foreground"
                     }`}
                   >
-                    {step.done ? "✓" : i + 1}
+                    {step.done ? "✓" : step.failed ? "!" : i + 1}
                   </div>
                   {i < timelineSteps.length - 1 ? (
                     <div
@@ -252,6 +206,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                       <Clock className="size-3" />
                       {step.time}
+                    </p>
+                  ) : step.active ? (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      In progress…
+                    </p>
+                  ) : step.failed ? (
+                    <p className="mt-0.5 text-xs text-destructive">
+                      Export failed
                     </p>
                   ) : (
                     <p className="mt-0.5 text-xs text-muted-foreground">

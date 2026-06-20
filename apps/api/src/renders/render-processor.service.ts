@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 import { S3Service } from '../storage/s3.service.js';
+import { BillingService } from '../billing/billing.service.js';
 
 @Injectable()
 export class RenderProcessorService implements OnModuleInit {
@@ -25,6 +26,7 @@ export class RenderProcessorService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3: S3Service,
+    private readonly billing: BillingService,
   ) {
     this.monorepoRoot = path.resolve(process.cwd(), '../..');
     this.remotionRoot = path.join(this.monorepoRoot, 'packages/remotion');
@@ -80,7 +82,7 @@ export class RenderProcessorService implements OnModuleInit {
 
     await this.prisma.renderJob.update({
       where: { id: jobId },
-      data: { status: 'processing', errorMessage: null },
+      data: { status: 'rendering', errorMessage: null },
     });
 
     const tempDir = path.join(os.tmpdir(), `arco-render-${randomUUID()}`);
@@ -98,6 +100,11 @@ export class RenderProcessorService implements OnModuleInit {
       );
 
       await this.runRemotionRender(propsPath, outputPath);
+
+      await this.prisma.renderJob.update({
+        where: { id: jobId },
+        data: { status: 'uploading' },
+      });
 
       const mp4 = await readFile(outputPath);
       const key = `renders/${job.project.userId}/${jobId}.mp4`;
@@ -123,6 +130,8 @@ export class RenderProcessorService implements OnModuleInit {
           errorMessage: message,
         },
       });
+
+      await this.billing.refundExport(job.project.userId, jobId);
 
       this.logger.error(`Render failed: ${jobId} — ${message}`);
     } finally {

@@ -3,8 +3,10 @@
 import type { ExportFormat } from "@arco/project-schema";
 import { Download } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { createRenderJob, getRenderJob } from "@/app/actions/renders";
+import { getBillingStatusAction } from "@/app/actions/billing";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,9 +41,19 @@ type ExportDialogProps = {
 type ExportPhase =
   | "idle"
   | "queued"
-  | "processing"
+  | "rendering"
+  | "uploading"
   | "completed"
   | "failed";
+
+const PHASE_LABELS: Record<ExportPhase, string> = {
+  idle: "Ready to export",
+  queued: "Queued for render…",
+  rendering: "Rendering video…",
+  uploading: "Uploading MP4…",
+  completed: "Export complete",
+  failed: "Export failed",
+};
 
 export function ExportDialog({
   open,
@@ -76,8 +88,13 @@ export function ExportDialog({
           try {
             const job = await getRenderJob(jobId);
 
-            if (job.status === "processing") {
-              setPhase("processing");
+            if (job.status === "rendering" || job.status === "processing") {
+              setPhase("rendering");
+              return;
+            }
+
+            if (job.status === "uploading") {
+              setPhase("uploading");
               return;
             }
 
@@ -85,13 +102,16 @@ export function ExportDialog({
               stopPolling();
               setPhase("completed");
               setOutputUrl(job.outputUrl);
+              toast.success("Export ready");
               return;
             }
 
             if (job.status === "failed") {
               stopPolling();
               setPhase("failed");
-              setError(job.errorMessage ?? "Render failed.");
+              const message = job.errorMessage ?? "Render failed.";
+              setError(message);
+              toast.error(message);
             }
           } catch {
             stopPolling();
@@ -110,42 +130,47 @@ export function ExportDialog({
     setOutputUrl(null);
 
     try {
+      const billing = await getBillingStatusAction();
+      if (!billing.canUseProduct) {
+        throw new Error("Subscribe to export videos.");
+      }
+      if (billing.exportsRemaining <= 0) {
+        throw new Error("No exports remaining this period. Manage your plan in Billing.");
+      }
+
       const job = await createRenderJob({ projectId, format });
-      setPhase(job.status === "processing" ? "processing" : "queued");
+      setPhase(
+        job.status === "rendering" || job.status === "processing"
+          ? "rendering"
+          : job.status === "uploading"
+            ? "uploading"
+            : "queued",
+      );
 
       if (job.status === "completed" && job.outputUrl) {
         setPhase("completed");
         setOutputUrl(job.outputUrl);
+        toast.success("Export ready");
         return;
       }
 
       if (job.status === "failed") {
+        const message = job.errorMessage ?? "Render failed.";
         setPhase("failed");
-        setError(job.errorMessage ?? "Render failed.");
+        setError(message);
+        toast.error(message);
         return;
       }
 
       pollJob(job.id);
-      void getRenderJob(job.id).then((latest) => {
-        if (latest.status === "processing") setPhase("processing");
-        if (latest.status === "completed" && latest.outputUrl) {
-          stopPolling();
-          setPhase("completed");
-          setOutputUrl(latest.outputUrl);
-        }
-        if (latest.status === "failed") {
-          stopPolling();
-          setPhase("failed");
-          setError(latest.errorMessage ?? "Render failed.");
-        }
-      });
     } catch (exportError) {
-      setPhase("failed");
-      setError(
+      const message =
         exportError instanceof Error
           ? exportError.message
-          : "Could not start export.",
-      );
+          : "Could not start export.";
+      setPhase("failed");
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -161,7 +186,8 @@ export function ExportDialog({
     link.remove();
   };
 
-  const isBusy = phase === "queued" || phase === "processing";
+  const isBusy =
+    phase === "queued" || phase === "rendering" || phase === "uploading";
 
   return (
     <Dialog
@@ -218,17 +244,13 @@ export function ExportDialog({
           </FieldContent>
         </Field>
 
-        {phase === "queued" ? (
+        {(phase === "queued" ||
+          phase === "rendering" ||
+          phase === "uploading") && (
           <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-            Queued — waiting for render worker…
+            {PHASE_LABELS[phase]}
           </p>
-        ) : null}
-
-        {phase === "processing" ? (
-          <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-            Rendering your video…
-          </p>
-        ) : null}
+        )}
 
         {phase === "completed" && outputUrl ? (
           <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
@@ -255,9 +277,7 @@ export function ExportDialog({
           >
             <Download data-icon="inline-start" />
             {isBusy
-              ? phase === "processing"
-                ? "Rendering…"
-                : "Starting…"
+              ? PHASE_LABELS[phase]
               : phase === "failed"
                 ? "Retry export"
                 : "Export MP4"}
