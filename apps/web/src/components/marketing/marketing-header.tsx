@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
+import { MarketingLogo } from "@/components/marketing/marketing-logo";
 import { Button } from "@/components/ui/button";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { transitionMedium } from "@/lib/motion/presets";
@@ -24,20 +24,10 @@ export function MarketingHeader() {
       transition={transitionMedium}
     >
       <div className="marketing-container flex h-16 items-center justify-between">
-        <Link
-          href="/"
-          className="transition-opacity hover:opacity-80"
-          aria-label="Arco home"
-        >
-          <Image
-            src="/arcologo-black.svg"
-            alt="Arco"
-            width={410}
-            height={85}
-            className="h-7 w-24 sm:h-8 sm:w-28"
-            priority
-          />
-        </Link>
+        <MarketingLogo
+          className="h-7 w-24 sm:h-8 sm:w-28"
+          priority
+        />
 
         <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
           {mainNav.map((item, i) => (

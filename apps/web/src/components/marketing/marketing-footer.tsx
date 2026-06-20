@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { CookieSettingsTrigger } from "@/components/consent/cookie-settings-trigger";
+import { MarketingLogo } from "@/components/marketing/marketing-logo";
 import { footerColumns, siteConfig } from "@/lib/marketing/site-config";
 
 export function MarketingFooter() {
@@ -11,13 +11,7 @@ export function MarketingFooter() {
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-2">
             <Link href="/" aria-label="Arco home">
-              <Image
-                src="/arcologo-black.svg"
-                alt="Arco"
-                width={410}
-                height={85}
-                className="h-7 w-24"
-              />
+              <MarketingLogo className="h-7 w-24" linked={false} />
             </Link>
             <p className="mt-4 max-w-xs text-[14px] leading-relaxed text-[var(--marketing-muted)]">
               {siteConfig.description}

@@ -11,6 +11,7 @@ import {
   getRelatedPosts,
   type BlogSection,
 } from "@/lib/marketing/blog";
+import { createPageMetadata } from "@/lib/marketing/metadata";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -23,10 +24,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = getBlogPost(slug);
   if (!post) return { title: "Not found" };
-  return {
-    title: `${post.title} — Arco Blog`,
+  return createPageMetadata({
+    title: post.title,
     description: post.excerpt,
-  };
+    path: `/blog/${slug}`,
+  });
 }
 
 function BlogContent({ sections }: { sections: BlogSection[] }) {
@@ -69,16 +71,16 @@ function BlogToc({ sections }: { sections: BlogSection[] }) {
   return (
     <nav className="hidden lg:block" aria-label="Table of contents">
       <div className="sticky top-24">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--marketing-subtle)]">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-marketing-subtle">
           On this page
         </p>
-        <ul className="space-y-2 border-l border-[var(--marketing-border)] pl-3">
+        <ul className="space-y-2 border-l border-marketing-border pl-3">
           {headings.map((h) =>
             h.type === "heading" ? (
               <li key={h.id}>
                 <a
                   href={`#${h.id}`}
-                  className="block text-[13px] text-[var(--marketing-muted)] hover:text-foreground"
+                  className="block text-[13px] text-marketing-muted hover:text-foreground"
                 >
                   {h.text}
                 </a>
@@ -103,23 +105,23 @@ export default async function BlogArticlePage({ params }: Props) {
       <div className="marketing-container-blog">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1.5 text-[13px] text-[var(--marketing-muted)] transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1.5 text-[13px] text-marketing-muted transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />
           Back to blog
         </Link>
 
-        <header className="mt-8 border-b border-[var(--marketing-border)] pb-8">
-          <Badge variant="outline" className="mb-4 border-[var(--marketing-border)]">
+        <header className="mt-8 border-b border-marketing-border pb-8">
+          <Badge variant="outline" className="mb-4 border-marketing-border">
             {post.category}
           </Badge>
           <h1 className="marketing-heading text-[2rem] leading-tight sm:text-[2.75rem]">
             {post.title}
           </h1>
-          <p className="mt-4 text-[17px] leading-relaxed text-[var(--marketing-muted)]">
+          <p className="mt-4 text-[17px] leading-relaxed text-marketing-muted">
             {post.excerpt}
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-4 text-[13px] text-[var(--marketing-subtle)]">
+          <div className="mt-6 flex flex-wrap items-center gap-4 text-[13px] text-marketing-subtle">
             <span className="font-medium text-foreground">{post.author.name}</span>
             <span>{post.author.role}</span>
             <span>·</span>
@@ -144,7 +146,7 @@ export default async function BlogArticlePage({ params }: Props) {
       </div>
 
       {related.length > 0 ? (
-        <section className="mt-24 border-t border-[var(--marketing-border)] pt-16">
+        <section className="mt-24 border-t border-marketing-border pt-16">
           <div className="marketing-container">
             <h2 className="text-[20px] font-semibold">Related articles</h2>
             <div className="mt-8 grid gap-6 sm:grid-cols-2">

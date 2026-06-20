@@ -6,6 +6,7 @@ import { GoogleConsentDefaultScript } from "@/components/consent/google-consent-
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "@/components/providers/session-provider";
+import { rootMetadata } from "@/lib/marketing/metadata";
 
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -23,11 +24,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Arco — Motion design for product demos",
-  description:
-    "Upload your app recording. Arco adds zooms, ripples, and titles — then export a launch-ready demo.",
-};
+export const metadata: Metadata = rootMetadata;
 
 export default function RootLayout({
   children,

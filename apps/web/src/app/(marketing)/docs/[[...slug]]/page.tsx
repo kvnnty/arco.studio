@@ -8,6 +8,7 @@ import {
 } from "@/components/marketing/docs/doc-content";
 import { DocsSidebar } from "@/components/marketing/docs/docs-sidebar";
 import { getAllDocSlugs, getDocPage } from "@/lib/marketing/docs";
+import { createPageMetadata } from "@/lib/marketing/metadata";
 
 type Props = { params: Promise<{ slug?: string[] }> };
 
@@ -21,10 +22,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug = [] } = await params;
   const page = getDocPage(slug);
   if (!page) return { title: "Not found" };
-  return {
-    title: `${page.title} — Arco Docs`,
+  const path = slug.length === 0 ? "/docs" : `/docs/${slug.join("/")}`;
+  return createPageMetadata({
+    title: page.title,
     description: page.description,
-  };
+    path,
+  });
 }
 
 export default async function DocsPage({ params }: Props) {

@@ -122,9 +122,14 @@ const docsPages: Record<string, DocPage> = {
         ],
       },
       {
+        type: "callout",
+        variant: "info",
+        text: "A command-line interface is not available yet. Use the dashboard or API reference for now.",
+      },
+      {
         type: "code",
         language: "bash",
-        title: "CLI (coming soon)",
+        title: "API example",
         code: `# Export via API\narco projects create --recording ./demo.mp4\narco renders start --project proj_abc123`,
       },
     ],
@@ -346,4 +351,81 @@ export function getDocPage(slug: string[]): DocPage | undefined {
 
 export function getAllDocSlugs(): string[][] {
   return Object.values(docsPages).map((p) => p.slug);
+}
+
+export type DocSearchResult = {
+  href: string;
+  title: string;
+  snippet: string;
+};
+
+function docHref(slug: string[]): string {
+  return slug.length === 0 ? "/docs" : `/docs/${slug.join("/")}`;
+}
+
+function sectionTexts(section: DocSection): string[] {
+  switch (section.type) {
+    case "paragraph":
+    case "callout":
+      return [section.text];
+    case "heading":
+      return [section.text];
+    case "list":
+      return section.items;
+    case "code":
+      return [section.title ?? "", section.code];
+    case "table":
+      return [...section.headers, ...section.rows.flat()];
+    default:
+      return [];
+  }
+}
+
+export function searchDocPages(query: string): DocSearchResult[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+
+  const results: Array<DocSearchResult & { score: number }> = [];
+
+  for (const page of Object.values(docsPages)) {
+    const searchable: Array<{ text: string; weight: number }> = [
+      { text: page.title, weight: 3 },
+      { text: page.description, weight: 2 },
+    ];
+
+    for (const section of page.sections) {
+      for (const text of sectionTexts(section)) {
+        if (text.trim()) {
+          searchable.push({ text, weight: 1 });
+        }
+      }
+    }
+
+    let bestScore = 0;
+    let bestSnippet = page.description;
+
+    for (const { text, weight } of searchable) {
+      const lower = text.toLowerCase();
+      if (!lower.includes(q)) continue;
+
+      const score = weight + (lower.startsWith(q) ? 1 : 0);
+      if (score >= bestScore) {
+        bestScore = score;
+        bestSnippet = text.length > 120 ? `${text.slice(0, 117)}...` : text;
+      }
+    }
+
+    if (bestScore > 0) {
+      results.push({
+        href: docHref(page.slug),
+        title: page.title,
+        snippet: bestSnippet,
+        score: bestScore,
+      });
+    }
+  }
+
+  return results
+    .sort((a, b) => b.score - a.score)
+    .map(({ href, title, snippet }) => ({ href, title, snippet }));
 }

@@ -4,12 +4,14 @@ import { CtaBand } from "@/components/marketing/cta-band";
 import { FeatureGrid } from "@/components/marketing/feature-grid";
 import { SectionHeader } from "@/components/marketing/section-header";
 import { coreFeatures, workflowSteps } from "@/lib/marketing/features";
+import { createPageMetadata } from "@/lib/marketing/metadata";
 
-export const metadata: Metadata = {
-  title: "Features — Arco",
+export const metadata: Metadata = createPageMetadata({
+  title: "Features",
   description:
     "AI-powered motion design, brand extraction, multi-format export, and more.",
-};
+  path: "/features",
+});
 
 export default function FeaturesPage() {
   return (
@@ -27,7 +29,7 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      <section className="border-y border-[var(--marketing-border)] bg-[var(--marketing-surface)] py-24 sm:py-32">
+      <section className="border-y border-marketing-border bg-marketing-surface py-24 sm:py-32">
         <div className="marketing-container">
           <SectionHeader title="Built for product teams" />
           <div className="mt-16 grid gap-12 lg:grid-cols-2">
@@ -39,14 +41,14 @@ export default function FeaturesPage() {
                   </span>
                   <div>
                     <h3 className="text-[16px] font-semibold">{step.title}</h3>
-                    <p className="mt-1 text-[14px] leading-relaxed text-[var(--marketing-muted)]">
+                    <p className="mt-1 text-[14px] leading-relaxed text-marketing-muted">
                       {step.description}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="rounded-2xl border border-[var(--marketing-border)] bg-[var(--marketing-bg)] p-8">
+            <div className="rounded-2xl border border-marketing-border bg-marketing-bg p-8">
               <h3 className="text-[18px] font-semibold">What you get</h3>
               <ul className="mt-6 space-y-3">
                 {[
@@ -59,7 +61,7 @@ export default function FeaturesPage() {
                 ].map((item) => (
                   <li
                     key={item}
-                    className="flex items-start gap-2 text-[14px] text-[var(--marketing-muted)]"
+                    className="flex items-start gap-2 text-[14px] text-marketing-muted"
                   >
                     <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
                     {item}

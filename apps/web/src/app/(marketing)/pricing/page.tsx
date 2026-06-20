@@ -6,11 +6,14 @@ import { FeatureComparisonTable } from "@/components/marketing/feature-compariso
 import { PricingCards } from "@/components/marketing/pricing-cards";
 import { SectionHeader } from "@/components/marketing/section-header";
 import { pricingFaqs, pricingPlans } from "@/lib/marketing/pricing";
+import { createPageMetadata } from "@/lib/marketing/metadata";
 
-export const metadata: Metadata = {
-  title: "Pricing — Arco",
-  description: "Simple, transparent pricing for product demo videos. Start free, upgrade when you scale.",
-};
+export const metadata: Metadata = createPageMetadata({
+  title: "Pricing",
+  description:
+    "Simple, transparent pricing for product demo videos. Start free, upgrade when you scale.",
+  path: "/pricing",
+});
 
 export default function PricingPage() {
   return (
@@ -28,7 +31,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="border-t border-[var(--marketing-border)] py-24 sm:py-32">
+      <section className="border-t border-marketing-border py-24 sm:py-32">
         <div className="marketing-container">
           <SectionHeader title="Compare plans" description="See what's included at each tier." />
           <div className="mt-12">

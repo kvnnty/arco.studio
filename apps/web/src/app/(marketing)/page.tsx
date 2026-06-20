@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { JsonLd } from "@/components/marketing/json-ld";
 import { AboutSection } from "@/components/marketing/about-section";
 import { CtaBand } from "@/components/marketing/cta-band";
 import { FeatureGrid } from "@/components/marketing/feature-grid";
@@ -20,19 +21,40 @@ import {
   testimonials,
   workflowSteps,
 } from "@/lib/marketing/features";
+import { createPageMetadata } from "@/lib/marketing/metadata";
 import { pricingPlans } from "@/lib/marketing/pricing";
 import { siteConfig } from "@/lib/marketing/site-config";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: `${siteConfig.name} — ${siteConfig.tagline}`,
   description: siteConfig.description,
-};
+  path: "/",
+});
+
+const homeJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteConfig.name,
+    url: siteConfig.url,
+    description: siteConfig.description,
+    sameAs: [siteConfig.links.twitter, siteConfig.links.github],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteConfig.name,
+    url: siteConfig.url,
+    description: siteConfig.description,
+  },
+];
 
 export default function HomePage() {
   return (
     <>
+      <JsonLd data={homeJsonLd} />
       <Hero
-        eyebrow="Now in early access"
+        eyebrow="Start with one free export"
         title="Turn screen recordings into launch-ready demos"
         description="Upload once. Arco adds zooms, ripples, and titles — then export a polished product video in minutes, not hours."
         features={heroFeatures}
