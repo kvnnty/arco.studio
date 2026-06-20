@@ -17,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { signOutAction } from "@/app/actions/auth";
+import { useConsent } from "@/components/consent/consent-provider";
 import { LogOut, Settings, User } from "lucide-react";
 
 type AppTopbarProps = {
@@ -33,6 +34,7 @@ export function AppTopbar({
   exportsRemaining = 0,
   planActive = false,
 }: AppTopbarProps) {
+  const { openPreferences } = useConsent();
   const initials =
     user.name
       ?.split(" ")
@@ -89,6 +91,9 @@ export function AppTopbar({
             Settings
           </DropdownMenuItem>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={openPreferences}>
+            Cookie settings
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => void signOutAction()}
             className="text-destructive"

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { CookieSettingsTrigger } from "@/components/consent/cookie-settings-trigger";
 import { footerColumns, siteConfig } from "@/lib/marketing/site-config";
 
 export function MarketingFooter() {
@@ -67,6 +68,7 @@ export function MarketingFooter() {
             <Link href="/terms" className="transition-colors hover:text-foreground">
               Terms
             </Link>
+            <CookieSettingsTrigger className="text-[12px] text-[var(--marketing-muted)]" />
             <a
               href="mailto:hello@arco.app"
               className="transition-colors hover:text-foreground"

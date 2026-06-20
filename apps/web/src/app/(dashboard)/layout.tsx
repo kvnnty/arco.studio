@@ -1,9 +1,6 @@
 import { auth } from "@/auth";
 import { getBillingStatusAction } from "@/app/actions/billing";
-import { AppSidebar } from "@/components/dashboard/app-sidebar";
-import { AppTopbar } from "@/components/dashboard/app-topbar";
-import { DashboardPaywall } from "@/components/dashboard/dashboard-paywall";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
 export default async function DashboardLayout({
   children,
@@ -16,23 +13,16 @@ export default async function DashboardLayout({
     : null;
 
   return (
-    <SidebarProvider>
-      <AppSidebar billing={billing} />
-      <SidebarInset>
-        <AppTopbar
-          user={{
-            name: session?.user?.name,
-            email: session?.user?.email,
-          }}
-          exportsRemaining={billing?.exportsRemaining ?? 0}
-          planActive={billing?.canUseProduct ?? false}
-        />
-        <div className="flex-1 overflow-y-auto p-6">
-          <DashboardPaywall canUseProduct={billing?.canUseProduct ?? false}>
-            {children}
-          </DashboardPaywall>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <DashboardShell
+      user={{
+        name: session?.user?.name,
+        email: session?.user?.email,
+      }}
+      exportsRemaining={billing?.exportsRemaining ?? 0}
+      planActive={billing?.canUseProduct ?? false}
+      billing={billing}
+    >
+      {children}
+    </DashboardShell>
   );
 }

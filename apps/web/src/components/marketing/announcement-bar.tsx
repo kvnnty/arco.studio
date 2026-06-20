@@ -15,7 +15,7 @@ export function AnnouncementBar() {
 
   return (
     <motion.div
-      className="border-b border-marketing-border bg-secondary text relative z-50"
+      className="border-b border-marketing-border bg-linear-to-b from-secondary/80 to-secondary text relative z-50"
       initial={reduced ? false : "hidden"}
       animate="visible"
       variants={fadeUp}

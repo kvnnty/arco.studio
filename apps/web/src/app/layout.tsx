@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter, Figtree } from "next/font/google";
 
+import { ConsentProvider } from "@/components/consent/consent-provider";
+import { GoogleConsentDefaultScript } from "@/components/consent/google-consent-default";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "@/components/providers/session-provider";
@@ -34,12 +36,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("font-sans", figtree.variable)}>
+      <head>
+        <GoogleConsentDefaultScript />
+      </head>
       <body
         className={`${inter.variable} ${geistMono.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
       >
         <SessionProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster />
+          <ConsentProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+            <Toaster />
+          </ConsentProvider>
         </SessionProvider>
       </body>
     </html>
