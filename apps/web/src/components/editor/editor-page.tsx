@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -23,7 +23,7 @@ import {
 export function EditorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: authSession, status: authStatus } = useSession();
+  const { session: authSession, loading: authLoading } = useAuth();
 
   const [session, setSession] = useState<EditorSession | null>(null);
   const [ready, setReady] = useState(false);
@@ -37,7 +37,7 @@ export function EditorPage() {
   const projectIdParam = searchParams.get("projectId");
 
   useEffect(() => {
-    if (authStatus === "loading") return;
+    if (authLoading) return;
 
     let cancelled = false;
 
@@ -78,7 +78,7 @@ export function EditorPage() {
     return () => {
       cancelled = true;
     };
-  }, [authStatus, projectIdParam, router]);
+  }, [authLoading, projectIdParam, router]);
 
   const goToStep = useCallback(
     (step: JourneyStep, nextSession: EditorSession) => {
@@ -143,7 +143,7 @@ export function EditorPage() {
     [session, authSession?.accessToken, goToStep],
   );
 
-  if (!ready || authStatus === "loading") {
+  if (!ready || authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
         Loading…
@@ -190,4 +190,4 @@ export function EditorPage() {
     <EditorShell session={session} onSessionChange={setSession} />
   );
 }
-
+

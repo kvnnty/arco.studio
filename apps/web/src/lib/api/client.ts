@@ -68,10 +68,62 @@ export async function apiFetch<T>(
   return response.json() as Promise<T>;
 }
 
-export type AuthResponse = {
-  access_token: string;
-  user: { id: string; email: string; name: string | null };
+export type AuthResponse = AuthTokensResponse;
+
+export type AuthTokensResponse = {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: "Bearer";
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+    emailVerified: boolean;
+    onboardingCompleted: boolean;
+    onboardingStep: string;
+  };
 };
+
+export async function apiRequestMagicLink(email: string) {
+  return apiFetch<{ sent: boolean; devVerifyUrl?: string }>("/auth/magic-link", {
+    method: "POST",
+    body: { email: email.trim().toLowerCase() },
+  });
+}
+
+export async function apiVerifyMagicLink(token: string): Promise<AuthTokensResponse> {
+  return apiFetch<AuthTokensResponse>("/auth/magic-link/verify", {
+    method: "POST",
+    body: { token },
+  });
+}
+
+export async function apiLogin(input: {
+  email: string;
+  password: string;
+}): Promise<AuthTokensResponse> {
+  return apiFetch<AuthTokensResponse>("/auth/login", {
+    method: "POST",
+    body: {
+      email: input.email.trim().toLowerCase(),
+      password: input.password,
+    },
+  });
+}
+
+export async function apiRegister(input: {
+  email: string;
+  password: string;
+}): Promise<{ sent: boolean; message: string; devVerifyUrl?: string }> {
+  return apiFetch("/auth/register", {
+    method: "POST",
+    body: {
+      email: input.email.trim().toLowerCase(),
+      password: input.password,
+    },
+  });
+}
 
 export type ApiProjectRecord = {
   id: string;
@@ -101,34 +153,6 @@ export function parseProjectData(raw: string | ArcoProject): ArcoProject {
     throw new Error("Project data is empty");
   }
   return JSON.parse(raw) as ArcoProject;
-}
-
-export async function apiRegister(input: {
-  email: string;
-  password: string;
-  name?: string;
-}): Promise<AuthResponse> {
-  return apiFetch<AuthResponse>("/auth/register", {
-    method: "POST",
-    body: {
-      email: input.email.trim().toLowerCase(),
-      password: input.password,
-      name: input.name?.trim(),
-    },
-  });
-}
-
-export async function apiLogin(input: {
-  email: string;
-  password: string;
-}): Promise<AuthResponse> {
-  return apiFetch<AuthResponse>("/auth/login", {
-    method: "POST",
-    body: {
-      email: input.email.trim().toLowerCase(),
-      password: input.password,
-    },
-  });
 }
 
 export async function apiGetProject(

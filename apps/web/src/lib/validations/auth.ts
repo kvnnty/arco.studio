@@ -1,30 +1,24 @@
 import { z } from "zod";
 
-const emailSchema = z
-  .string()
-  .trim()
-  .min(1, "Email is required.")
-  .email("Enter a valid email.")
-  .transform((value) => value.toLowerCase());
-
-export const passwordLoginSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(1, "Password is required."),
-});
-
 export const magicLinkSchema = z.object({
-  email: emailSchema,
+  email: z.string().email("Enter a valid email address."),
 });
 
-export const passwordSignupSchema = z.object({
-  name: z.string().trim().min(1, "Name is required."),
-  email: emailSchema,
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters."),
+export const loginSchema = z.object({
+  email: z.string().email("Enter a valid email address."),
+  password: z.string().min(8, "Password must be at least 8 characters."),
 });
 
-export const signupSchema = z.object({
-  name: z.string().trim().min(1, "Name is required."),
-  email: emailSchema,
+export const passwordRegisterSchema = z.object({
+  email: z.string().email("Enter a valid email address."),
+  password: z.string().min(8, "Password must be at least 8 characters."),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8, "Password must be at least 8 characters."),
+});
+
+export const profileSchema = z.object({
+  name: z.string().trim().max(120).optional(),
 });

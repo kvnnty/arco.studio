@@ -13,7 +13,6 @@ import {
   Library,
   Plus,
   Settings,
-  Users,
   Zap,
 } from "lucide-react";
 
@@ -42,7 +41,6 @@ const mainNav = [
 const accountNav = [
   { title: "Usage", href: "/dashboard/usage", icon: Zap },
   { title: "Billing", href: "/dashboard/billing", icon: CreditCard },
-  { title: "Team", href: "/dashboard/team", icon: Users, soon: true },
   { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
   { title: "Help", href: "/dashboard/help", icon: HelpCircle },
@@ -119,7 +117,7 @@ export function AppSidebar({ billing }: { billing?: BillingStatus | null }) {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNav.map((item) => (

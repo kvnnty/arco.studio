@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
-import { passwordSignupAction, type AuthFormState } from "@/app/actions/auth";
+import {
+  magicLinkAction,
+  passwordRegisterAction,
+  type AuthFormState,
+} from "@/app/actions/auth";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -24,79 +28,170 @@ import { Input } from "@/components/ui/input";
 
 const initialState: AuthFormState = {};
 
+type SignupMode = "magic" | "password";
+
 export function SignupForm() {
-  const [state, formAction, pending] = useActionState(
-    passwordSignupAction,
+  const [mode, setMode] = useState<SignupMode>("magic");
+  const [magicState, magicAction, magicPending] = useActionState(
+    magicLinkAction,
     initialState,
   );
+  const [passwordState, passwordAction, passwordPending] = useActionState(
+    passwordRegisterAction,
+    initialState,
+  );
+
+  const state = mode === "magic" ? magicState : passwordState;
+  const pending = mode === "magic" ? magicPending : passwordPending;
+
+  if (state.sent) {
+    return (
+      <Card className="w-full max-w-md rounded-2xl">
+        <CardHeader>
+          <CardTitle>Verify your email</CardTitle>
+          <CardDescription>
+            {state.message ??
+              "We sent a verification link. Confirm your email to continue."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {process.env.NODE_ENV === "development" && state.devVerifyUrl ? (
+            <>
+              <Alert>
+                <AlertDescription>
+                  Development mode: open the verification link below.
+                </AlertDescription>
+              </Alert>
+              <Button
+                className="w-full"
+                render={<Link href={state.devVerifyUrl} />}
+              >
+                Open verification link
+              </Button>
+            </>
+          ) : null}
+          <Button
+            variant="outline"
+            className="w-full"
+            render={<Link href="/login" />}
+          >
+            Back to sign in
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md rounded-2xl border-none ring-0 shadow-none">
       <CardHeader>
-        <CardTitle>Create account</CardTitle>
+        <CardTitle>Create your account</CardTitle>
         <CardDescription>
-          Start turning screen recordings into launch-ready demos.
+          {mode === "magic"
+            ? "Start with just your email. Add a password later if you want."
+            : "Create your account with an email and password."}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <OAuthButtons />
-        <form action={formAction} className="mt-6">
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="name">Name</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="name"
-                  name="name"
-                  autoComplete="name"
-                  required
-                  placeholder="Your name"
-                />
-              </FieldContent>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  placeholder="you@company.com"
-                />
-              </FieldContent>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  minLength={6}
-                  placeholder="At least 6 characters"
-                />
-              </FieldContent>
-            </Field>
-            {state.error ? (
-              <Alert variant="destructive">
-                <AlertDescription>{state.error}</AlertDescription>
-              </Alert>
-            ) : null}
-            <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "Creating account…" : "Create account"}
-            </Button>
-          </FieldGroup>
-        </form>
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/login" className="text-accent-foreground hover:underline">
-            Sign in
-          </Link>
-        </p>
+        {mode === "magic" ? (
+          <form action={magicAction}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="you@company.com"
+                  />
+                </FieldContent>
+              </Field>
+              {state.error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{state.error}</AlertDescription>
+                </Alert>
+              ) : null}
+              <Button type="submit" className="w-full" disabled={pending}>
+                {pending ? "Sending link…" : "Continue with email"}
+              </Button>
+            </FieldGroup>
+          </form>
+        ) : (
+          <form action={passwordAction}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="register-email">Email</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="register-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="you@company.com"
+                  />
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="register-password">Password</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="register-password"
+                    name="password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                    placeholder="At least 8 characters"
+                  />
+                </FieldContent>
+              </Field>
+              {state.error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{state.error}</AlertDescription>
+                </Alert>
+              ) : null}
+              <Button type="submit" className="w-full" disabled={pending}>
+                {pending ? "Creating account…" : "Create account"}
+              </Button>
+            </FieldGroup>
+          </form>
+        )}
+
+        <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
+          <p>
+            {mode === "magic" ? (
+              <>
+                Prefer a password?{" "}
+                <button
+                  type="button"
+                  className="text-accent-foreground hover:underline"
+                  onClick={() => setMode("password")}
+                >
+                  Create account with password
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="text-accent-foreground hover:underline"
+                onClick={() => setMode("magic")}
+              >
+                Use a magic link instead
+              </button>
+            )}
+          </p>
+          <p>
+            Already have an account?{" "}
+            <Link href="/login" className="text-accent-foreground hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

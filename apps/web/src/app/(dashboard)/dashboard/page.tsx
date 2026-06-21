@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Film, FolderOpen, Plus, Upload, Video, Zap } from "lucide-react";
 
 import { listDashboardProjects } from "@/app/actions/projects";
-import { auth } from "@/auth";
+import { getServerSession } from "@/lib/auth/session";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ProjectPoster } from "@/components/dashboard/project-poster";
@@ -19,7 +19,7 @@ import {
 import { buildProjectActivity } from "@/lib/dashboard/activity";
 
 export default async function DashboardHomePage() {
-  const session = await auth();
+  const session = await getServerSession();
   const projects = await listDashboardProjects();
   const recentProjects = projects.slice(0, 3);
   const activity = buildProjectActivity(projects, 8);
@@ -28,7 +28,7 @@ export default async function DashboardHomePage() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <PageHeader
         title={`Welcome back${session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}`}
-        description="Here's what's happening in your workspace."
+        description="Here's what's happening in your account."
       >
         <Button render={<Link href="/dashboard/projects/new" />}>
           <Plus data-icon="inline-start" />

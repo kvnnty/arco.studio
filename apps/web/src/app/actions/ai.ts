@@ -2,13 +2,21 @@
 
 import type { Marker, StylePreset } from "@arco/project-schema";
 
-import { auth } from "@/auth";
+import { getAccessToken } from "@/lib/auth/session";
 import {
   apiChat,
   apiGenerateDraft,
   apiRefineProject,
   apiRegenerateMarker,
 } from "@/lib/api/client";
+
+async function requireAccessToken(): Promise<string> {
+  const token = await getAccessToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+  return token;
+}
 
 export async function generateDraftAction(input: {
   title: string;
@@ -27,12 +35,8 @@ export async function generateDraftAction(input: {
   stylePreset: StylePreset;
   source: "llm" | "heuristic";
 }> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    throw new Error("Not authenticated");
-  }
-
-  return apiGenerateDraft(session.accessToken, input);
+  const token = await requireAccessToken();
+  return apiGenerateDraft(token, input);
 }
 
 export async function regenerateMarkerAction(input: {
@@ -47,17 +51,9 @@ export async function regenerateMarkerAction(input: {
     callout?: { text: string; subtext?: string };
     startMs: number;
   };
-}): Promise<{
-  callout: { text: string; subtext?: string };
-  label?: string;
-  source: "llm" | "heuristic";
-}> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    throw new Error("Not authenticated");
-  }
-
-  return apiRegenerateMarker(session.accessToken, input);
+}) {
+  const token = await requireAccessToken();
+  return apiRegenerateMarker(token, input);
 }
 
 export async function refineProjectAction(input: {
@@ -70,47 +66,14 @@ export async function refineProjectAction(input: {
     callout?: { text: string; subtext?: string };
     startMs: number;
   }>;
-}): Promise<{
-  markers: Array<{ callout: { text: string; subtext?: string }; label?: string }>;
-  source: "llm" | "heuristic";
-}> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    throw new Error("Not authenticated");
-  }
-
-  return apiRefineProject(session.accessToken, input);
+}) {
+  const token = await requireAccessToken();
+  return apiRefineProject(token, input);
 }
 
-export async function chatProjectAction(input: {
-  projectId: string;
-  message: string;
-  history?: Array<{ role: "user" | "assistant"; content: string }>;
-  project: {
-    title: string;
-    stylePreset?: string;
-    durationMs: number;
-    intent?: string;
-    productUrl?: string;
-    markers: Array<{
-      id: string;
-      startMs: number;
-      durationMs: number;
-      label?: string;
-      callout?: { text: string; subtext?: string };
-    }>;
-    selectedMarkerIndex?: number;
-    playheadMs?: number;
-  };
-}): Promise<{
-  action: Record<string, unknown>;
-  message: string;
-  source: "llm" | "heuristic";
-}> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    throw new Error("Not authenticated");
-  }
-
-  return apiChat(session.accessToken, input);
+export async function chatAction(input: Parameters<typeof apiChat>[1]) {
+  const token = await requireAccessToken();
+  return apiChat(token, input);
 }
+
+export const chatProjectAction = chatAction;

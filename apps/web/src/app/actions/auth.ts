@@ -1,25 +1,47 @@
 "use server";
 
-import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 
-import { signIn, signOut } from "@/auth";
-import { apiRegister } from "@/lib/api/client";
-import { ensureApiAuthForEmail } from "@/lib/auth/api-provision";
-import { createMagicLink } from "@/lib/auth/magic-link";
-import { createUser, getUserByEmail } from "@/lib/auth/users";
+import { ApiError, getApiUrl } from "@/lib/api/client";
+import { clearAuthCookies, setAuthCookies } from "@/lib/auth/cookies";
+import type { AuthTokensResponse } from "@/lib/auth/constants";
 import {
+  loginSchema,
   magicLinkSchema,
-  passwordLoginSchema,
-  passwordSignupSchema,
-  signupSchema,
+  passwordRegisterSchema,
+  resetPasswordSchema,
 } from "@/lib/validations/auth";
 import { formatZodError, safeParseFormData } from "@/lib/validations/form-data";
 
 export type AuthFormState = {
   error?: string;
   sent?: boolean;
-  verifyUrl?: string;
+  devVerifyUrl?: string;
+  message?: string;
 };
+
+async function postAuth<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${getApiUrl()}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    let message = "Something went wrong.";
+    try {
+      const payload = (await response.json()) as { message?: string | string[] };
+      if (typeof payload.message === "string") message = payload.message;
+      if (Array.isArray(payload.message)) message = payload.message.join(", ");
+    } catch {
+      // ignore
+    }
+    throw new ApiError(response.status, message);
+  }
+
+  return response.json() as Promise<T>;
+}
 
 export async function magicLinkAction(
   _prev: AuthFormState,
@@ -30,151 +52,170 @@ export async function magicLinkAction(
     return { error: formatZodError(parsed.error) };
   }
 
-  const { email } = parsed.data;
-
-  const user = await getUserByEmail(email);
-  if (!user) {
-    return { error: "No account found for this email. Create one first." };
-  }
-
-  const token = await createMagicLink(email);
-  const verifyUrl =
-    process.env.NODE_ENV === "development"
-      ? `/auth/verify?token=${token}`
-      : undefined;
-
-  return { sent: true, verifyUrl };
-}
-
-export async function passwordSignupAction(
-  _prev: AuthFormState,
-  formData: FormData,
-): Promise<AuthFormState> {
-  const parsed = safeParseFormData(passwordSignupSchema, formData);
-  if (!parsed.success) {
-    return { error: formatZodError(parsed.error) };
-  }
-
-  const { name, email, password } = parsed.data;
-
   try {
-    await apiRegister({ email, password, name });
+    const result = await postAuth<{ sent: boolean; devVerifyUrl?: string }>(
+      "/auth/magic-link",
+      { email: parsed.data.email },
+    );
+    return { sent: true, devVerifyUrl: result.devVerifyUrl };
   } catch (error) {
     return {
-      error:
-        error instanceof Error ? error.message : "Could not create account.",
+      error: error instanceof Error ? error.message : "Could not send magic link.",
     };
   }
-
-  try {
-    await signIn("credentials", {
-      email,
-      password,
-      redirectTo: "/dashboard/billing?welcome=1",
-    });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Account created but sign-in failed. Try logging in." };
-    }
-    throw error;
-  }
-
-  return {};
 }
 
 export async function passwordLoginAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const parsed = safeParseFormData(passwordLoginSchema, formData);
+  const parsed = safeParseFormData(loginSchema, formData);
   if (!parsed.success) {
     return { error: formatZodError(parsed.error) };
   }
 
-  const { email, password } = parsed.data;
-
   try {
-    await signIn("credentials", {
-      email,
-      password,
-      redirectTo: "/dashboard",
-    });
+    const tokens = await postAuth<AuthTokensResponse>("/auth/login", parsed.data);
+    await setAuthCookies(tokens);
+    redirect(tokens.user.onboardingCompleted ? "/dashboard" : "/onboarding");
   } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Invalid email or password." };
-    }
-    throw error;
+    return {
+      error: error instanceof Error ? error.message : "Invalid email or password.",
+    };
   }
-
-  return {};
 }
 
-export async function signupAction(
+export async function passwordRegisterAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const parsed = safeParseFormData(signupSchema, formData);
+  const parsed = safeParseFormData(passwordRegisterSchema, formData);
   if (!parsed.success) {
     return { error: formatZodError(parsed.error) };
   }
 
-  const { name, email } = parsed.data;
-
   try {
-    await createUser({ name, email });
+    const result = await postAuth<{ sent: boolean; message: string; devVerifyUrl?: string }>(
+      "/auth/register",
+      parsed.data,
+    );
+    return {
+      sent: true,
+      message: result.message,
+      devVerifyUrl: result.devVerifyUrl,
+    };
   } catch (error) {
     return {
-      error:
-        error instanceof Error ? error.message : "Could not create account.",
+      error: error instanceof Error ? error.message : "Could not create account.",
     };
   }
-
-  const token = await createMagicLink(email);
-  const verifyUrl =
-    process.env.NODE_ENV === "development"
-      ? `/auth/verify?token=${token}`
-      : undefined;
-
-  return { sent: true, verifyUrl };
 }
 
 export async function verifyMagicLinkAction(token: string) {
-  const { consumeMagicLink } = await import("@/lib/auth/magic-link");
-  const email = await consumeMagicLink(token);
-  if (!email) {
-    return { error: "This link is invalid or has expired." };
-  }
-
-  let authResult;
   try {
-    authResult = await ensureApiAuthForEmail(email);
+    const tokens = await postAuth<AuthTokensResponse>("/auth/magic-link/verify", {
+      token,
+    });
+    await setAuthCookies(tokens);
+    redirect(tokens.user.onboardingCompleted ? "/dashboard" : "/onboarding");
   } catch (error) {
     return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Could not connect to your account.",
+      error: error instanceof Error ? error.message : "This link is invalid or expired.",
     };
+  }
+}
+
+export async function completeOAuthAction(token: string) {
+  try {
+    const tokens = await postAuth<AuthTokensResponse>("/auth/oauth/complete", {
+      token,
+    });
+    await setAuthCookies(tokens);
+    redirect(tokens.user.onboardingCompleted ? "/dashboard" : "/onboarding");
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "OAuth sign-in failed.",
+    };
+  }
+}
+
+export async function forgotPasswordAction(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const parsed = safeParseFormData(magicLinkSchema, formData);
+  if (!parsed.success) {
+    return { error: formatZodError(parsed.error) };
   }
 
   try {
-    await signIn("credentials", {
-      email: authResult.user.email,
-      userId: authResult.user.id,
-      name: authResult.user.name ?? "",
-      accessToken: authResult.access_token,
-      redirectTo: "/dashboard/billing?welcome=1",
-    });
+    const result = await postAuth<{ sent: boolean; message: string }>(
+      "/auth/password/forgot",
+      { email: parsed.data.email },
+    );
+    return { sent: true, message: result.message };
   } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Could not sign in. Please request a new link." };
-    }
-    throw error;
+    return {
+      error: error instanceof Error ? error.message : "Could not send reset link.",
+    };
+  }
+}
+
+export async function resetPasswordAction(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const parsed = safeParseFormData(resetPasswordSchema, formData);
+  if (!parsed.success) {
+    return { error: formatZodError(parsed.error) };
   }
 
-  return {};
+  try {
+    await postAuth("/auth/password/reset", parsed.data);
+    redirect("/login?reset=1");
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Could not reset password.",
+    };
+  }
 }
 
 export async function signOutAction() {
-  await signOut({ redirectTo: "/login" });
+  const { getRefreshTokenFromCookies } = await import("@/lib/auth/cookies");
+  const refreshToken = await getRefreshTokenFromCookies();
+
+  if (refreshToken) {
+    try {
+      await postAuth("/auth/logout", { refreshToken });
+    } catch {
+      // ignore logout failures
+    }
+  }
+
+  await clearAuthCookies();
+  redirect("/login");
+}
+
+export async function completeOnboardingAction(input: {
+  name?: string;
+  step?: string;
+}) {
+  const { requireServerSession } = await import("@/lib/auth/session");
+  const session = await requireServerSession();
+
+  const response = await fetch(`${getApiUrl()}/auth/onboarding`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Could not save onboarding progress.");
+  }
+
+  return response.json();
 }

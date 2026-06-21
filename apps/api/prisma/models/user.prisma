@@ -1,17 +1,26 @@
 model User {
-  id                    String       @id @default(cuid())
-  email                 String       @unique
+  id                    String           @id @default(cuid())
+  email                 String           @unique
   name                  String?
-  passwordHash          String
-  createdAt             DateTime     @default(now())
-  stripeCustomerId      String?      @unique
-  stripeSubscriptionId  String?      @unique
-  planStatus            String       @default("inactive")
+  passwordHash          String?
+  emailVerified         Boolean          @default(false)
+  emailVerifiedAt       DateTime?
+  onboardingCompleted   Boolean          @default(false)
+  onboardingStep        String           @default("plan")
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  stripeCustomerId      String?          @unique
+  stripeSubscriptionId  String?          @unique
+  planStatus            String           @default("inactive")
   plan                  String?
-  exportAllowance       Int          @default(15)
-  exportsUsedThisPeriod Int          @default(0)
+  exportAllowance       Int              @default(15)
+  exportsUsedThisPeriod Int              @default(0)
   periodEnd             DateTime?
-  hadLaunchOffer        Boolean      @default(false)
+  hadLaunchOffer        Boolean          @default(false)
   projects              Project[]
   usageEvents           UsageEvent[]
+  authSessions          AuthSession[]
+  magicLinkTokens       MagicLinkToken[]
+  authAuditLogs         AuthAuditLog[]
+  authIdentities        AuthIdentity[]
 }

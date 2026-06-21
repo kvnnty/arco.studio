@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { auth } from "@/auth";
+import { getServerSession } from "@/lib/auth/session";
 import { getBillingStatusAction } from "@/app/actions/billing";
 import { EditorPage } from "@/components/editor/editor-page";
 import { EditorPaywall } from "@/components/dashboard/editor-paywall";
@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 export default async function EditorRoute() {
-  const session = await auth();
+  const session = await getServerSession();
   const billing = session?.accessToken
     ? await getBillingStatusAction().catch(() => null)
     : null;

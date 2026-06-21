@@ -2,7 +2,7 @@
 
 import type { ArcoProject } from "@arco/project-schema";
 
-import { auth } from "@/auth";
+import { getAccessToken } from "@/lib/auth/session";
 import {
   apiCreateProject,
   apiGetProject,
@@ -23,11 +23,11 @@ import {
 } from "@/lib/editor/create-project";
 
 async function requireAccessToken(): Promise<string> {
-  const session = await auth();
-  if (!session?.accessToken) {
+  const token = await getAccessToken();
+  if (!token) {
     throw new Error("Not authenticated");
   }
-  return session.accessToken;
+  return token;
 }
 
 function toEditorSession(
@@ -69,21 +69,21 @@ function toEditorSession(
 }
 
 export async function listDashboardProjects(): Promise<DashboardProject[]> {
-  const session = await auth();
-  if (!session?.accessToken) return [];
+  const token = await getAccessToken();
+  if (!token) return [];
 
-  const records = await apiListProjects(session.accessToken);
+  const records = await apiListProjects(token);
   return records.map(toDashboardProject);
 }
 
 export async function getDashboardProject(
   id: string,
 ): Promise<DashboardProject | null> {
-  const session = await auth();
-  if (!session?.accessToken) return null;
+  const token = await getAccessToken();
+  if (!token) return null;
 
   try {
-    const record = await apiGetProject(session.accessToken, id);
+    const record = await apiGetProject(token, id);
     return toDashboardProject(record);
   } catch {
     return null;
@@ -127,10 +127,10 @@ export async function syncProject(input: {
   recordingSrc: string;
   thumbnailUrl?: string;
 }) {
-  const session = await auth();
-  if (!session?.accessToken) return;
+  const token = await getAccessToken();
+  if (!token) return;
 
-  await apiUpdateProject(session.accessToken, input.projectId, {
+  await apiUpdateProject(token, input.projectId, {
     title: input.project.meta.title,
     platform: input.platform,
     stylePreset: input.project.stylePreset,
@@ -149,10 +149,10 @@ export async function syncProjectSummary(input: {
   exportFormat: string;
   markerCount: number;
 }) {
-  const session = await auth();
-  if (!session?.accessToken) return;
+  const token = await getAccessToken();
+  if (!token) return;
 
-  await apiUpdateProject(session.accessToken, input.id, {
+  await apiUpdateProject(token, input.id, {
     title: input.title,
     platform: input.platform,
     exportFormat: input.exportFormat,

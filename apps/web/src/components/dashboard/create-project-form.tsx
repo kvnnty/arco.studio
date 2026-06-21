@@ -5,7 +5,7 @@ import { STYLE_PRESETS } from "@arco/project-schema/style-presets";
 import { getExportDimensions } from "@arco/project-schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/providers/auth-provider";
 import { useCallback, useRef, useState } from "react";
 import { Sparkles, Upload } from "lucide-react";
 
@@ -49,7 +49,7 @@ const EXAMPLE_BRANDS = [
 
 export function CreateProjectForm() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("My launch video");

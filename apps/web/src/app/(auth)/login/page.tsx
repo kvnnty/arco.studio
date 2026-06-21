@@ -1,11 +1,24 @@
 import { redirect } from "next/navigation";
 
-import { auth } from "@/auth";
 import { LoginForm } from "@/components/auth/login-form";
+import { getServerSession } from "@/lib/auth/session";
 
-export default async function LoginPage() {
-  const session = await auth();
-  if (session) redirect("/dashboard");
+type PageProps = {
+  searchParams: Promise<{ error?: string; reset?: string }>;
+};
 
-  return <LoginForm />;
+export default async function LoginPage({ searchParams }: PageProps) {
+  const session = await getServerSession();
+  if (session) {
+    redirect(session.user.onboardingCompleted ? "/dashboard" : "/onboarding");
+  }
+
+  const params = await searchParams;
+
+  return (
+    <LoginForm
+      oauthError={params.error ? decodeURIComponent(params.error) : undefined}
+      resetSuccess={params.reset === "1"}
+    />
+  );
 }

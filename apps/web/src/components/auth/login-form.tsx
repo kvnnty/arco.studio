@@ -25,25 +25,28 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-
 const initialState: AuthFormState = {};
 
-type LoginTab = "password" | "magic";
+type LoginMode = "magic" | "password";
 
-export function LoginForm() {
-  const [tab, setTab] = useState<LoginTab>("password");
-  const [passwordState, passwordAction, passwordPending] = useActionState(
-    passwordLoginAction,
-    initialState,
-  );
+type LoginFormProps = {
+  oauthError?: string;
+  resetSuccess?: boolean;
+};
+
+export function LoginForm({ oauthError, resetSuccess }: LoginFormProps) {
+  const [mode, setMode] = useState<LoginMode>("magic");
   const [magicState, magicAction, magicPending] = useActionState(
     magicLinkAction,
     initialState,
   );
+  const [passwordState, passwordAction, passwordPending] = useActionState(
+    passwordLoginAction,
+    initialState,
+  );
 
-  const state = tab === "password" ? passwordState : magicState;
-  const pending = tab === "password" ? passwordPending : magicPending;
+  const state = mode === "magic" ? magicState : passwordState;
+  const pending = mode === "magic" ? magicPending : passwordPending;
 
   if (state.sent) {
     return (
@@ -55,21 +58,26 @@ export function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {process.env.NODE_ENV === "development" && state.verifyUrl ? (
+          {state.message ? (
             <Alert>
-              <AlertDescription>
-                Email delivery is not configured yet. Use this link to sign in
-                during development.
-              </AlertDescription>
+              <AlertDescription>{state.message}</AlertDescription>
             </Alert>
           ) : null}
-          {state.verifyUrl ? (
-            <Button
-              className="w-full"
-              render={<Link href={state.verifyUrl} />}
-            >
-              Open sign-in link
-            </Button>
+          {process.env.NODE_ENV === "development" && state.devVerifyUrl ? (
+            <>
+              <Alert>
+                <AlertDescription>
+                  Email delivery is not configured yet. Use this link during
+                  development.
+                </AlertDescription>
+              </Alert>
+              <Button
+                className="w-full"
+                render={<Link href={state.devVerifyUrl} />}
+              >
+                Open sign-in link
+              </Button>
+            </>
           ) : null}
           <Button
             variant="outline"
@@ -86,71 +94,29 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md rounded-2xl border-none ring-0 shadow-none">
       <CardHeader>
-        <CardTitle>Sign in</CardTitle>
+        <CardTitle>Welcome back</CardTitle>
         <CardDescription>
-          Sign in with your password or request a magic link.
+          {mode === "magic"
+            ? "Enter your email and we'll send you a secure sign-in link."
+            : "Sign in with the email and password for your account."}
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {resetSuccess ? (
+          <Alert className="mb-4">
+            <AlertDescription>
+              Password updated. Sign in with your new password.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {oauthError ? (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{oauthError}</AlertDescription>
+          </Alert>
+        ) : null}
         <OAuthButtons />
-        <div className="mt-6 grid grid-cols-2 gap-2">
-          <Button
-            type="button"
-            variant={tab === "password" ? "default" : "outline"}
-            onClick={() => setTab("password")}
-          >
-            Password
-          </Button>
-          <Button
-            type="button"
-            variant={tab === "magic" ? "default" : "outline"}
-            onClick={() => setTab("magic")}
-          >
-            Magic link
-          </Button>
-        </div>
-
-        {tab === "password" ? (
-          <form action={passwordAction} className="mt-6">
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="you@company.com"
-                  />
-                </FieldContent>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    placeholder="Your password"
-                  />
-                </FieldContent>
-              </Field>
-              {state.error ? (
-                <Alert variant="destructive">
-                  <AlertDescription>{state.error}</AlertDescription>
-                </Alert>
-              ) : null}
-              <Button type="submit" className="w-full" disabled={pending}>
-                {pending ? "Signing in…" : "Sign in with password"}
-              </Button>
-            </FieldGroup>
-          </form>
-        ) : (
-          <form action={magicAction} className="mt-6">
+        {mode === "magic" ? (
+          <form action={magicAction}>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="magic-email">Email</FieldLabel>
@@ -175,19 +141,90 @@ export function LoginForm() {
               </Button>
             </FieldGroup>
           </form>
+        ) : (
+          <form action={passwordAction}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="you@company.com"
+                  />
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    minLength={8}
+                    placeholder="Your password"
+                  />
+                </FieldContent>
+              </Field>
+              {state.error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{state.error}</AlertDescription>
+                </Alert>
+              ) : null}
+              <Button type="submit" className="w-full" disabled={pending}>
+                {pending ? "Signing in…" : "Sign in with password"}
+              </Button>
+            </FieldGroup>
+          </form>
         )}
 
-        <p
-          className={cn(
-            "mt-6 text-center text-sm text-muted-foreground",
-            tab === "magic" && "mt-4",
-          )}
-        >
-          No account?{" "}
-          <Link href="/signup" className="text-accent-foreground hover:underline">
-            Create one
-          </Link>
-        </p>
+        <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
+          <p>
+            {mode === "magic" ? (
+              <>
+                Prefer a password?{" "}
+                <button
+                  type="button"
+                  className="text-accent-foreground hover:underline"
+                  onClick={() => setMode("password")}
+                >
+                  Sign in with password
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="text-accent-foreground hover:underline"
+                  onClick={() => setMode("magic")}
+                >
+                  Use a magic link instead
+                </button>
+              </>
+            )}
+          </p>
+          {mode === "password" ? (
+            <p>
+              <Link
+                href="/forgot-password"
+                className="text-accent-foreground hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </p>
+          ) : null}
+          <p>
+            No account?{" "}
+            <Link href="/signup" className="text-accent-foreground hover:underline">
+              Create one
+            </Link>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

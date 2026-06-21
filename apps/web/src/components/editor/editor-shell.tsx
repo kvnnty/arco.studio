@@ -5,7 +5,7 @@ import { getExportDimensions } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 import type { PlayerRef } from "@remotion/player";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/providers/auth-provider";
 import Link from "next/link";
 import { Settings2, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -63,7 +63,7 @@ export function EditorShell({
   session: initialSession,
   onSessionChange,
 }: EditorShellProps) {
-  const { data: authSession } = useSession();
+  const { session: authSession } = useAuth();
   const [session, setSession] = useState(initialSession);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

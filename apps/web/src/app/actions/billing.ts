@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getAccessToken } from "@/lib/auth/session";
 import {
   apiCreateBillingCheckout,
   apiCreateBillingPortal,
@@ -11,11 +11,11 @@ import {
 } from "@/lib/api/client";
 
 async function requireToken(): Promise<string> {
-  const session = await auth();
-  if (!session?.accessToken) {
+  const token = await getAccessToken();
+  if (!token) {
     throw new Error("Not authenticated");
   }
-  return session.accessToken;
+  return token;
 }
 
 export async function getBillingStatusAction(): Promise<BillingStatus> {

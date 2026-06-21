@@ -3,7 +3,7 @@
 import type { ArcoProject } from "@arco/project-schema";
 import { Upload } from "lucide-react";
 import { useRef } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/providers/auth-provider";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ type CustomizePanelProps = {
 };
 
 export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const brand = project.brand ?? {

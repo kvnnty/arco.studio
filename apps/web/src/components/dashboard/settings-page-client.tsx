@@ -1,7 +1,13 @@
 "use client";
 
-import { Copy, Key, Plus } from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
 
+import { signOutAction } from "@/app/actions/auth";
+import {
+  listSessionsAction,
+  revokeSessionAction,
+  updateProfileAction,
+} from "@/app/actions/settings";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 type SettingsPageClientProps = {
   user: {
     name?: string | null;
@@ -23,20 +30,57 @@ type SettingsPageClientProps = {
   };
 };
 
+type SessionRow = {
+  id: string;
+  deviceLabel: string | null;
+  ipAddress: string | null;
+  lastUsedAt: string;
+  current: boolean;
+};
+
 export function SettingsPageClient({ user }: SettingsPageClientProps) {
+  const [name, setName] = useState(user.name ?? "");
+  const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    void listSessionsAction()
+      .then(setSessions)
+      .catch(() => setSessions([]));
+  }, []);
+
+  function saveProfile() {
+    startTransition(async () => {
+      setMessage(null);
+      try {
+        await updateProfileAction({ name: name.trim() || undefined });
+        setMessage("Profile saved.");
+      } catch {
+        setMessage("Could not save profile.");
+      }
+    });
+  }
+
+  function revokeSession(id: string) {
+    startTransition(async () => {
+      await revokeSessionAction(id);
+      setSessions((current) => current.filter((session) => session.id !== id));
+    });
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
       <PageHeader
         title="Settings"
-        description="Manage your account, workspace, and preferences."
+        description="Manage your account, security, and preferences."
       />
 
       <Tabs defaultValue="profile">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="workspace">Workspace</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="api">API keys</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="mt-6 space-y-6">
@@ -48,7 +92,11 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue={user.name ?? ""} />
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -59,48 +107,59 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
                   disabled
                 />
               </div>
-              <Button>Save changes</Button>
+              {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+              <Button onClick={saveProfile} disabled={pending}>
+                Save changes
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="workspace" className="mt-6 space-y-6">
+        <TabsContent value="security" className="mt-6 space-y-6">
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle className="text-base">Workspace</CardTitle>
+              <CardTitle className="text-base">Active sessions</CardTitle>
               <CardDescription>
-                General settings for your workspace.
+                Devices currently signed in to your account.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="workspace-name">Workspace name</Label>
-                <Input id="workspace-name" defaultValue="Sploy" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="workspace-slug">URL slug</Label>
-                <Input id="workspace-slug" defaultValue="sploy" disabled />
-              </div>
-              <Button>Save workspace</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">Default export settings</CardTitle>
-              <CardDescription>
-                Applied to new projects by default.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="default-format">Default format</Label>
-                <Input id="default-format" defaultValue="16:9" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="default-style">Default style preset</Label>
-                <Input id="default-style" defaultValue="Minimal" />
-              </div>
+              {sessions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No active sessions.</p>
+              ) : (
+                sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between gap-4 rounded-xl border p-4"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">
+                        {session.deviceLabel ?? "Unknown device"}
+                        {session.current ? " (this device)" : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {session.ipAddress ?? "Unknown IP"} · Last active{" "}
+                        {new Date(session.lastUsedAt).toLocaleString()}
+                      </p>
+                    </div>
+                    {!session.current ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => revokeSession(session.id)}
+                        disabled={pending}
+                      >
+                        Revoke
+                      </Button>
+                    ) : null}
+                  </div>
+                ))
+              )}
+              <form action={signOutAction}>
+                <Button variant="outline" type="submit">
+                  Sign out
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
@@ -109,9 +168,7 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
           <Card className="rounded-2xl">
             <CardHeader>
               <CardTitle className="text-base">Email notifications</CardTitle>
-              <CardDescription>
-                Choose what updates you receive.
-              </CardDescription>
+              <CardDescription>Choose what updates you receive.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {[
@@ -133,15 +190,9 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
                   description: "New features and improvements",
                   default: false,
                 },
-                {
-                  id: "marketing",
-                  label: "Marketing emails",
-                  description: "Tips, tutorials, and promotions",
-                  default: false,
-                },
-              ].map((item, i) => (
+              ].map((item, index) => (
                 <div key={item.id}>
-                  {i > 0 ? <Separator className="mb-6" /> : null}
+                  {index > 0 ? <Separator className="mb-6" /> : null}
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-medium">{item.label}</p>
@@ -153,44 +204,6 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="api" className="mt-6 space-y-6">
-          <Card className="rounded-2xl">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base">API keys</CardTitle>
-                <CardDescription>
-                  Programmatic access to Arco (coming soon).
-                </CardDescription>
-              </div>
-              <Button size="sm" disabled>
-                <Plus data-icon="inline-start" />
-                Create key
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between rounded-xl border border-dashed p-6">
-                <div className="flex items-center gap-3">
-                  <Key className="size-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">No API keys yet</p>
-                    <p className="text-xs text-muted-foreground">
-                      API access will be available in a future release.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-2 rounded-xl bg-muted/30 p-3">
-                <code className="flex-1 truncate text-xs text-muted-foreground">
-                  arco_sk_live_••••••••••••••••
-                </code>
-                <Button variant="ghost" size="icon-sm" disabled>
-                  <Copy className="size-4" />
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
