@@ -29,12 +29,19 @@ const initialState: AuthFormState = {};
 
 type LoginMode = "magic" | "password";
 
+import type { OAuthProviderId } from "@/lib/auth/oauth";
+
 type LoginFormProps = {
   oauthError?: string;
   resetSuccess?: boolean;
+  oauthProviders?: OAuthProviderId[];
 };
 
-export function LoginForm({ oauthError, resetSuccess }: LoginFormProps) {
+export function LoginForm({
+  oauthError,
+  resetSuccess,
+  oauthProviders = [],
+}: LoginFormProps) {
   const [mode, setMode] = useState<LoginMode>("magic");
   const [magicState, magicAction, magicPending] = useActionState(
     magicLinkAction,
@@ -114,9 +121,9 @@ export function LoginForm({ oauthError, resetSuccess }: LoginFormProps) {
             <AlertDescription>{oauthError}</AlertDescription>
           </Alert>
         ) : null}
-        <OAuthButtons />
+        <OAuthButtons providers={oauthProviders} />
         {mode === "magic" ? (
-          <form action={magicAction}>
+          <form action={magicAction} className="mt-6">
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="magic-email">Email</FieldLabel>
@@ -142,7 +149,7 @@ export function LoginForm({ oauthError, resetSuccess }: LoginFormProps) {
             </FieldGroup>
           </form>
         ) : (
-          <form action={passwordAction}>
+          <form action={passwordAction} className="mt-6">
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>

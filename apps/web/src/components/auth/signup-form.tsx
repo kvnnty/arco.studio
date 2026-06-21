@@ -9,6 +9,7 @@ import {
   type AuthFormState,
 } from "@/app/actions/auth";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import type { OAuthProviderId } from "@/lib/auth/oauth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +31,11 @@ const initialState: AuthFormState = {};
 
 type SignupMode = "magic" | "password";
 
-export function SignupForm() {
+type SignupFormProps = {
+  oauthProviders?: OAuthProviderId[];
+};
+
+export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
   const [mode, setMode] = useState<SignupMode>("magic");
   const [magicState, magicAction, magicPending] = useActionState(
     magicLinkAction,
@@ -93,9 +98,9 @@ export function SignupForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <OAuthButtons />
+        <OAuthButtons providers={oauthProviders} />
         {mode === "magic" ? (
-          <form action={magicAction}>
+          <form action={magicAction} className="mt-6">
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -121,7 +126,7 @@ export function SignupForm() {
             </FieldGroup>
           </form>
         ) : (
-          <form action={passwordAction}>
+          <form action={passwordAction} className="mt-6">
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="register-email">Email</FieldLabel>
