@@ -27,7 +27,7 @@ export function FeatureComparisonTable() {
               <th className="px-6 py-4 text-[13px] font-medium text-marketing-muted">
                 Feature
               </th>
-              <th className="px-6 py-4 text-center text-[13px] font-semibold">Starter</th>
+              <th className="px-6 py-4 text-center text-[13px] font-semibold">Intro</th>
               <th className="px-6 py-4 text-center text-[13px] font-semibold text-primary">
                 Pro
               </th>
@@ -52,7 +52,7 @@ export function FeatureComparisonTable() {
                   >
                     <td className="px-6 py-4 text-[14px] text-foreground">{feature.name}</td>
                     <td className="px-6 py-4 text-center">
-                      <CellValue value={feature.starter} />
+                      <CellValue value={feature.trial} />
                     </td>
                     <td className="px-6 py-4 text-center">
                       <CellValue value={feature.pro} />

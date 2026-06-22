@@ -5,6 +5,7 @@ import {
   apiCreateBillingPortal,
   apiGetBillingStatus,
   apiGetBillingUsage,
+  type CheckoutPlan,
 } from "@/lib/api/client";
 import { useApiClient } from "@/lib/api/hooks/use-api-client";
 import { queryKeys } from "@/lib/api/query-keys";
@@ -33,9 +34,9 @@ export function useCheckoutMutation() {
   const { token } = useApiClient();
 
   return useMutation({
-    mutationFn: () => {
+    mutationFn: (plan: CheckoutPlan) => {
       if (!token) throw new Error("Not authenticated");
-      return apiCreateBillingCheckout(token);
+      return apiCreateBillingCheckout(token, plan);
     },
   });
 }

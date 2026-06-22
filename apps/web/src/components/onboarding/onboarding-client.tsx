@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCompleteOnboardingMutation } from "@/lib/api/hooks/auth";
 import { useCheckoutMutation } from "@/lib/api/hooks/billing";
+import type { CheckoutPlan } from "@/lib/api/client";
 import type { AuthUser } from "@/lib/auth/constants";
 
 type OnboardingClientProps = {
@@ -53,20 +54,13 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
     );
   }
 
-  function finishFree() {
-    completeOnboarding.mutate(
-      { step: "completed" },
-      { onSuccess: () => router.push("/dashboard") },
-    );
-  }
-
-  function startCheckout() {
+  function startCheckout(plan: CheckoutPlan) {
     setError(null);
     completeOnboarding.mutate(
       { step: "completed" },
       {
         onSuccess: () => {
-          checkout.mutate(undefined, {
+          checkout.mutate(plan, {
             onSuccess: ({ url }) => {
               window.location.href = url;
             },
@@ -75,6 +69,13 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
         },
         onError: () => setError("Could not start checkout."),
       },
+    );
+  }
+
+  function goToBilling() {
+    completeOnboarding.mutate(
+      { step: "completed" },
+      { onSuccess: () => router.push("/dashboard/billing?welcome=1") },
     );
   }
 
@@ -119,22 +120,38 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
           <CardHeader>
             <CardTitle className="text-base">Choose your plan</CardTitle>
             <CardDescription>
-              Explore the dashboard free, or upgrade now to unlock exports.
+              No free tier. Start with Intro at $9/month or Pro at $29/month from day
+              one.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-xl border p-4">
-              <p className="font-medium">Pro — Launch Offer</p>
+              <p className="font-medium">Intro — $9/mo</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                $9 first month, then $29/mo. 15 exports per month, all aspect
-                ratios, AI assistant, brand from URL.
+                Get started with 5 exports. Upgrade to Pro or Team when you&apos;re
+                ready.
               </p>
-              <Button className="mt-4" onClick={startCheckout} disabled={pending}>
-                Upgrade and pay
+              <Button
+                className="mt-4"
+                variant="outline"
+                onClick={() => startCheckout("trial")}
+                disabled={pending}
+              >
+                Get started — $9/mo
               </Button>
             </div>
-            <Button variant="outline" onClick={finishFree} disabled={pending}>
-              Continue to dashboard
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+              <p className="font-medium">Pro — $29/mo</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Full access from day one. 15 exports per month, all aspect ratios, AI
+                assistant, brand from URL.
+              </p>
+              <Button className="mt-4" onClick={() => startCheckout("pro")} disabled={pending}>
+                Start Pro — $29/mo
+              </Button>
+            </div>
+            <Button variant="ghost" onClick={goToBilling} disabled={pending}>
+              Choose later in Billing
             </Button>
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </CardContent>

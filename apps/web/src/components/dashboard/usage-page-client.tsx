@@ -67,7 +67,7 @@ export function UsagePageClient() {
           </Button>
         ) : (
           <Button render={<Link href="/dashboard/billing?welcome=1" />}>
-            Start Launch Offer
+            Choose a plan
           </Button>
         )}
       </PageHeader>

@@ -26,7 +26,7 @@ export function EditorPaywall({ canUseProduct, children }: EditorPaywallProps) {
           Subscribe to use the editor and export videos.
         </p>
         <Button onClick={() => router.push("/dashboard/billing?welcome=1")}>
-          View Launch Offer
+          Choose a plan
         </Button>
       </div>
     );

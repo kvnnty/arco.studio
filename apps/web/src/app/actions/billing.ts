@@ -8,6 +8,7 @@ import {
   apiGetBillingUsage,
   type BillingStatus,
   type BillingUsage,
+  type CheckoutPlan,
 } from "@/lib/api/client";
 
 async function requireToken(): Promise<string> {
@@ -28,9 +29,11 @@ export async function getBillingUsageAction(): Promise<BillingUsage> {
   return apiGetBillingUsage(token);
 }
 
-export async function createCheckoutSessionAction(): Promise<{ url: string }> {
+export async function createCheckoutSessionAction(
+  plan: CheckoutPlan,
+): Promise<{ url: string }> {
   const token = await requireToken();
-  return apiCreateBillingCheckout(token);
+  return apiCreateBillingCheckout(token, plan);
 }
 
 export async function createPortalSessionAction(): Promise<{ url: string }> {

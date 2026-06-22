@@ -470,13 +470,16 @@ export async function apiGetBillingUsage(token: string): Promise<BillingUsage> {
   return apiRequest<BillingUsage>("/billing/usage", { token });
 }
 
+export type CheckoutPlan = "trial" | "pro";
+
 export async function apiCreateBillingCheckout(
   token: string,
+  plan: CheckoutPlan,
 ): Promise<{ url: string }> {
   return apiRequest<{ url: string }>("/billing/checkout-session", {
     token,
     method: "POST",
-    body: {},
+    body: { plan },
   });
 }
 

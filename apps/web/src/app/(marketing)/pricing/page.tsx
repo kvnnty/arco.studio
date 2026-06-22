@@ -11,7 +11,7 @@ import { createPageMetadata } from "@/lib/marketing/metadata";
 export const metadata: Metadata = createPageMetadata({
   title: "Pricing",
   description:
-    "Simple, transparent pricing for product demo videos. Start free, upgrade when you scale.",
+    "Simple, transparent pricing for product demo videos. $9 Intro, $29 Pro, or $79 Team.",
   path: "/pricing",
 });
 
@@ -23,7 +23,7 @@ export default function PricingPage() {
           <SectionHeader
             eyebrow="Pricing"
             title="Simple pricing for every stage"
-            description="Start free with one export. Upgrade to Pro when you're ready to ship demos every week."
+            description="Start with Intro at $9/month, or go straight to Pro at $29/month when you're ready to ship."
           />
           <div className="mt-16">
             <PricingCards plans={pricingPlans} />
@@ -43,8 +43,8 @@ export default function PricingPage() {
       <FaqSection items={pricingFaqs} />
 
       <CtaBand
-        title="Start with one free export"
-        description="No credit card required. Upgrade anytime from your dashboard."
+        title="Pick the plan that fits"
+        description="No free tier. Start with Intro at $9/month or subscribe to Pro at $29/month from day one."
       />
     </>
   );

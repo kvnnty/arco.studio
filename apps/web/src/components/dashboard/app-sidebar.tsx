@@ -166,7 +166,7 @@ export function AppSidebar({ billing }: { billing?: BillingStatus | null }) {
                 href="/dashboard/billing?welcome=1"
                 className="mt-2 block text-xs text-accent-foreground hover:underline"
               >
-                Launch Offer — $9 first month
+                Intro $9/mo or Pro $29/mo
               </Link>
             </>
           )}

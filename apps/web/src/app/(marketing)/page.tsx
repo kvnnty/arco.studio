@@ -54,7 +54,7 @@ export default function HomePage() {
     <>
       <JsonLd data={homeJsonLd} />
       <Hero
-        eyebrow="Start with one free export"
+        eyebrow="From $9/month"
         title="Turn screen recordings into launch-ready demos"
         description="Upload once. Arco adds zooms, ripples, and titles — then export a polished product video in minutes, not hours."
         features={heroFeatures}
@@ -102,7 +102,7 @@ export default function HomePage() {
           <SectionHeader
             eyebrow="Pricing"
             title="Simple pricing for every stage"
-            description="Start free with one export. Upgrade when you're ready to ship demos every week."
+            description="Start with Intro at $9/month, or subscribe to Pro at $29/month when you're ready to ship."
           />
           <div className="mt-16">
             <PricingCards
@@ -127,7 +127,7 @@ export default function HomePage() {
 
       <CtaBand
         title="Ready to ship your first demo?"
-        description="Start free with one export. Upgrade when you're ready to scale."
+        description="Start with Intro at $9/month or go straight to Pro at $29/month."
         secondaryCta={{ label: "Read the docs", href: "/docs" }}
       />
     </>

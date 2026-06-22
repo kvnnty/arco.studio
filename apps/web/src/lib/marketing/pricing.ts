@@ -8,23 +8,25 @@ export type PricingPlan = {
   cta: string;
   href: string;
   popular?: boolean;
+  priceNote?: string;
 };
 
 export const pricingPlans: PricingPlan[] = [
   {
-    id: "free",
-    name: "Starter",
-    description: "Try Arco with a single export to validate your workflow.",
-    monthlyPrice: 0,
-    annualPrice: 0,
+    id: "trial",
+    name: "Intro",
+    description: "Try Arco at a lower price before you commit to a full plan.",
+    monthlyPrice: 9,
+    annualPrice: 9,
     features: [
-      "1 MP4 export",
+      "5 MP4 exports",
       "Full editor access",
       "1080p export",
       "Community support",
     ],
     cta: "Get started",
-    href: "/signup",
+    href: "/signup?plan=trial",
+    priceNote: "Entry plan — upgrade to Pro or Team anytime",
   },
   {
     id: "pro",
@@ -40,8 +42,8 @@ export const pricingPlans: PricingPlan[] = [
       "Music bed + logo overlay",
       "Priority support",
     ],
-    cta: "Start Pro trial",
-    href: "/signup",
+    cta: "Start Pro — $29/mo",
+    href: "/signup?plan=pro",
     popular: true,
   },
   {
@@ -75,9 +77,9 @@ export const pricingFaqs = [
       "Yes. Cancel from your billing settings and your subscription ends at the close of the current billing period.",
   },
   {
-    question: "Is there a launch discount?",
+    question: "What's the difference between Intro and Pro?",
     answer:
-      "New Pro subscribers get their first month for $9, then $29/month. The discount applies automatically at checkout.",
+      "Intro is $9/month with a smaller export limit — a low-commitment way to try Arco. Pro is $29/month from day one with full features. Choose Pro at checkout if you're already ready to ship demos every week.",
   },
   {
     question: "Do you offer annual billing?",
@@ -96,26 +98,26 @@ export const featureComparison = {
     {
       name: "Exports",
       features: [
-        { name: "Monthly exports", starter: "1", pro: "15", team: "50" },
-        { name: "Resolution", starter: "1080p", pro: "1080p", team: "1080p" },
-        { name: "Aspect ratios", starter: "16:9", pro: "16:9, 1:1, 9:16", team: "16:9, 1:1, 9:16" },
+        { name: "Monthly exports", trial: "5", pro: "15", team: "50" },
+        { name: "Resolution", trial: "1080p", pro: "1080p", team: "1080p" },
+        { name: "Aspect ratios", trial: "16:9", pro: "16:9, 1:1, 9:16", team: "16:9, 1:1, 9:16" },
       ],
     },
     {
       name: "Editor",
       features: [
-        { name: "AI assistant", starter: true, pro: true, team: true },
-        { name: "Brand from URL", starter: false, pro: true, team: true },
-        { name: "Music + logo overlay", starter: false, pro: true, team: true },
-        { name: "Shared brand kits", starter: false, pro: false, team: true },
+        { name: "AI assistant", trial: true, pro: true, team: true },
+        { name: "Brand from URL", trial: false, pro: true, team: true },
+        { name: "Music + logo overlay", trial: false, pro: true, team: true },
+        { name: "Shared brand kits", trial: false, pro: false, team: true },
       ],
     },
     {
       name: "Support",
       features: [
-        { name: "Community support", starter: true, pro: true, team: true },
-        { name: "Priority support", starter: false, pro: true, team: true },
-        { name: "Dedicated support", starter: false, pro: false, team: true },
+        { name: "Community support", trial: true, pro: true, team: true },
+        { name: "Priority support", trial: false, pro: true, team: true },
+        { name: "Dedicated support", trial: false, pro: false, team: true },
       ],
     },
   ],

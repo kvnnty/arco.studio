@@ -70,7 +70,7 @@ export class BillingService {
 
     if (user.planStatus !== 'active') {
       throw new HttpException(
-        'An active subscription is required. Start the Launch Offer to continue.',
+        'An active subscription is required. Choose Intro ($9) or Pro ($29) to continue.',
         HttpStatus.PAYMENT_REQUIRED,
       );
     }
@@ -155,7 +155,11 @@ export class BillingService {
     return { events, counts };
   }
 
-  async createCheckoutSession(userId: string, email: string): Promise<{ url: string }> {
+  async createCheckoutSession(
+    userId: string,
+    email: string,
+    plan: 'trial' | 'pro',
+  ): Promise<{ url: string }> {
     const stripe = this.requireStripe();
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -165,9 +169,16 @@ export class BillingService {
       throw new BadRequestException('You already have an active subscription.');
     }
 
-    const priceId = process.env.STRIPE_PRICE_PRO_MONTHLY;
+    const priceId =
+      plan === 'trial'
+        ? process.env.STRIPE_PRICE_TRIAL_MONTHLY
+        : process.env.STRIPE_PRICE_PRO_MONTHLY;
     if (!priceId) {
-      throw new ServiceUnavailableException('STRIPE_PRICE_PRO_MONTHLY is not configured.');
+      throw new ServiceUnavailableException(
+        plan === 'trial'
+          ? 'STRIPE_PRICE_TRIAL_MONTHLY is not configured.'
+          : 'STRIPE_PRICE_PRO_MONTHLY is not configured.',
+      );
     }
 
     let customerId = user.stripeCustomerId;
@@ -190,22 +201,15 @@ export class BillingService {
       process.env.STRIPE_CANCEL_URL ??
       'http://localhost:3000/dashboard/billing?checkout=canceled';
 
-    const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
-    const launchCoupon = process.env.STRIPE_COUPON_LAUNCH;
-    if (launchCoupon && !user.hadLaunchOffer) {
-      discounts.push({ coupon: launchCoupon });
-    }
-
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      discounts: discounts.length > 0 ? discounts : undefined,
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: { userId },
+      metadata: { userId, plan },
       subscription_data: {
-        metadata: { userId },
+        metadata: { userId, plan },
       },
     });
 
@@ -280,22 +284,25 @@ export class BillingService {
     const userId = session.metadata?.userId;
     if (!userId) return;
 
+    const plan = session.metadata?.plan === 'trial' ? 'trial' : 'pro';
     const subscriptionId =
       typeof session.subscription === 'string'
         ? session.subscription
         : session.subscription?.id;
 
-    const hadDiscount = (session.total_details?.amount_discount ?? 0) > 0;
+    const exportAllowance =
+      plan === 'trial'
+        ? Number(process.env.EXPORT_ALLOWANCE_TRIAL ?? 5)
+        : Number(process.env.EXPORT_ALLOWANCE_PRO ?? 15);
 
     await this.prisma.user.update({
       where: { id: userId },
       data: {
         planStatus: 'active',
-        plan: 'pro',
+        plan,
         stripeSubscriptionId: subscriptionId ?? undefined,
-        exportAllowance: Number(process.env.EXPORT_ALLOWANCE_PRO ?? 15),
+        exportAllowance,
         exportsUsedThisPeriod: 0,
-        ...(hadDiscount ? { hadLaunchOffer: true } : {}),
       },
     });
   }
@@ -330,6 +337,13 @@ export class BillingService {
       planStatus = 'canceled';
     }
 
+    const plan =
+      subscription.metadata?.plan === 'trial'
+        ? 'trial'
+        : planStatus === 'active'
+          ? 'pro'
+          : null;
+
     const periodEndUnix =
       subscription.items.data[0]?.current_period_end ??
       (subscription as Stripe.Subscription & { current_period_end?: number })
@@ -342,7 +356,7 @@ export class BillingService {
       where: { id: userId },
       data: {
         planStatus,
-        plan: planStatus === 'active' ? 'pro' : null,
+        plan,
         stripeSubscriptionId: subscription.id,
         periodEnd,
       },

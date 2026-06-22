@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Req,
+  Body,
   Headers,
   HttpCode,
   UseGuards,
@@ -11,6 +12,7 @@ import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { BillingService } from './billing.service.js';
+import { CreateCheckoutDto } from './dto/create-checkout.dto.js';
 
 type AuthedRequest = Request & { user: { id: string; email: string } };
 
@@ -32,8 +34,12 @@ export class BillingController {
 
   @UseGuards(JwtAuthGuard)
   @Post('checkout-session')
-  createCheckout(@Req() req: AuthedRequest) {
-    return this.billing.createCheckoutSession(req.user.id, req.user.email);
+  createCheckout(@Req() req: AuthedRequest, @Body() body: CreateCheckoutDto) {
+    return this.billing.createCheckoutSession(
+      req.user.id,
+      req.user.email,
+      body.plan,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

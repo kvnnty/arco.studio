@@ -81,7 +81,7 @@ export function PricingCards({
       <MotionStagger className="grid gap-6 lg:grid-cols-3" stagger={0.1}>
         {plans.map((plan) => {
           const price = annual ? plan.annualPrice : plan.monthlyPrice;
-          const isFree = price === 0;
+          const isTrial = plan.id === "trial";
           const features = featureLimit
             ? plan.features.slice(0, featureLimit)
             : plan.features;
@@ -104,28 +104,26 @@ export function PricingCards({
                 <p className={cn("mt-2 text-[14px]", plan.popular ? "text-secondary-foreground" : "text-marketing-muted")}>{plan.description}</p>
 
                 <div className="mt-6 flex items-baseline gap-1">
-                  {isFree ? (
-                    <span className="text-[3rem] font-semibold leading-none tracking-tight">
-                      Free
-                    </span>
-                  ) : (
-                    <>
-                      <motion.span
-                        key={price}
-                        className="text-[3rem] font-semibold leading-none tracking-tight"
-                        initial={reduced ? false : { opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={reduced ? { duration: 0 } : springSnappy}
-                      >
-                        ${price}
-                      </motion.span>
-                      <span className={cn("text-[14px]", plan.popular ? "text-secondary-foreground" : "text-marketing-muted")}>/mo</span>
-                    </>
-                  )}
+                  <motion.span
+                    key={price}
+                    className="text-[3rem] font-semibold leading-none tracking-tight"
+                    initial={reduced ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={reduced ? { duration: 0 } : springSnappy}
+                  >
+                    ${price}
+                  </motion.span>
+                  <span className={cn("text-[14px]", plan.popular ? "text-secondary-foreground" : "text-marketing-muted")}>/mo</span>
                 </div>
 
-                {plan.id === "pro" && !annual ? (
-                  <p className="mt-2 text-[12px] text-primary">$9 first month launch offer</p>
+                {plan.priceNote ? (
+                  <p className={cn("mt-2 text-[12px]", plan.popular ? "text-secondary-foreground/80" : "text-marketing-muted")}>
+                    {plan.priceNote}
+                  </p>
+                ) : null}
+
+                {isTrial && showBillingToggle && annual ? (
+                  <p className="mt-2 text-[12px] text-marketing-muted">Intro is billed monthly only</p>
                 ) : null}
 
                 <ul className="mt-8 flex-1 space-y-3">
