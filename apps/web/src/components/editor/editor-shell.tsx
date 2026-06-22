@@ -10,13 +10,13 @@ import Link from "next/link";
 import { Settings2, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import type { BrandKit } from "@/lib/api/hooks/brand";
 import {
-  chatProjectAction,
-  refineProjectAction,
-  regenerateMarkerAction,
-} from "@/app/actions/ai";
-import type { BrandKit } from "@/app/actions/brand";
-import { syncProject } from "@/app/actions/projects";
+  useChatMutation,
+  useRefineProjectMutation,
+  useRegenerateMarkerMutation,
+} from "@/lib/api/hooks/ai";
+import { useSyncProjectMutation } from "@/lib/api/hooks/projects";
 import { apiChatStream } from "@/lib/api/client";
 import { ChatPanel } from "@/components/editor/chat-panel";
 import { CustomizePanel } from "@/components/editor/customize-panel";
@@ -76,6 +76,10 @@ export function EditorShell({
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const brandKitRef = useRef<BrandKit | null>(null);
   const playerRef = useRef<PlayerRef>(null);
+  const syncProject = useSyncProjectMutation();
+  const refineProject = useRefineProjectMutation();
+  const regenerateMarker = useRegenerateMarkerMutation();
+  const chatMutation = useChatMutation();
 
   const project = session.project;
   const isAnalyzing = session.journeyStep === "analyzing";
@@ -113,14 +117,18 @@ export function EditorShell({
     setSaveStatus("saving");
 
     saveTimerRef.current = setTimeout(() => {
-      void syncProject({
-        projectId: session.projectId,
-        project: session.project,
-        platform: session.platform,
-        recordingSrc: session.recordingUrl,
-      })
-        .then(() => setSaveStatus("saved"))
-        .catch(() => setSaveStatus("error"));
+      syncProject.mutate(
+        {
+          projectId: session.projectId,
+          project: session.project,
+          platform: session.platform,
+          recordingSrc: session.recordingUrl,
+        },
+        {
+          onSuccess: () => setSaveStatus("saved"),
+          onError: () => setSaveStatus("error"),
+        },
+      );
     }, 500);
 
     return () => {
@@ -128,7 +136,7 @@ export function EditorShell({
         clearTimeout(saveTimerRef.current);
       }
     };
-  }, [session, isAnalyzing]);
+  }, [session, isAnalyzing, syncProject]);
 
   const updateProject = useCallback(
     (next: ArcoProject, step: EditorSession["journeyStep"] = "edit") => {
@@ -235,7 +243,7 @@ export function EditorShell({
         journeyStep: "edit",
       };
 
-      void syncProject({
+      syncProject.mutate({
         projectId: session.projectId,
         project: draftProject,
         platform: session.platform,
@@ -245,7 +253,7 @@ export function EditorShell({
       persist(nextSession);
       setSelectedId(draftProject.markers[0]?.id ?? null);
     },
-    [persist, session],
+    [persist, session, syncProject],
   );
 
   const executeChatAction = useCallback(
@@ -256,7 +264,7 @@ export function EditorShell({
         const instruction =
           (action.instruction as string | undefined) ?? "Improve the copy";
         const sorted = [...project.markers].sort((a, b) => a.startMs - b.startMs);
-        const refined = await refineProjectAction({
+        const refined = await refineProject.mutateAsync({
           title: project.meta.title,
           instruction,
           intent: project.brief?.intent,
@@ -281,7 +289,7 @@ export function EditorShell({
         if (!marker) {
           return { type: "reply", message: "Could not find that scene." };
         }
-        const result = await regenerateMarkerAction({
+        const result = await regenerateMarker.mutateAsync({
           title: project.meta.title,
           durationMs: project.recording.durationMs,
           markerIndex,
@@ -325,7 +333,7 @@ export function EditorShell({
 
       return { type: "reply", message: "Done." };
     },
-    [project, selectedMarkerIndex],
+    [project, selectedMarkerIndex, refineProject, regenerateMarker],
   );
 
   const handleSendMessage = useCallback(
@@ -387,7 +395,7 @@ export function EditorShell({
           message: fullMessage || "Done.",
         };
       } else {
-        chatResult = await chatProjectAction(payload);
+        chatResult = await chatMutation.mutateAsync(payload);
         options?.onStream?.(chatResult.message);
       }
 
@@ -408,6 +416,7 @@ export function EditorShell({
     },
     [
       authSession?.accessToken,
+      chatMutation,
       executeChatAction,
       project,
       selectedMarkerIndex,

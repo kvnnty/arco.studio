@@ -2,11 +2,9 @@
 
 import type { ExportFormat } from "@arco/project-schema";
 import { Download } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { createRenderJob, getRenderJob } from "@/app/actions/renders";
-import { getBillingStatusAction } from "@/app/actions/billing";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,6 +20,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
+import {
+  useCreateRenderMutation,
+  useRenderJob,
+} from "@/lib/api/hooks/renders";
 
 const FORMATS: { id: ExportFormat; label: string; description: string }[] = [
   { id: "16:9", label: "16:9", description: "YouTube, landing hero" },
@@ -55,6 +58,14 @@ const PHASE_LABELS: Record<ExportPhase, string> = {
   failed: "Export failed",
 };
 
+function phaseFromStatus(status: string): ExportPhase {
+  if (status === "rendering" || status === "processing") return "rendering";
+  if (status === "uploading") return "uploading";
+  if (status === "completed") return "completed";
+  if (status === "failed") return "failed";
+  return "queued";
+}
+
 export function ExportDialog({
   open,
   onOpenChange,
@@ -63,106 +74,71 @@ export function ExportDialog({
   onFormatChange,
   projectTitle,
 }: ExportDialogProps) {
+  const [jobId, setJobId] = useState<string | null>(null);
   const [phase, setPhase] = useState<ExportPhase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const stopPolling = useCallback(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }, []);
+  const { data: billing } = useBillingStatus();
+  const createRender = useCreateRenderMutation();
+  const { data: job } = useRenderJob(jobId, !!jobId);
 
   useEffect(() => {
-    return () => stopPolling();
-  }, [stopPolling]);
+    if (!job) return;
 
-  const pollJob = useCallback(
-    (jobId: string) => {
-      stopPolling();
+    if (job.status === "completed" && job.outputUrl) {
+      setPhase("completed");
+      setOutputUrl(job.outputUrl);
+      toast.success("Export ready");
+      return;
+    }
 
-      pollRef.current = setInterval(() => {
-        void (async () => {
-          try {
-            const job = await getRenderJob(jobId);
+    if (job.status === "failed") {
+      const message = job.errorMessage ?? "Render failed.";
+      setPhase("failed");
+      setError(message);
+      toast.error(message);
+      return;
+    }
 
-            if (job.status === "rendering" || job.status === "processing") {
-              setPhase("rendering");
-              return;
-            }
-
-            if (job.status === "uploading") {
-              setPhase("uploading");
-              return;
-            }
-
-            if (job.status === "completed" && job.outputUrl) {
-              stopPolling();
-              setPhase("completed");
-              setOutputUrl(job.outputUrl);
-              toast.success("Export ready");
-              return;
-            }
-
-            if (job.status === "failed") {
-              stopPolling();
-              setPhase("failed");
-              const message = job.errorMessage ?? "Render failed.";
-              setError(message);
-              toast.error(message);
-            }
-          } catch {
-            stopPolling();
-            setPhase("failed");
-            setError("Could not check render status.");
-          }
-        })();
-      }, 2000);
-    },
-    [stopPolling],
-  );
+    setPhase(phaseFromStatus(job.status));
+  }, [job]);
 
   const handleExport = async () => {
     setPhase("queued");
     setError(null);
     setOutputUrl(null);
+    setJobId(null);
 
     try {
-      const billing = await getBillingStatusAction();
-      if (!billing.canUseProduct) {
+      if (!billing?.canUseProduct) {
         throw new Error("Subscribe to export videos.");
       }
       if (billing.exportsRemaining <= 0) {
-        throw new Error("No exports remaining this period. Manage your plan in Billing.");
+        throw new Error(
+          "No exports remaining this period. Manage your plan in Billing.",
+        );
       }
 
-      const job = await createRenderJob({ projectId, format });
-      setPhase(
-        job.status === "rendering" || job.status === "processing"
-          ? "rendering"
-          : job.status === "uploading"
-            ? "uploading"
-            : "queued",
-      );
+      const created = await createRender.mutateAsync({ projectId, format });
+      setJobId(created.id);
 
-      if (job.status === "completed" && job.outputUrl) {
+      if (created.status === "completed" && created.outputUrl) {
         setPhase("completed");
-        setOutputUrl(job.outputUrl);
+        setOutputUrl(created.outputUrl);
         toast.success("Export ready");
         return;
       }
 
-      if (job.status === "failed") {
-        const message = job.errorMessage ?? "Render failed.";
+      if (created.status === "failed") {
+        const message = created.errorMessage ?? "Render failed.";
         setPhase("failed");
         setError(message);
         toast.error(message);
         return;
       }
 
-      pollJob(job.id);
+      setPhase(phaseFromStatus(created.status));
     } catch (exportError) {
       const message =
         exportError instanceof Error
@@ -194,7 +170,7 @@ export function ExportDialog({
       open={open}
       onOpenChange={(next) => {
         if (!next) {
-          stopPolling();
+          setJobId(null);
           setPhase("idle");
           setError(null);
           setOutputUrl(null);
@@ -272,8 +248,8 @@ export function ExportDialog({
         ) : (
           <Button
             className="w-full"
-            onClick={handleExport}
-            disabled={isBusy || phase === "completed"}
+            onClick={() => void handleExport()}
+            disabled={isBusy || phase === "completed" || createRender.isPending}
           >
             <Download data-icon="inline-start" />
             {isBusy

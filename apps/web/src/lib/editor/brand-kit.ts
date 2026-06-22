@@ -1,5 +1,5 @@
 import type { StylePreset } from "@arco/project-schema";
-import type { BrandKit } from "@/app/actions/brand";
+import type { BrandKit } from "@/lib/api/hooks/brand";
 
 export function toneToStylePreset(
   tone?: BrandKit["tone"],

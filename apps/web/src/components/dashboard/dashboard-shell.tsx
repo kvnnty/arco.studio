@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { AppTopbar } from "@/components/dashboard/app-topbar";
 import { DashboardPaywall } from "@/components/dashboard/dashboard-paywall";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -12,23 +13,18 @@ type DashboardShellProps = {
     name?: string | null;
     email?: string | null;
   };
-  exportsRemaining: number;
-  planActive: boolean;
-  billing: React.ComponentProps<typeof AppSidebar>["billing"];
 };
 
-export function DashboardShell({
-  children,
-  user,
-  exportsRemaining,
-  planActive,
-  billing,
-}: DashboardShellProps) {
+export function DashboardShell({ children, user }: DashboardShellProps) {
   const { consent } = useConsent();
+  const { data: billing } = useBillingStatus();
+
+  const planActive = billing?.canUseProduct ?? false;
+  const exportsRemaining = billing?.exportsRemaining ?? 0;
 
   return (
     <SidebarProvider persistState={consent.functional}>
-      <AppSidebar billing={billing} />
+      <AppSidebar billing={billing ?? null} />
       <SidebarInset>
         <AppTopbar
           user={user}

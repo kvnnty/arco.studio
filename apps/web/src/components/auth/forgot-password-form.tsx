@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useState } from "react";
 
-import { forgotPasswordAction, type AuthFormState } from "@/app/actions/auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,23 +19,18 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-
-const initialState: AuthFormState = {};
+import { useForgotPasswordMutation } from "@/lib/api/hooks/auth";
 
 export function ForgotPasswordForm() {
-  const [state, formAction, pending] = useActionState(
-    forgotPasswordAction,
-    initialState,
-  );
+  const [sentMessage, setSentMessage] = useState<string | null>(null);
+  const forgotPassword = useForgotPasswordMutation();
 
-  if (state.sent) {
+  if (sentMessage) {
     return (
       <Card className="w-full max-w-md rounded-2xl">
         <CardHeader>
           <CardTitle>Check your email</CardTitle>
-          <CardDescription>
-            {state.message ?? "If an account exists, a reset link has been sent."}
-          </CardDescription>
+          <CardDescription>{sentMessage}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button className="w-full" render={<Link href="/login" />}>
@@ -56,7 +50,20 @@ export function ForgotPasswordForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={formAction}>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            forgotPassword.mutate(String(formData.get("email") ?? ""), {
+              onSuccess: (result) => {
+                setSentMessage(
+                  result.message ??
+                    "If an account exists, a reset link has been sent.",
+                );
+              },
+            });
+          }}
+        >
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -71,13 +78,19 @@ export function ForgotPasswordForm() {
                 />
               </FieldContent>
             </Field>
-            {state.error ? (
+            {forgotPassword.error ? (
               <Alert variant="destructive">
-                <AlertDescription>{state.error}</AlertDescription>
+                <AlertDescription>
+                  {forgotPassword.error.message}
+                </AlertDescription>
               </Alert>
             ) : null}
-            <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "Sending…" : "Send reset link"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={forgotPassword.isPending}
+            >
+              {forgotPassword.isPending ? "Sending…" : "Send reset link"}
             </Button>
           </FieldGroup>
         </form>

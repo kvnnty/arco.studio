@@ -4,6 +4,7 @@ import type { Marker } from "@arco/project-schema";
 import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { useAuth } from "@/components/providers/auth-provider";
 import { JourneyStepper } from "@/components/editor/journey-stepper";
 import {
   ANALYSIS_STEPS,
@@ -34,8 +35,12 @@ export function AnalysisScreen({
 }: AnalysisScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [detected, setDetected] = useState<Marker[]>([]);
+  const { session } = useAuth();
 
   useEffect(() => {
+    const accessToken = session?.accessToken;
+    if (!accessToken) return;
+
     let cancelled = false;
 
     void runAnalysis(
@@ -45,6 +50,7 @@ export function AnalysisScreen({
         setDetected(markers);
       },
       {
+        accessToken,
         title: projectTitle,
         durationMs,
         platform,
@@ -58,7 +64,15 @@ export function AnalysisScreen({
     return () => {
       cancelled = true;
     };
-  }, [durationMs, intent, onComplete, platform, projectTitle, productUrl]);
+  }, [
+    durationMs,
+    intent,
+    onComplete,
+    platform,
+    projectTitle,
+    productUrl,
+    session?.accessToken,
+  ]);
 
   const progress = ((stepIndex + 1) / ANALYSIS_STEPS.length) * 100;
   const currentStep = ANALYSIS_STEPS[stepIndex];

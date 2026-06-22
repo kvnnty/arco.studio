@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
 
-import type { BillingStatus } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +13,10 @@ import {
 } from "@/components/ui/card";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { UsageChart } from "@/components/dashboard/usage-chart";
+import {
+  useBillingStatus,
+  useBillingUsage,
+} from "@/lib/api/hooks/billing";
 import { buildWeeklyExportChart } from "@/lib/dashboard/usage-chart";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -24,23 +27,28 @@ const TYPE_LABELS: Record<string, string> = {
   ai_chat: "Chat messages",
 };
 
-type UsagePageClientProps = {
-  status: BillingStatus;
-  counts: Record<string, number>;
-  events: Array<{ type: string; createdAt: string }>;
-};
+export function UsagePageClient() {
+  const { data: status, isLoading: statusLoading } = useBillingStatus();
+  const { data: usage, isLoading: usageLoading } = useBillingUsage();
 
-export function UsagePageClient({
-  status,
-  counts,
-  events,
-}: UsagePageClientProps) {
+  if (statusLoading || usageLoading || !status || !usage) {
+    return (
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+        <PageHeader
+          title="Usage & exports"
+          description="Track exports and activity for this billing period."
+        />
+        <p className="text-sm text-muted-foreground">Loading usage…</p>
+      </div>
+    );
+  }
+
   const used = status.exportsUsedThisPeriod;
   const allowance = status.exportAllowance;
   const percent = allowance > 0 ? Math.round((used / allowance) * 100) : 0;
-  const chartData = buildWeeklyExportChart(events);
+  const chartData = buildWeeklyExportChart(usage.events);
 
-  const breakdown = Object.entries(counts)
+  const breakdown = Object.entries(usage.counts)
     .filter(([type]) => type !== "export_refund")
     .map(([type, count]) => ({
       label: TYPE_LABELS[type] ?? type,

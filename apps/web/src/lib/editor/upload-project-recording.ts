@@ -1,7 +1,7 @@
 import type { ArcoProject, ExportFormat, StylePreset } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 
-import { syncProject } from "@/app/actions/projects";
+import { syncProjectRecord } from "@/lib/api/projects";
 import {
   uploadRecordingWithProgress,
   uploadThumbnail,
@@ -104,7 +104,7 @@ export async function uploadProjectRecording(
     project = applyStylePreset(project, input.stylePreset);
   }
 
-  await syncProject({
+  await syncProjectRecord(input.accessToken, {
     projectId: input.projectId,
     project,
     platform: input.platform as "web" | "mobile" | "both",

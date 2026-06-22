@@ -4,10 +4,8 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  createEditorProject,
-  loadEditorProject,
-} from "@/app/actions/projects";
+import { fetchEditorProject } from "@/lib/api/projects";
+import { useCreateProjectMutation } from "@/lib/api/hooks/projects";
 import { CreateProjectScreen } from "@/components/editor/create-project-screen";
 import { EditorShell } from "@/components/editor/editor-shell";
 import { UploadScreen } from "@/components/editor/upload-screen";
@@ -35,6 +33,7 @@ export function EditorPage() {
   >(null);
 
   const projectIdParam = searchParams.get("projectId");
+  const createProject = useCreateProjectMutation();
 
   useEffect(() => {
     if (authLoading) return;
@@ -45,19 +44,22 @@ export function EditorPage() {
       setLoadError(null);
 
       if (projectIdParam) {
-        const loaded = await loadEditorProject(projectIdParam);
-        if (cancelled) return;
+        const accessToken = authSession?.accessToken;
+        if (!accessToken) return;
 
-        if (!loaded) {
+        try {
+          const loaded = await fetchEditorProject(accessToken, projectIdParam);
+          if (cancelled) return;
+
+          saveEditorSession(loaded);
+          setSession(loaded);
+          setReady(true);
+        } catch {
+          if (cancelled) return;
           setLoadError("Project not found or you do not have access.");
           setSession(null);
           setReady(true);
-          return;
         }
-
-        saveEditorSession(loaded);
-        setSession(loaded);
-        setReady(true);
         return;
       }
 
@@ -78,7 +80,7 @@ export function EditorPage() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, projectIdParam, router]);
+  }, [authLoading, authSession?.accessToken, projectIdParam, router]);
 
   const goToStep = useCallback(
     (step: JourneyStep, nextSession: EditorSession) => {
@@ -95,7 +97,7 @@ export function EditorPage() {
       setLoadError(null);
 
       try {
-        const { id } = await createEditorProject({ title: name, platform });
+        const { id } = await createProject.mutateAsync({ title: name, platform });
         router.replace(`/editor?projectId=${id}`);
       } catch {
         setLoadError("Could not create project. Please sign in and try again.");
@@ -103,7 +105,7 @@ export function EditorPage() {
         setCreating(false);
       }
     },
-    [router],
+    [createProject, router],
   );
 
   const handleUpload = useCallback(

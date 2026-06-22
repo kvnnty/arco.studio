@@ -1,71 +1,52 @@
 import type { ArcoProject } from "@arco/project-schema";
+import type { AxiosRequestConfig } from "axios";
 
-export function getApiUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_API_URL ??
-    process.env.API_URL ??
-    "http://localhost:8000/api"
-  );
-}
+import { ApiError, createApiClient } from "@/lib/api/axios";
+import { getApiUrl } from "@/lib/api/config";
 
-export class ApiError extends Error {
-  status: number;
+export { ApiError, getApiUrl };
 
-  constructor(status: number, message: string) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
-
-type ApiFetchOptions = {
+type ApiRequestOptions = {
   token?: string;
   method?: string;
   body?: unknown;
   formData?: FormData;
+  onUploadProgress?: (percent: number) => void;
 };
 
-export async function apiFetch<T>(
+async function apiRequest<T>(
   path: string,
-  options: ApiFetchOptions = {},
+  options: ApiRequestOptions = {},
 ): Promise<T> {
-  const { token, method = "GET", body, formData } = options;
-  const headers: Record<string, string> = {};
+  const {
+    token,
+    method = "GET",
+    body,
+    formData,
+    onUploadProgress,
+  } = options;
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  if (body && !formData) {
-    headers["Content-Type"] = "application/json";
-  }
-
-  const response = await fetch(`${getApiUrl()}${path}`, {
+  const client = createApiClient(token);
+  const config: AxiosRequestConfig = {
     method,
-    headers,
-    body: formData ?? (body ? JSON.stringify(body) : undefined),
-  });
+    url: path,
+    data: formData ?? body,
+    headers: formData ? { "Content-Type": "multipart/form-data" } : undefined,
+    onUploadProgress: onUploadProgress
+      ? (event) => {
+          if (!event.total) return;
+          onUploadProgress(Math.round((event.loaded / event.total) * 100));
+        }
+      : undefined,
+  };
 
-  if (!response.ok) {
-    let message = response.statusText;
-    try {
-      const payload = (await response.json()) as { message?: string | string[] };
-      if (typeof payload.message === "string") {
-        message = payload.message;
-      } else if (Array.isArray(payload.message)) {
-        message = payload.message.join(", ");
-      }
-    } catch {
-      // ignore parse errors
-    }
-    throw new ApiError(response.status, message);
-  }
+  const response = await client.request<T>(config);
 
   if (response.status === 204) {
     return undefined as T;
   }
 
-  return response.json() as Promise<T>;
+  return response.data;
 }
 
 export type AuthResponse = AuthTokensResponse;
@@ -86,14 +67,19 @@ export type AuthTokensResponse = {
 };
 
 export async function apiRequestMagicLink(email: string) {
-  return apiFetch<{ sent: boolean; devVerifyUrl?: string }>("/auth/magic-link", {
-    method: "POST",
-    body: { email: email.trim().toLowerCase() },
-  });
+  return apiRequest<{ sent: boolean; devVerifyUrl?: string }>(
+    "/auth/magic-link",
+    {
+      method: "POST",
+      body: { email: email.trim().toLowerCase() },
+    },
+  );
 }
 
-export async function apiVerifyMagicLink(token: string): Promise<AuthTokensResponse> {
-  return apiFetch<AuthTokensResponse>("/auth/magic-link/verify", {
+export async function apiVerifyMagicLink(
+  token: string,
+): Promise<AuthTokensResponse> {
+  return apiRequest<AuthTokensResponse>("/auth/magic-link/verify", {
     method: "POST",
     body: { token },
   });
@@ -103,7 +89,7 @@ export async function apiLogin(input: {
   email: string;
   password: string;
 }): Promise<AuthTokensResponse> {
-  return apiFetch<AuthTokensResponse>("/auth/login", {
+  return apiRequest<AuthTokensResponse>("/auth/login", {
     method: "POST",
     body: {
       email: input.email.trim().toLowerCase(),
@@ -116,12 +102,57 @@ export async function apiRegister(input: {
   email: string;
   password: string;
 }): Promise<{ sent: boolean; message: string; devVerifyUrl?: string }> {
-  return apiFetch("/auth/register", {
+  return apiRequest("/auth/register", {
     method: "POST",
     body: {
       email: input.email.trim().toLowerCase(),
       password: input.password,
     },
+  });
+}
+
+export async function apiForgotPassword(email: string) {
+  return apiRequest<{ sent: boolean; message: string }>(
+    "/auth/password/forgot",
+    {
+      method: "POST",
+      body: { email: email.trim().toLowerCase() },
+    },
+  );
+}
+
+export async function apiResetPassword(input: {
+  token: string;
+  password: string;
+}) {
+  return apiRequest("/auth/password/reset", {
+    method: "POST",
+    body: input,
+  });
+}
+
+export async function apiCompleteOAuth(token: string) {
+  return apiRequest<AuthTokensResponse>("/auth/oauth/complete", {
+    method: "POST",
+    body: { token },
+  });
+}
+
+export async function apiCompleteOnboarding(
+  token: string,
+  input: { name?: string; step?: string },
+) {
+  return apiRequest("/auth/onboarding", {
+    token,
+    method: "PATCH",
+    body: input,
+  });
+}
+
+export async function apiLogout(refreshToken: string) {
+  return apiRequest("/auth/logout", {
+    method: "POST",
+    body: { refreshToken },
   });
 }
 
@@ -159,13 +190,13 @@ export async function apiGetProject(
   token: string,
   projectId: string,
 ): Promise<ApiProjectRecord> {
-  return apiFetch<ApiProjectRecord>(`/projects/${projectId}`, { token });
+  return apiRequest<ApiProjectRecord>(`/projects/${projectId}`, { token });
 }
 
 export async function apiListProjects(
   token: string,
 ): Promise<ApiProjectRecord[]> {
-  return apiFetch<ApiProjectRecord[]>("/projects", { token });
+  return apiRequest<ApiProjectRecord[]>("/projects", { token });
 }
 
 export async function apiCreateProject(
@@ -177,7 +208,7 @@ export async function apiCreateProject(
     projectData?: ArcoProject;
   },
 ): Promise<ApiProjectRecord> {
-  return apiFetch<ApiProjectRecord>("/projects", {
+  return apiRequest<ApiProjectRecord>("/projects", {
     token,
     method: "POST",
     body: input,
@@ -198,7 +229,7 @@ export async function apiUpdateProject(
     thumbnailUrl?: string;
   },
 ): Promise<ApiProjectRecord> {
-  return apiFetch<ApiProjectRecord>(`/projects/${projectId}`, {
+  return apiRequest<ApiProjectRecord>(`/projects/${projectId}`, {
     token,
     method: "PATCH",
     body: input,
@@ -210,42 +241,14 @@ export async function uploadRecordingWithProgress(
   file: File,
   onProgress?: (percent: number) => void,
 ): Promise<{ key: string; url: string }> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${getApiUrl()}/uploads`);
-    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+  const formData = new FormData();
+  formData.append("file", file);
 
-    xhr.upload.onprogress = (event) => {
-      if (!event.lengthComputable || !onProgress) return;
-      onProgress(Math.round((event.loaded / event.total) * 100));
-    };
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          resolve(JSON.parse(xhr.responseText) as { key: string; url: string });
-        } catch {
-          reject(new Error("Invalid upload response"));
-        }
-        return;
-      }
-
-      let message = "Upload failed";
-      try {
-        const payload = JSON.parse(xhr.responseText) as { message?: string };
-        if (payload.message) message = payload.message;
-      } catch {
-        // ignore
-      }
-      reject(new ApiError(xhr.status, message));
-    };
-
-    xhr.onerror = () => reject(new Error("Upload failed"));
-    xhr.onabort = () => reject(new Error("Upload cancelled"));
-
-    const formData = new FormData();
-    formData.append("file", file);
-    xhr.send(formData);
+  return apiRequest<{ key: string; url: string }>("/uploads", {
+    token,
+    method: "POST",
+    formData,
+    onUploadProgress: onProgress,
   });
 }
 
@@ -256,7 +259,7 @@ export async function uploadThumbnail(
   const formData = new FormData();
   formData.append("file", file);
 
-  return apiFetch<{ key: string; url: string }>("/uploads/thumbnail", {
+  return apiRequest<{ key: string; url: string }>("/uploads/thumbnail", {
     token,
     method: "POST",
     formData,
@@ -284,7 +287,7 @@ export async function apiCreateRender(
   token: string,
   input: { projectId: string; format: string },
 ): Promise<RenderJobRecord> {
-  return apiFetch<RenderJobRecord>("/renders", {
+  return apiRequest<RenderJobRecord>("/renders", {
     token,
     method: "POST",
     body: input,
@@ -295,7 +298,7 @@ export async function apiGetRender(
   token: string,
   jobId: string,
 ): Promise<RenderJobRecord> {
-  return apiFetch<RenderJobRecord>(`/renders/${jobId}`, { token });
+  return apiRequest<RenderJobRecord>(`/renders/${jobId}`, { token });
 }
 
 export async function apiGenerateDraft(
@@ -314,7 +317,7 @@ export async function apiGenerateDraft(
     };
   },
 ): Promise<GenerateDraftResponse> {
-  return apiFetch<GenerateDraftResponse>("/ai/generate-draft", {
+  return apiRequest<GenerateDraftResponse>("/ai/generate-draft", {
     token,
     method: "POST",
     body: input,
@@ -343,7 +346,7 @@ export async function apiRegenerateMarker(
     };
   },
 ): Promise<RegenerateMarkerResponse> {
-  return apiFetch<RegenerateMarkerResponse>("/ai/regenerate-marker", {
+  return apiRequest<RegenerateMarkerResponse>("/ai/regenerate-marker", {
     token,
     method: "POST",
     body: input,
@@ -351,7 +354,10 @@ export async function apiRegenerateMarker(
 }
 
 export type RefineProjectResponse = {
-  markers: Array<{ callout: { text: string; subtext?: string }; label?: string }>;
+  markers: Array<{
+    callout: { text: string; subtext?: string };
+    label?: string;
+  }>;
   source: "llm" | "heuristic";
 };
 
@@ -369,7 +375,7 @@ export async function apiRefineProject(
     }>;
   },
 ): Promise<RefineProjectResponse> {
-  return apiFetch<RefineProjectResponse>("/ai/refine-project", {
+  return apiRequest<RefineProjectResponse>("/ai/refine-project", {
     token,
     method: "POST",
     body: input,
@@ -406,7 +412,7 @@ export async function apiChat(
     };
   },
 ): Promise<ChatResponse> {
-  return apiFetch<ChatResponse>("/ai/chat", {
+  return apiRequest<ChatResponse>("/ai/chat", {
     token,
     method: "POST",
     body: input,
@@ -428,7 +434,7 @@ export async function apiAnalyzeBrandUrl(
   token: string,
   url: string,
 ): Promise<BrandKitResponse> {
-  return apiFetch<BrandKitResponse>("/brand/analyze-url", {
+  return apiRequest<BrandKitResponse>("/brand/analyze-url", {
     token,
     method: "POST",
     body: { url },
@@ -457,17 +463,17 @@ export type BillingUsage = {
 };
 
 export async function apiGetBillingStatus(token: string): Promise<BillingStatus> {
-  return apiFetch<BillingStatus>("/billing/status", { token });
+  return apiRequest<BillingStatus>("/billing/status", { token });
 }
 
 export async function apiGetBillingUsage(token: string): Promise<BillingUsage> {
-  return apiFetch<BillingUsage>("/billing/usage", { token });
+  return apiRequest<BillingUsage>("/billing/usage", { token });
 }
 
 export async function apiCreateBillingCheckout(
   token: string,
 ): Promise<{ url: string }> {
-  return apiFetch<{ url: string }>("/billing/checkout-session", {
+  return apiRequest<{ url: string }>("/billing/checkout-session", {
     token,
     method: "POST",
     body: {},
@@ -477,17 +483,52 @@ export async function apiCreateBillingCheckout(
 export async function apiCreateBillingPortal(
   token: string,
 ): Promise<{ url: string }> {
-  return apiFetch<{ url: string }>("/billing/portal-session", {
+  return apiRequest<{ url: string }>("/billing/portal-session", {
     token,
     method: "POST",
     body: {},
   });
 }
 
+export type AuthSessionRecord = {
+  id: string;
+  deviceLabel: string | null;
+  ipAddress: string | null;
+  lastUsedAt: string;
+  createdAt: string;
+  current: boolean;
+};
+
+export async function apiUpdateProfile(
+  token: string,
+  input: { name?: string },
+) {
+  return apiRequest("/users/me", {
+    token,
+    method: "PATCH",
+    body: input,
+  });
+}
+
+export async function apiListSessions(token: string) {
+  return apiRequest<AuthSessionRecord[]>("/auth/sessions", { token });
+}
+
+export async function apiRevokeSession(token: string, sessionId: string) {
+  return apiRequest(`/auth/sessions/${sessionId}`, {
+    token,
+    method: "DELETE",
+  });
+}
+
 export async function apiChatStream(
   token: string,
   input: Parameters<typeof apiChat>[1],
-  onChunk: (chunk: { token?: string; action?: Record<string, unknown>; error?: string }) => void,
+  onChunk: (chunk: {
+    token?: string;
+    action?: Record<string, unknown>;
+    error?: string;
+  }) => void,
 ): Promise<void> {
   const response = await fetch(`${getApiUrl()}/ai/chat/stream`, {
     method: "POST",
@@ -530,7 +571,13 @@ export async function apiChatStream(
       const payload = line.slice(6).trim();
       if (payload === "[DONE]") return;
       try {
-        onChunk(JSON.parse(payload) as { token?: string; action?: Record<string, unknown>; error?: string });
+        onChunk(
+          JSON.parse(payload) as {
+            token?: string;
+            action?: Record<string, unknown>;
+            error?: string;
+          },
+        );
       } catch {
         // ignore malformed chunks
       }

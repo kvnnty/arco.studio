@@ -3,18 +3,18 @@
 import Link from "next/link";
 import { Download, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { createRenderJob, getRenderJob } from "@/app/actions/renders";
 import type { ProjectStatus } from "@/lib/dashboard/types";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useCreateRenderMutation, useRenderJob } from "@/lib/api/hooks/renders";
 
 type ProjectDetailActionsProps = {
   projectId: string;
@@ -34,122 +34,87 @@ export function ProjectDetailActions({
   latestRenderError,
 }: ProjectDetailActionsProps) {
   const router = useRouter();
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
+  const [jobId, setJobId] = useState<string | null>(
+    initialStatus === "processing" ? latestRenderJobId : null,
+  );
   const [status, setStatus] = useState(initialStatus);
   const [outputUrl, setOutputUrl] = useState(latestExportUrl);
-  const [renderJobId, setRenderJobId] = useState(latestRenderJobId);
   const [error, setError] = useState(latestRenderError);
   const [exporting, setExporting] = useState(false);
   const [stageLabel, setStageLabel] = useState<string | null>(null);
 
-  const stopPolling = useCallback(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }, []);
-
-  const refreshPage = useCallback(() => {
-    router.refresh();
-  }, [router]);
-
-  const pollJob = useCallback(
-    (jobId: string) => {
-      stopPolling();
-      setStatus("processing");
-      setError(null);
-
-      pollRef.current = setInterval(() => {
-        void (async () => {
-          try {
-            const job = await getRenderJob(jobId);
-
-            if (
-              job.status === "queued" ||
-              job.status === "rendering" ||
-              job.status === "processing" ||
-              job.status === "uploading"
-            ) {
-              setStatus("processing");
-              setStageLabel(
-                job.status === "queued"
-                  ? "Queued for render…"
-                  : job.status === "uploading"
-                    ? "Uploading MP4…"
-                    : "Rendering video…",
-              );
-              return;
-            }
-
-            if (job.status === "completed" && job.outputUrl) {
-              stopPolling();
-              setStatus("completed");
-              setOutputUrl(job.outputUrl);
-              setExporting(false);
-              refreshPage();
-              return;
-            }
-
-            if (job.status === "failed") {
-              stopPolling();
-              setStatus("failed");
-              const message = job.errorMessage ?? "Export failed.";
-              setError(message);
-              setExporting(false);
-              toast.error(message);
-              refreshPage();
-            }
-          } catch {
-            stopPolling();
-            setStatus("failed");
-            setError("Could not check export status.");
-            setExporting(false);
-          }
-        })();
-      }, 2000);
-    },
-    [refreshPage, stopPolling],
+  const createRender = useCreateRenderMutation();
+  const { data: job } = useRenderJob(
+    jobId,
+    !!jobId && (status === "processing" || exporting),
   );
 
   useEffect(() => {
+    if (!job) return;
+
     if (
-      renderJobId &&
-      (initialStatus === "processing" || status === "processing")
+      job.status === "queued" ||
+      job.status === "rendering" ||
+      job.status === "processing" ||
+      job.status === "uploading"
     ) {
-      pollJob(renderJobId);
+      setStatus("processing");
+      setStageLabel(
+        job.status === "queued"
+          ? "Queued for render…"
+          : job.status === "uploading"
+            ? "Uploading MP4…"
+            : "Rendering video…",
+      );
+      return;
     }
-    return () => stopPolling();
-  }, [initialStatus, pollJob, renderJobId, status, stopPolling]);
+
+    if (job.status === "completed" && job.outputUrl) {
+      setStatus("completed");
+      setOutputUrl(job.outputUrl);
+      setExporting(false);
+      router.refresh();
+      return;
+    }
+
+    if (job.status === "failed") {
+      const message = job.errorMessage ?? "Export failed.";
+      setStatus("failed");
+      setError(message);
+      setExporting(false);
+      toast.error(message);
+      router.refresh();
+    }
+  }, [job, router]);
 
   const handleExport = async () => {
     setExporting(true);
     setError(null);
 
     try {
-      const job = await createRenderJob({
+      const created = await createRender.mutateAsync({
         projectId,
         format: exportFormat,
       });
 
-      setRenderJobId(job.id);
+      setJobId(created.id);
 
-      if (job.status === "completed" && job.outputUrl) {
+      if (created.status === "completed" && created.outputUrl) {
         setStatus("completed");
-        setOutputUrl(job.outputUrl);
+        setOutputUrl(created.outputUrl);
         setExporting(false);
-        refreshPage();
+        router.refresh();
         return;
       }
 
-      if (job.status === "failed") {
+      if (created.status === "failed") {
         setStatus("failed");
-        setError(job.errorMessage ?? "Export failed.");
+        setError(created.errorMessage ?? "Export failed.");
         setExporting(false);
         return;
       }
 
-      pollJob(job.id);
+      setStatus("processing");
     } catch (exportError) {
       setStatus("failed");
       setError(
@@ -208,8 +173,8 @@ export function ProjectDetailActions({
         <Button
           variant="outline"
           className="w-full"
-          onClick={handleExport}
-          disabled={isProcessing}
+          onClick={() => void handleExport()}
+          disabled={isProcessing || createRender.isPending}
         >
           <RefreshCw data-icon="inline-start" />
           {status === "failed" ? "Retry export" : "Export again"}

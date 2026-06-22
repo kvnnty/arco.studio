@@ -9,7 +9,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useCallback, useRef, useState } from "react";
 import { Sparkles, Upload } from "lucide-react";
 
-import { createEditorProject } from "@/app/actions/projects";
+import { useCreateProjectMutation } from "@/lib/api/hooks/projects";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,7 @@ export function CreateProjectForm() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const createProject = useCreateProjectMutation();
 
   const handleFile = useCallback((next: File) => {
     if (!next.type.startsWith("video/")) {
@@ -89,7 +90,7 @@ export function CreateProjectForm() {
     setUploadProgress(0);
 
     try {
-      const { id } = await createEditorProject({
+      const { id } = await createProject.mutateAsync({
         title: name.trim() || "Untitled",
         platform: "web",
       });

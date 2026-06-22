@@ -4,7 +4,7 @@ import {
   effectsFromClickEffect,
 } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
-import { generateDraftAction } from "@/app/actions/ai";
+import { apiGenerateDraft } from "@/lib/api/client";
 import { createMarkerId } from "./create-project";
 
 export type AnalysisStep = {
@@ -118,12 +118,13 @@ export type DraftAnalysisResult = {
   markers: Marker[];
   stylePreset: StylePreset;
   source: "llm" | "heuristic";
-  brandKit?: import("@/app/actions/brand").BrandKit;
+  brandKit?: import("@/lib/api/hooks/brand").BrandKit;
 };
 
 export async function runAnalysis(
   onStep: (stepIndex: number, detectedMarkers: Marker[]) => void,
   input: {
+    accessToken: string;
     title: string;
     durationMs: number;
     platform?: string;
@@ -137,7 +138,7 @@ export async function runAnalysis(
     };
   },
 ): Promise<DraftAnalysisResult> {
-  const draftPromise = generateDraftAction({
+  const draftPromise = apiGenerateDraft(input.accessToken, {
     title: input.title,
     durationMs: input.durationMs,
     platform: input.platform,

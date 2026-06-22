@@ -8,7 +8,7 @@ import {
 import { Sparkles } from "lucide-react";
 import { useState } from "react";
 
-import { regenerateMarkerAction } from "@/app/actions/ai";
+import { useRegenerateMarkerMutation } from "@/lib/api/hooks/ai";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -66,6 +66,7 @@ export function SceneInspector({
 }: SceneInspectorProps) {
   const [regenerating, setRegenerating] = useState(false);
   const [regenError, setRegenError] = useState<string | null>(null);
+  const regenerateMarker = useRegenerateMarkerMutation();
 
   if (!marker) {
     return (
@@ -86,7 +87,7 @@ export function SceneInspector({
     setRegenError(null);
 
     try {
-      const result = await regenerateMarkerAction({
+      const result = await regenerateMarker.mutateAsync({
         title: projectTitle,
         durationMs,
         markerIndex,

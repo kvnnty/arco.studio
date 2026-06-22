@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Download, Film, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Download, Film, Search } from "lucide-react";
 
-import type { DashboardProject } from "@/lib/dashboard/projects";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { ProjectPoster } from "@/components/dashboard/project-poster";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
@@ -17,13 +16,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useProjects } from "@/lib/api/hooks/projects";
 
-type ProjectsListClientProps = {
-  projects: DashboardProject[];
-};
-
-export function ProjectsListClient({ projects }: ProjectsListClientProps) {
+export function ProjectsListClient() {
   const [query, setQuery] = useState("");
+  const { data: projects = [], isLoading } = useProjects();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -32,6 +29,10 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
       project.title.toLowerCase().includes(q),
     );
   }, [projects, query]);
+
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground">Loading projects…</p>;
+  }
 
   if (projects.length === 0) {
     return (

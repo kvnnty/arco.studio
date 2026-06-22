@@ -92,7 +92,7 @@ export function PricingCards({
                 className={cn(
                   "relative flex h-full flex-col rounded-2xl border p-6 sm:p-8",
                   plan.popular
-                    ? "border-primary/40 bg-marketing-surface ring-1 ring-primary/20"
+                    ? "border- bg-secondary text-secondary-foreground ring-1 ring-secondary-foreground/20"
                     : "border-marketing-border bg-marketing-surface",
                 )}
               >
@@ -101,7 +101,7 @@ export function PricingCards({
                 ) : null}
 
                 <h3 className="text-[18px] font-semibold">{plan.name}</h3>
-                <p className="mt-2 text-[14px] text-marketing-muted">{plan.description}</p>
+                <p className={cn("mt-2 text-[14px]", plan.popular ? "text-secondary-foreground" : "text-marketing-muted")}>{plan.description}</p>
 
                 <div className="mt-6 flex items-baseline gap-1">
                   {isFree ? (
@@ -119,7 +119,7 @@ export function PricingCards({
                       >
                         ${price}
                       </motion.span>
-                      <span className="text-[14px] text-marketing-muted">/mo</span>
+                      <span className={cn("text-[14px]", plan.popular ? "text-secondary-foreground" : "text-marketing-muted")}>/mo</span>
                     </>
                   )}
                 </div>
@@ -132,7 +132,7 @@ export function PricingCards({
                   {features.map((feature) => (
                     <li
                       key={feature}
-                      className="flex items-start gap-2.5 text-[14px] text-marketing-muted"
+                      className={cn("flex items-start gap-2.5 text-[14px]", plan.popular ? "text-secondary-foreground" : "text-marketing-muted")}
                     >
                       <Check className="mt-0.5 size-4 shrink-0 text-primary" />
                       {feature}

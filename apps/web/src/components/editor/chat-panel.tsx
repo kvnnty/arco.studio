@@ -4,7 +4,9 @@ import type { Marker } from "@arco/project-schema";
 import { Send, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { analyzeBrandUrlAction, type BrandKit } from "@/app/actions/brand";
+import { useAuth } from "@/components/providers/auth-provider";
+import type { BrandKit } from "@/lib/api/hooks/brand";
+import { useAnalyzeBrandMutation } from "@/lib/api/hooks/brand";
 import { ChatMessageBubble } from "@/components/editor/chat-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +64,8 @@ export function ChatPanel({
   const [sending, setSending] = useState(false);
   const [analysisStarted, setAnalysisStarted] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { session } = useAuth();
+  const analyzeBrand = useAnalyzeBrandMutation();
 
   const appendMessage = useCallback((message: ChatMessage) => {
     setMessages((prev) => [...prev, message]);
@@ -86,6 +90,9 @@ export function ChatPanel({
     const brandStatusId = createChatId();
 
     void (async () => {
+      const accessToken = session?.accessToken;
+      if (!accessToken) return;
+
       let brandKit: BrandKit | undefined;
 
       if (productUrl?.trim()) {
@@ -97,7 +104,7 @@ export function ChatPanel({
         });
 
         try {
-          brandKit = await analyzeBrandUrlAction(productUrl.trim());
+          brandKit = await analyzeBrand.mutateAsync(productUrl.trim());
           onBrandAnalyzed(brandKit);
 
           setMessages((prev) =>
@@ -181,6 +188,7 @@ export function ChatPanel({
           });
         },
         {
+          accessToken,
           title: projectTitle,
           durationMs,
           platform,
@@ -226,6 +234,8 @@ export function ChatPanel({
     })();
   }, [
     analysisStarted,
+    analyzeBrand,
+    session?.accessToken,
     appendMessage,
     durationMs,
     intent,

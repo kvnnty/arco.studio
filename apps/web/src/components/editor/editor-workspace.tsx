@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { syncProject } from "@/app/actions/projects";
+import { useSyncProjectMutation } from "@/lib/api/hooks/projects";
 import { ExportDialog } from "@/components/editor/export-dialog";
 import { JourneyStepper } from "@/components/editor/journey-stepper";
 import { SceneInspector } from "@/components/editor/scene-inspector";
@@ -46,6 +46,7 @@ export function EditorWorkspace({
   const [cameraMode, setCameraMode] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const playerRef = useRef<PlayerRef>(null);
+  const syncProject = useSyncProjectMutation();
 
   const project = session.project;
   const selectedMarker = useMemo(
@@ -72,14 +73,18 @@ export function EditorWorkspace({
     setSaveStatus("saving");
 
     saveTimerRef.current = setTimeout(() => {
-      void syncProject({
-        projectId: session.projectId,
-        project: session.project,
-        platform: session.platform,
-        recordingSrc: session.recordingUrl,
-      })
-        .then(() => setSaveStatus("saved"))
-        .catch(() => setSaveStatus("error"));
+      syncProject.mutate(
+        {
+          projectId: session.projectId,
+          project: session.project,
+          platform: session.platform,
+          recordingSrc: session.recordingUrl,
+        },
+        {
+          onSuccess: () => setSaveStatus("saved"),
+          onError: () => setSaveStatus("error"),
+        },
+      );
     }, 500);
 
     return () => {
@@ -87,7 +92,7 @@ export function EditorWorkspace({
         clearTimeout(saveTimerRef.current);
       }
     };
-  }, [session]);
+  }, [session, syncProject]);
 
   const updateProject = useCallback(
     (next: ArcoProject) => {

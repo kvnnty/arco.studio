@@ -1,13 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState } from "react";
 
-import { signOutAction } from "@/app/actions/auth";
-import {
-  listSessionsAction,
-  revokeSessionAction,
-  updateProfileAction,
-} from "@/app/actions/settings";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +16,12 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLogoutMutation } from "@/lib/api/hooks/auth";
+import {
+  useRevokeSessionMutation,
+  useSessions,
+  useUpdateProfileMutation,
+} from "@/lib/api/hooks/settings";
 
 type SettingsPageClientProps = {
   user: {
@@ -30,44 +30,32 @@ type SettingsPageClientProps = {
   };
 };
 
-type SessionRow = {
-  id: string;
-  deviceLabel: string | null;
-  ipAddress: string | null;
-  lastUsedAt: string;
-  current: boolean;
-};
-
 export function SettingsPageClient({ user }: SettingsPageClientProps) {
   const [name, setName] = useState(user.name ?? "");
-  const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [message, setMessage] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
 
-  useEffect(() => {
-    void listSessionsAction()
-      .then(setSessions)
-      .catch(() => setSessions([]));
-  }, []);
+  const { data: sessions = [], isLoading: sessionsLoading } = useSessions();
+  const updateProfile = useUpdateProfileMutation();
+  const revokeSession = useRevokeSessionMutation();
+  const logout = useLogoutMutation();
 
   function saveProfile() {
-    startTransition(async () => {
-      setMessage(null);
-      try {
-        await updateProfileAction({ name: name.trim() || undefined });
-        setMessage("Profile saved.");
-      } catch {
-        setMessage("Could not save profile.");
-      }
-    });
+    setMessage(null);
+    updateProfile.mutate(
+      { name: name.trim() || undefined },
+      {
+        onSuccess: () => setMessage("Profile saved."),
+        onError: () => setMessage("Could not save profile."),
+      },
+    );
   }
 
-  function revokeSession(id: string) {
-    startTransition(async () => {
-      await revokeSessionAction(id);
-      setSessions((current) => current.filter((session) => session.id !== id));
-    });
+  function revoke(id: string) {
+    revokeSession.mutate(id);
   }
+
+  const pending =
+    updateProfile.isPending || revokeSession.isPending || logout.isPending;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
@@ -124,7 +112,9 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {sessions.length === 0 ? (
+              {sessionsLoading ? (
+                <p className="text-sm text-muted-foreground">Loading sessions…</p>
+              ) : sessions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No active sessions.</p>
               ) : (
                 sessions.map((session) => (
@@ -146,7 +136,7 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => revokeSession(session.id)}
+                        onClick={() => revoke(session.id)}
                         disabled={pending}
                       >
                         Revoke
@@ -155,11 +145,13 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
                   </div>
                 ))
               )}
-              <form action={signOutAction}>
-                <Button variant="outline" type="submit">
-                  Sign out
-                </Button>
-              </form>
+              <Button
+                variant="outline"
+                onClick={() => logout.mutate()}
+                disabled={pending}
+              >
+                Sign out
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

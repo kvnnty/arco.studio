@@ -1,10 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-import { completeOnboardingAction } from "@/app/actions/auth";
-import { createCheckoutSessionAction } from "@/app/actions/billing";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCompleteOnboardingMutation } from "@/lib/api/hooks/auth";
+import { useCheckoutMutation } from "@/lib/api/hooks/billing";
 import type { AuthUser } from "@/lib/auth/constants";
 
 type OnboardingClientProps = {
@@ -29,47 +29,53 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
   );
   const [name, setName] = useState(user.name ?? "");
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+
+  const completeOnboarding = useCompleteOnboardingMutation();
+  const checkout = useCheckoutMutation();
+
+  const pending = completeOnboarding.isPending || checkout.isPending;
 
   function saveProfile() {
-    startTransition(async () => {
-      setError(null);
-      try {
-        await completeOnboardingAction({
-          name: name.trim() || undefined,
-          step: "plan",
-        });
-        setStep("plan");
-      } catch {
-        setError("Could not save profile.");
-      }
-    });
+    setError(null);
+    completeOnboarding.mutate(
+      { name: name.trim() || undefined, step: "plan" },
+      {
+        onSuccess: () => setStep("plan"),
+        onError: () => setError("Could not save profile."),
+      },
+    );
   }
 
   function skipToPlan() {
-    startTransition(async () => {
-      await completeOnboardingAction({ step: "plan" });
-      setStep("plan");
-    });
+    completeOnboarding.mutate(
+      { step: "plan" },
+      { onSuccess: () => setStep("plan") },
+    );
   }
 
   function finishFree() {
-    startTransition(async () => {
-      await completeOnboardingAction({ step: "completed" });
-      router.push("/dashboard");
-    });
+    completeOnboarding.mutate(
+      { step: "completed" },
+      { onSuccess: () => router.push("/dashboard") },
+    );
   }
 
   function startCheckout() {
-    startTransition(async () => {
-      try {
-        await completeOnboardingAction({ step: "completed" });
-        const { url } = await createCheckoutSessionAction();
-        window.location.href = url;
-      } catch {
-        setError("Could not start checkout.");
-      }
-    });
+    setError(null);
+    completeOnboarding.mutate(
+      { step: "completed" },
+      {
+        onSuccess: () => {
+          checkout.mutate(undefined, {
+            onSuccess: ({ url }) => {
+              window.location.href = url;
+            },
+            onError: () => setError("Could not start checkout."),
+          });
+        },
+        onError: () => setError("Could not start checkout."),
+      },
+    );
   }
 
   return (

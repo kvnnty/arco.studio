@@ -3,14 +3,8 @@
 import { CreditCard, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  createCheckoutSessionAction,
-  createPortalSessionAction,
-} from "@/app/actions/billing";
-import type { BillingStatus } from "@/lib/api/client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +15,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  useBillingPortalMutation,
+  useBillingStatus,
+  useCheckoutMutation,
+} from "@/lib/api/hooks/billing";
 
 const PRO_FEATURES = [
   "15 MP4 exports per month",
@@ -30,42 +29,53 @@ const PRO_FEATURES = [
   "Music bed + logo overlay",
 ];
 
-type BillingPageClientProps = {
-  status: BillingStatus;
-};
-
-export function BillingPageClient({ status }: BillingPageClientProps) {
+export function BillingPageClient() {
   const searchParams = useSearchParams();
   const welcome = searchParams.get("welcome") === "1";
   const checkout = searchParams.get("checkout");
-  const [loading, setLoading] = useState<"checkout" | "portal" | null>(null);
+
+  const { data: status, isLoading } = useBillingStatus();
+  const checkoutMutation = useCheckoutMutation();
+  const portalMutation = useBillingPortalMutation();
+
+  if (isLoading || !status) {
+    return (
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+        <PageHeader
+          title="Billing"
+          description="Launch Offer — first month $9, then $29/month. Cancel anytime."
+        />
+        <p className="text-sm text-muted-foreground">Loading billing…</p>
+      </div>
+    );
+  }
 
   const isActive = status.planStatus === "active";
 
-  const handleCheckout = async () => {
-    setLoading("checkout");
-    try {
-      const { url } = await createCheckoutSessionAction();
-      window.location.href = url;
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not start checkout.",
-      );
-      setLoading(null);
-    }
+  const handleCheckout = () => {
+    checkoutMutation.mutate(undefined, {
+      onSuccess: ({ url }) => {
+        window.location.href = url;
+      },
+      onError: (error) => {
+        toast.error(
+          error instanceof Error ? error.message : "Could not start checkout.",
+        );
+      },
+    });
   };
 
-  const handlePortal = async () => {
-    setLoading("portal");
-    try {
-      const { url } = await createPortalSessionAction();
-      window.location.href = url;
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not open billing portal.",
-      );
-      setLoading(null);
-    }
+  const handlePortal = () => {
+    portalMutation.mutate(undefined, {
+      onSuccess: ({ url }) => {
+        window.location.href = url;
+      },
+      onError: (error) => {
+        toast.error(
+          error instanceof Error ? error.message : "Could not open billing portal.",
+        );
+      },
+    });
   };
 
   return (
@@ -134,12 +144,19 @@ export function BillingPageClient({ status }: BillingPageClientProps) {
               <Badge variant="outline" className="border-primary/30 text-primary">
                 Active — Pro
               </Badge>
-              <Button variant="outline" disabled={loading === "portal"} onClick={() => void handlePortal()}>
+              <Button
+                variant="outline"
+                disabled={portalMutation.isPending}
+                onClick={handlePortal}
+              >
                 Manage subscription
               </Button>
             </div>
           ) : (
-            <Button disabled={loading === "checkout"} onClick={() => void handleCheckout()}>
+            <Button
+              disabled={checkoutMutation.isPending}
+              onClick={handleCheckout}
+            >
               Start Launch Offer — $9
             </Button>
           )}

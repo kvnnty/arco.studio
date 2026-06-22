@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 
-import {
-  magicLinkAction,
-  passwordLoginAction,
-  type AuthFormState,
-} from "@/app/actions/auth";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -25,11 +20,13 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-const initialState: AuthFormState = {};
+import {
+  useLoginMutation,
+  useMagicLinkMutation,
+} from "@/lib/api/hooks/auth";
+import type { OAuthProviderId } from "@/lib/auth/oauth";
 
 type LoginMode = "magic" | "password";
-
-import type { OAuthProviderId } from "@/lib/auth/oauth";
 
 type LoginFormProps = {
   oauthError?: string;
@@ -43,19 +40,21 @@ export function LoginForm({
   oauthProviders = [],
 }: LoginFormProps) {
   const [mode, setMode] = useState<LoginMode>("magic");
-  const [magicState, magicAction, magicPending] = useActionState(
-    magicLinkAction,
-    initialState,
-  );
-  const [passwordState, passwordAction, passwordPending] = useActionState(
-    passwordLoginAction,
-    initialState,
-  );
+  const [magicSent, setMagicSent] = useState<{
+    devVerifyUrl?: string;
+    message?: string;
+  } | null>(null);
 
-  const state = mode === "magic" ? magicState : passwordState;
-  const pending = mode === "magic" ? magicPending : passwordPending;
+  const magicLink = useMagicLinkMutation();
+  const login = useLoginMutation();
 
-  if (state.sent) {
+  const pending = mode === "magic" ? magicLink.isPending : login.isPending;
+  const error =
+    mode === "magic"
+      ? magicLink.error?.message
+      : login.error?.message;
+
+  if (magicSent) {
     return (
       <Card className="w-full max-w-md rounded-2xl">
         <CardHeader>
@@ -65,12 +64,12 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {state.message ? (
+          {magicSent.message ? (
             <Alert>
-              <AlertDescription>{state.message}</AlertDescription>
+              <AlertDescription>{magicSent.message}</AlertDescription>
             </Alert>
           ) : null}
-          {process.env.NODE_ENV === "development" && state.devVerifyUrl ? (
+          {process.env.NODE_ENV === "development" && magicSent.devVerifyUrl ? (
             <>
               <Alert>
                 <AlertDescription>
@@ -80,7 +79,7 @@ export function LoginForm({
               </Alert>
               <Button
                 className="w-full"
-                render={<Link href={state.devVerifyUrl} />}
+                render={<Link href={magicSent.devVerifyUrl} />}
               >
                 Open sign-in link
               </Button>
@@ -89,7 +88,7 @@ export function LoginForm({
           <Button
             variant="outline"
             className="w-full"
-            render={<Link href="/login" />}
+            onClick={() => setMagicSent(null)}
           >
             Use a different email
           </Button>
@@ -123,7 +122,21 @@ export function LoginForm({
         ) : null}
         <OAuthButtons providers={oauthProviders} />
         {mode === "magic" ? (
-          <form action={magicAction} className="mt-6">
+          <form
+            className="mt-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const formData = new FormData(event.currentTarget);
+              const email = String(formData.get("email") ?? "");
+              magicLink.mutate(email, {
+                onSuccess: (result) => {
+                  setMagicSent({
+                    devVerifyUrl: result.devVerifyUrl,
+                  });
+                },
+              });
+            }}
+          >
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="magic-email">Email</FieldLabel>
@@ -138,9 +151,9 @@ export function LoginForm({
                   />
                 </FieldContent>
               </Field>
-              {state.error ? (
+              {error ? (
                 <Alert variant="destructive">
-                  <AlertDescription>{state.error}</AlertDescription>
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               ) : null}
               <Button type="submit" className="w-full" disabled={pending}>
@@ -149,7 +162,17 @@ export function LoginForm({
             </FieldGroup>
           </form>
         ) : (
-          <form action={passwordAction} className="mt-6">
+          <form
+            className="mt-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const formData = new FormData(event.currentTarget);
+              login.mutate({
+                email: String(formData.get("email") ?? ""),
+                password: String(formData.get("password") ?? ""),
+              });
+            }}
+          >
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -178,9 +201,9 @@ export function LoginForm({
                   />
                 </FieldContent>
               </Field>
-              {state.error ? (
+              {error ? (
                 <Alert variant="destructive">
-                  <AlertDescription>{state.error}</AlertDescription>
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               ) : null}
               <Button type="submit" className="w-full" disabled={pending}>
@@ -204,15 +227,13 @@ export function LoginForm({
                 </button>
               </>
             ) : (
-              <>
-                <button
-                  type="button"
-                  className="text-accent-foreground hover:underline"
-                  onClick={() => setMode("magic")}
-                >
-                  Use a magic link instead
-                </button>
-              </>
+              <button
+                type="button"
+                className="text-accent-foreground hover:underline"
+                onClick={() => setMode("magic")}
+              >
+                Use a magic link instead
+              </button>
             )}
           </p>
           {mode === "password" ? (

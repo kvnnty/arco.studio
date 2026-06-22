@@ -17,12 +17,12 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DashboardAsset } from "@/lib/dashboard/types";
+import { useProjects } from "@/lib/api/hooks/projects";
+import { buildProjectAssets } from "@/lib/dashboard/assets";
 
-type AssetsPageClientProps = {
-  assets: DashboardAsset[];
-};
-
-export function AssetsPageClient({ assets }: AssetsPageClientProps) {
+export function AssetsPageClient() {
+  const { data: projects = [], isLoading } = useProjects();
+  const assets: DashboardAsset[] = buildProjectAssets(projects);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("all");
 
@@ -35,6 +35,10 @@ export function AssetsPageClient({ assets }: AssetsPageClientProps) {
       return matchesSearch && matchesTab;
     });
   }, [assets, search, tab]);
+
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground">Loading assets…</p>;
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { signOutAction } from "@/app/actions/auth";
+import { useLogoutMutation } from "@/lib/api/hooks/auth";
 import { useConsent } from "@/components/consent/consent-provider";
 import { LogOut, Settings, User } from "lucide-react";
 
@@ -35,6 +35,7 @@ export function AppTopbar({
   planActive = false,
 }: AppTopbarProps) {
   const { openPreferences } = useConsent();
+  const logout = useLogoutMutation();
   const initials =
     user.name
       ?.split(" ")
@@ -95,7 +96,7 @@ export function AppTopbar({
             Cookie settings
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => void signOutAction()}
+            onClick={() => logout.mutate()}
             className="text-destructive"
           >
             <LogOut />

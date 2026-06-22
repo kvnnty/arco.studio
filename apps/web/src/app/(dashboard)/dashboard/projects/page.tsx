@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-import { listDashboardProjects } from "@/app/actions/projects";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ProjectsListClient } from "@/components/dashboard/projects-list-client";
 import { Button } from "@/components/ui/button";
 
-export default async function ProjectsPage() {
-  const projects = await listDashboardProjects();
+export default function ProjectsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -21,7 +19,7 @@ export default async function ProjectsPage() {
         </Button>
       </PageHeader>
 
-      <ProjectsListClient projects={projects} />
+      <ProjectsListClient />
     </div>
   );
 }

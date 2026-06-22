@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DashboardNotification } from "@/lib/dashboard/types";
+import { useProjects } from "@/lib/api/hooks/projects";
+import { buildProjectNotifications } from "@/lib/dashboard/notifications";
 
 const typeIcons = {
   system: Bell,
@@ -21,14 +23,15 @@ const typeIcons = {
   billing: CreditCard,
 };
 
-type NotificationsPageClientProps = {
-  notifications: DashboardNotification[];
-};
-
-export function NotificationsPageClient({
-  notifications,
-}: NotificationsPageClientProps) {
+export function NotificationsPageClient() {
+  const { data: projects = [], isLoading } = useProjects();
+  const notifications: DashboardNotification[] =
+    buildProjectNotifications(projects);
   const unread = notifications.filter((n) => !n.read);
+
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground">Loading notifications…</p>;
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">

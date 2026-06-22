@@ -1,8 +1,5 @@
 "use client";
 
-import { useActionState } from "react";
-
-import { resetPasswordAction, type AuthFormState } from "@/app/actions/auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,24 +16,30 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-
-const initialState: AuthFormState = {};
+import { useResetPasswordMutation } from "@/lib/api/hooks/auth";
 
 export function ResetPasswordForm({ token }: { token: string }) {
-  const [state, formAction, pending] = useActionState(
-    resetPasswordAction,
-    initialState,
-  );
+  const resetPassword = useResetPasswordMutation();
 
   return (
     <Card className="w-full max-w-md rounded-2xl border-none ring-0 shadow-none">
       <CardHeader>
         <CardTitle>Set a new password</CardTitle>
-        <CardDescription>Choose a strong password with at least 8 characters.</CardDescription>
+        <CardDescription>
+          Choose a strong password with at least 8 characters.
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={formAction}>
-          <input type="hidden" name="token" value={token} />
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            resetPassword.mutate({
+              token,
+              password: String(formData.get("password") ?? ""),
+            });
+          }}
+        >
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="password">New password</FieldLabel>
@@ -51,13 +54,19 @@ export function ResetPasswordForm({ token }: { token: string }) {
                 />
               </FieldContent>
             </Field>
-            {state.error ? (
+            {resetPassword.error ? (
               <Alert variant="destructive">
-                <AlertDescription>{state.error}</AlertDescription>
+                <AlertDescription>
+                  {resetPassword.error.message}
+                </AlertDescription>
               </Alert>
             ) : null}
-            <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "Saving…" : "Reset password"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={resetPassword.isPending}
+            >
+              {resetPassword.isPending ? "Saving…" : "Reset password"}
             </Button>
           </FieldGroup>
         </form>

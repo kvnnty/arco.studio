@@ -4,10 +4,10 @@ import Link from "next/link";
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
-      <div className="hidden flex-1 flex-col justify-between gap-4 p-6 m-4 rounded-lg lg:flex bg-primary">
-        <Link href="/">
+      <div className="hidden flex-1 flex-col justify-between gap-4 p-6 m-4 rounded-lg lg:flex bg-secondary text-secondary-foreground">
+        <Link href="/" className="w-fit">
           <Image
-            src="/arcologo-black.svg"
+            src="/arcologo-white.svg"
             alt="Arco"
             width={410}
             height={85}
