@@ -14,7 +14,7 @@ export const metadata: Metadata = createPageMetadata({
 export default function ChangelogPage() {
   return (
     <section className="py-20 sm:py-28">
-      <div className="marketing-container-narrow">
+      <div className="marketing-container">
         <SectionHeader
           align="left"
           eyebrow="Changelog"

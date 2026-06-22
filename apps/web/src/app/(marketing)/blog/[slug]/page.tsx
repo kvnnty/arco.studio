@@ -102,7 +102,7 @@ export default async function BlogArticlePage({ params }: Props) {
 
   return (
     <article className="py-16 sm:py-24">
-      <div className="marketing-container-blog">
+      <div className="marketing-container">
         <Link
           href="/blog"
           className="inline-flex items-center gap-1.5 text-[13px] text-marketing-muted transition-colors hover:text-foreground"
@@ -138,7 +138,7 @@ export default async function BlogArticlePage({ params }: Props) {
       <div className="marketing-container mt-12">
         <div className="grid gap-12 lg:grid-cols-[1fr_200px] xl:grid-cols-[1fr_minmax(0,750px)_200px]">
           <div className="hidden xl:block" />
-          <div className="marketing-container-blog !px-0 min-w-0">
+          <div className="marketing-container !px-0 min-w-0">
             <BlogContent sections={post.content} />
           </div>
           <BlogToc sections={post.content} />

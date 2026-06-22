@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { ReferralsService } from '../referrals/referrals.service.js';
 
 export type BillingStatus = {
   planStatus: string;
@@ -25,7 +26,10 @@ export class BillingService {
   private readonly logger = new Logger(BillingService.name);
   private stripe: Stripe | null = null;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly referrals: ReferralsService,
+  ) {
     const secret = process.env.STRIPE_SECRET_KEY;
     if (secret) {
       this.stripe = new Stripe(secret);
@@ -305,6 +309,8 @@ export class BillingService {
         exportsUsedThisPeriod: 0,
       },
     });
+
+    await this.referrals.rewardReferrer(userId);
   }
 
   private async onSubscriptionUpdated(subscription: Stripe.Subscription) {

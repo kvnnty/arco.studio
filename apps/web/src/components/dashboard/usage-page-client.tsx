@@ -25,6 +25,7 @@ const TYPE_LABELS: Record<string, string> = {
   ai_regenerate: "Scene regenerations",
   ai_refine: "Copy refinements",
   ai_chat: "Chat messages",
+  referral_reward: "Referral rewards",
 };
 
 export function UsagePageClient() {
@@ -142,6 +143,20 @@ export function UsagePageClient() {
       </Card>
 
       <UsageChart data={chartData} />
+
+      <Card className="rounded-2xl border-primary/15 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="text-base">Earn more exports</CardTitle>
+          <CardDescription>
+            Invite friends to Arco and earn bonus export credits when they subscribe.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" render={<Link href="/dashboard/referrals" />}>
+            View referral program
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

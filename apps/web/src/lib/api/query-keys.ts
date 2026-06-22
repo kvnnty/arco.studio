@@ -13,4 +13,7 @@ export const queryKeys = {
   settings: {
     sessions: ["settings", "sessions"] as const,
   },
+  referrals: {
+    summary: ["referrals", "summary"] as const,
+  },
 } as const;

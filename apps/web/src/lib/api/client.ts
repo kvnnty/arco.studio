@@ -66,12 +66,15 @@ export type AuthTokensResponse = {
   };
 };
 
-export async function apiRequestMagicLink(email: string) {
+export async function apiRequestMagicLink(email: string, referralCode?: string) {
   return apiRequest<{ sent: boolean; devVerifyUrl?: string }>(
     "/auth/magic-link",
     {
       method: "POST",
-      body: { email: email.trim().toLowerCase() },
+      body: {
+        email: email.trim().toLowerCase(),
+        ...(referralCode ? { referralCode } : {}),
+      },
     },
   );
 }
@@ -101,12 +104,14 @@ export async function apiLogin(input: {
 export async function apiRegister(input: {
   email: string;
   password: string;
+  referralCode?: string;
 }): Promise<{ sent: boolean; message: string; devVerifyUrl?: string }> {
   return apiRequest("/auth/register", {
     method: "POST",
     body: {
       email: input.email.trim().toLowerCase(),
       password: input.password,
+      ...(input.referralCode ? { referralCode: input.referralCode } : {}),
     },
   });
 }
@@ -491,6 +496,31 @@ export async function apiCreateBillingPortal(
     method: "POST",
     body: {},
   });
+}
+
+export type ReferralInvite = {
+  id: string;
+  email: string;
+  status: "pending" | "rewarded";
+  creditsAwarded: number;
+  createdAt: string;
+  rewardedAt: string | null;
+};
+
+export type ReferralSummary = {
+  code: string;
+  link: string;
+  creditsPerReferral: number;
+  stats: {
+    pending: number;
+    rewarded: number;
+    creditsEarned: number;
+  };
+  invites: ReferralInvite[];
+};
+
+export async function apiGetReferrals(token: string): Promise<ReferralSummary> {
+  return apiRequest<ReferralSummary>("/referrals", { token });
 }
 
 export type AuthSessionRecord = {

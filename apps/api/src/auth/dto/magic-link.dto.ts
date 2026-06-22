@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class MagicLinkDto {
   @IsEmail()
@@ -7,4 +7,9 @@ export class MagicLinkDto {
   @IsOptional()
   @IsString()
   callbackUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  referralCode?: string;
 }

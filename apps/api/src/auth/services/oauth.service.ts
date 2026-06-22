@@ -17,6 +17,7 @@ import { normalizeEmail } from '../utils/crypto.util.js';
 import { AuditService } from '../services/audit.service.js';
 import { MagicLinkService } from '../services/magic-link.service.js';
 import { SessionService } from '../services/session.service.js';
+import { ReferralsService } from '../../referrals/referrals.service.js';
 import { GitHubOAuthProvider } from '../providers/github-oauth.provider.js';
 import { GoogleOAuthProvider } from '../providers/google-oauth.provider.js';
 import type { OAuthProviderId } from '../providers/oauth-provider.interface.js';
@@ -24,6 +25,7 @@ import type { OAuthProviderId } from '../providers/oauth-provider.interface.js';
 type OAuthStatePayload = {
   provider: OAuthProviderId;
   type: 'oauth_state';
+  referralCode?: string;
 };
 
 @Injectable()
@@ -37,6 +39,7 @@ export class OAuthService {
     private readonly magicLinks: MagicLinkService,
     private readonly sessions: SessionService,
     private readonly audit: AuditService,
+    private readonly referrals: ReferralsService,
   ) {}
 
   getConfiguredProviders(): OAuthProviderId[] {
@@ -46,10 +49,15 @@ export class OAuthService {
     return providers;
   }
 
-  startOAuth(providerId: string, res: Response): void {
+  startOAuth(providerId: string, res: Response, referralCode?: string): void {
     const provider = this.getProvider(providerId);
+    const normalized = referralCode?.trim().toUpperCase();
     const state = this.jwt.sign(
-      { provider: provider.id, type: 'oauth_state' } satisfies OAuthStatePayload,
+      {
+        provider: provider.id,
+        type: 'oauth_state',
+        ...(normalized ? { referralCode: normalized } : {}),
+      } satisfies OAuthStatePayload,
       { expiresIn: '10m' },
     );
     const redirectUri = this.getCallbackUrl(provider.id);
@@ -71,7 +79,7 @@ export class OAuthService {
     }
 
     try {
-      this.verifyState(state, providerId);
+      const statePayload = this.verifyState(state, providerId);
       const provider = this.getProvider(providerId);
       const profile = await provider.exchangeCode(
         code,
@@ -87,6 +95,7 @@ export class OAuthService {
           emailVerified: profile.emailVerified,
           metadata: profile.metadata,
         },
+        statePayload.referralCode,
       );
 
       const token = await this.magicLinks.createToken({
@@ -141,13 +150,17 @@ export class OAuthService {
     return tokens;
   }
 
-  private verifyState(state: string, providerId: string): void {
+  private verifyState(state: string, providerId: string): OAuthStatePayload {
     try {
       const payload = this.jwt.verify<OAuthStatePayload>(state);
       if (payload.type !== 'oauth_state' || payload.provider !== providerId) {
         throw new UnauthorizedException('Invalid OAuth state.');
       }
-    } catch {
+      return payload;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
       throw new UnauthorizedException('Invalid or expired OAuth state.');
     }
   }
@@ -174,6 +187,7 @@ export class OAuthService {
       emailVerified: boolean;
       metadata?: Record<string, unknown>;
     },
+    referralCode?: string,
   ) {
     const existingIdentity = await this.prisma.authIdentity.findUnique({
       where: {
@@ -236,6 +250,8 @@ export class OAuthService {
         metadata: profile.metadata ? JSON.stringify(profile.metadata) : null,
       },
     });
+
+    await this.referrals.attachReferral(user.id, referralCode);
 
     return user;
   }

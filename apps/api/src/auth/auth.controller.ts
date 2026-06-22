@@ -51,8 +51,12 @@ export class AuthController {
   }
 
   @Get('oauth/:provider')
-  startOAuth(@Param('provider') provider: string, @Res() res: Response) {
-    this.oauthService.startOAuth(provider, res);
+  startOAuth(
+    @Param('provider') provider: string,
+    @Query('ref') referralCode: string | undefined,
+    @Res() res: Response,
+  ) {
+    this.oauthService.startOAuth(provider, res, referralCode);
   }
 
   @Get('oauth/:provider/callback')

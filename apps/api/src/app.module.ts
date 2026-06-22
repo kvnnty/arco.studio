@@ -10,6 +10,7 @@ import { RendersModule } from './renders/renders.module.js';
 import { AiModule } from './ai/ai.module.js';
 import { BrandModule } from './brand/brand.module.js';
 import { BillingModule } from './billing/billing.module.js';
+import { ReferralsModule } from './referrals/referrals.module.js';
 import { HealthController } from './health/health.controller.js';
 
 @Module({
@@ -18,6 +19,7 @@ import { HealthController } from './health/health.controller.js';
     PrismaModule,
     StorageModule,
     BillingModule,
+    ReferralsModule,
     AuthModule,
     UsersModule,
     ProjectsModule,

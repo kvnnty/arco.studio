@@ -5,7 +5,7 @@ import { MotionReveal } from "@/components/marketing/motion/motion-reveal";
 export function AboutSection() {
   return (
     <section className="border-y border-marketing-border py-24 sm:py-32">
-      <div className="marketing-container-narrow">
+      <div className="marketing-container">
         <MotionReveal>
           <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-primary">
             About Arco

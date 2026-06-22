@@ -6,6 +6,7 @@ import {
   getOAuthStartUrl,
   type OAuthProviderId,
 } from "@/lib/auth/oauth";
+import { readReferralCode } from "@/lib/referral";
 
 const ALL_PROVIDERS: OAuthProviderId[] = ["google", "github"];
 
@@ -36,7 +37,9 @@ export function OAuthButtons({ providers }: OAuthButtonsProps) {
                   : `${label} sign-in is not configured yet`
               }
               render={
-                isEnabled ? <a href={getOAuthStartUrl(provider)} /> : undefined
+                isEnabled ? (
+                  <a href={getOAuthStartUrl(provider, readReferralCode())} />
+                ) : undefined
               }
             >
               {provider === "google" ? <GoogleIcon /> : <GitHubIcon />}

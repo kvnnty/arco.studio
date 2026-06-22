@@ -10,6 +10,7 @@ import {
   apiResetPassword,
 } from "@/lib/api/client";
 import { useApiClient } from "@/lib/api/hooks/use-api-client";
+import { readReferralCode } from "@/lib/referral";
 
 async function postAuthRoute<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(path, {
@@ -33,14 +34,18 @@ async function postAuthRoute<T>(path: string, body: unknown): Promise<T> {
 
 export function useMagicLinkMutation() {
   return useMutation({
-    mutationFn: (email: string) => apiRequestMagicLink(email),
+    mutationFn: (email: string) =>
+      apiRequestMagicLink(email, readReferralCode() ?? undefined),
   });
 }
 
 export function useRegisterMutation() {
   return useMutation({
     mutationFn: (input: { email: string; password: string }) =>
-      apiRegister(input),
+      apiRegister({
+        ...input,
+        referralCode: readReferralCode() ?? undefined,
+      }),
   });
 }
 

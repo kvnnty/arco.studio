@@ -1,0 +1,14 @@
+model Referral {
+  id              String    @id @default(cuid())
+  referrerUserId  String
+  referredUserId  String    @unique
+  status          String    @default("pending")
+  creditsAwarded  Int       @default(0)
+  createdAt       DateTime  @default(now())
+  rewardedAt      DateTime?
+  referrer        User      @relation("ReferralsSent", fields: [referrerUserId], references: [id], onDelete: Cascade)
+  referred        User      @relation("ReferralsReceived", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([referrerUserId, createdAt])
+  @@index([status])
+}

@@ -15,7 +15,7 @@ type LegalPageLayoutProps = {
 export function LegalPageLayout({ document }: LegalPageLayoutProps) {
   return (
     <article className="py-16 sm:py-24">
-      <div className="marketing-container-narrow">
+      <div className="marketing-container">
         <MotionReveal>
           <header className="border-b border-marketing-border pb-8">
             <h1 className="marketing-heading text-[2.5rem] sm:text-[3rem]">
@@ -90,7 +90,7 @@ export function LegalPageLinks({
   links: { slug: string; title: string }[];
 }) {
   return (
-    <div className="marketing-container-narrow mt-8 flex flex-wrap gap-4 pb-16">
+    <div className="marketing-container mt-8 flex flex-wrap gap-4 pb-16">
       {links.map((link) => (
         <Link
           key={link.slug}

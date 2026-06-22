@@ -25,6 +25,7 @@ import { EmailQueueService } from './services/email-queue.service.js';
 import { MagicLinkService } from './services/magic-link.service.js';
 import { RateLimitService } from './services/rate-limit.service.js';
 import { SessionService } from './services/session.service.js';
+import { ReferralsService } from '../referrals/referrals.service.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { MagicLinkDto } from './dto/magic-link.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
@@ -42,6 +43,7 @@ export class AuthService {
     private readonly audit: AuditService,
     private readonly rateLimit: RateLimitService,
     private readonly emailQueue: EmailQueueService,
+    private readonly referrals: ReferralsService,
   ) {}
 
   async requestMagicLink(dto: MagicLinkDto, ctx: AuthContext) {
@@ -76,6 +78,7 @@ export class AuthService {
           exportAllowance: Number(process.env.EXPORT_ALLOWANCE_PRO ?? 15),
         },
       });
+      await this.referrals.attachReferral(user.id, dto.referralCode);
     }
 
     const token = await this.magicLinks.createToken({
@@ -162,6 +165,7 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
+    const isNewUser = !existing;
     const user =
       existing ??
       (await this.prisma.user.create({
@@ -172,6 +176,10 @@ export class AuthService {
           exportAllowance: Number(process.env.EXPORT_ALLOWANCE_PRO ?? 15),
         },
       }));
+
+    if (isNewUser) {
+      await this.referrals.attachReferral(user.id, dto.referralCode);
+    }
 
     await this.prisma.user.update({
       where: { id: user.id },

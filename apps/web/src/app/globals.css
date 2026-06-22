@@ -240,16 +240,9 @@
   max-width: var(--marketing-content-max-width);
 }
 
-.marketing-container-narrow {
-  @apply mx-auto w-full max-w-[800px] px-6 sm:px-8;
-}
-
-.marketing-container-blog {
-  @apply mx-auto w-full max-w-[750px] px-6 sm:px-8;
-}
-
 .marketing-container-faq {
-  @apply mx-auto w-full max-w-[850px] px-6 sm:px-8;
+  @apply mx-auto w-full px-6 sm:px-8;
+  max-width: min(850px, var(--marketing-content-max-width));
 }
 
 .marketing-heading {

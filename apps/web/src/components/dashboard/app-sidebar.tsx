@@ -8,6 +8,7 @@ import {
   CreditCard,
   Film,
   FolderOpen,
+  Gift,
   HelpCircle,
   LayoutDashboard,
   Library,
@@ -40,6 +41,7 @@ const mainNav = [
 
 const accountNav = [
   { title: "Usage", href: "/dashboard/usage", icon: Zap },
+  { title: "Referrals", href: "/dashboard/referrals", icon: Gift },
   { title: "Billing", href: "/dashboard/billing", icon: CreditCard },
   { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
@@ -150,10 +152,10 @@ export function AppSidebar({ billing }: { billing?: BillingStatus | null }) {
                 </span>
               </div>
               <Link
-                href="/dashboard/usage"
+                href="/dashboard/referrals"
                 className="mt-2 block text-xs text-accent-foreground hover:underline"
               >
-                View usage
+                Invite friends, earn credits
               </Link>
             </>
           ) : (
