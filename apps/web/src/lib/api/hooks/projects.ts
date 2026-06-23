@@ -47,7 +47,14 @@ export function useCreateProjectMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: { title: string; platform: ProjectPlatform }) => {
+    mutationFn: (input: {
+      title: string;
+      platform: ProjectPlatform;
+      templateId?: string;
+      brief?: { intent?: string; productUrl?: string };
+      stylePreset?: import("@arco/project-schema").StylePreset;
+      exportFormat?: import("@arco/project-schema").ExportFormat;
+    }) => {
       if (!token) throw new Error("Not authenticated");
       return createProject(token, input);
     },

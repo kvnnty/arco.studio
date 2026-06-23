@@ -33,6 +33,7 @@ type ChatPanelProps = {
   durationMs: number;
   intent?: string;
   productUrl?: string;
+  templateId?: string;
   isAnalyzing: boolean;
   chatReady: boolean;
   selectedMarker: Marker | null;
@@ -51,6 +52,7 @@ export function ChatPanel({
   durationMs,
   intent,
   productUrl,
+  templateId,
   isAnalyzing,
   chatReady,
   selectedMarker,
@@ -194,6 +196,7 @@ export function ChatPanel({
           platform,
           intent: intent ?? brandKit?.description,
           productUrl,
+          templateId,
           brandContext: brandKit
             ? {
                 title: brandKit.title,
@@ -245,6 +248,7 @@ export function ChatPanel({
     platform,
     productUrl,
     projectTitle,
+    templateId,
   ]);
 
   const handleSend = async (text: string) => {

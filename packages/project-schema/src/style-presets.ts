@@ -1,4 +1,4 @@
-import type { ArcoProject } from "./index";
+import type { ArcoProject } from "./index.js";
 
 export const stylePresetSchema = [
   "linear",

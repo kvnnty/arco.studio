@@ -210,6 +210,9 @@ export async function apiCreateProject(
     title: string;
     platform: string;
     exportFormat?: string;
+    stylePreset?: string;
+    templateId?: string;
+    brief?: { intent?: string; productUrl?: string };
     projectData?: ArcoProject;
   },
 ): Promise<ApiProjectRecord> {
@@ -314,6 +317,14 @@ export async function apiGenerateDraft(
     platform?: string;
     intent?: string;
     productUrl?: string;
+    templateId?: string;
+    templateContext?: {
+      name: string;
+      copyTone: string;
+      sceneCount: number;
+      sceneHints: string[];
+      stylePreset: string;
+    };
     brandContext?: {
       title?: string;
       description?: string;

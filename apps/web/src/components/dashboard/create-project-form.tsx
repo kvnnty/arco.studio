@@ -1,16 +1,13 @@
 "use client";
 
-import type { ExportFormat, StylePreset } from "@arco/project-schema";
-import { STYLE_PRESETS } from "@arco/project-schema/style-presets";
-import { getExportDimensions } from "@arco/project-schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Sparkles, Upload } from "lucide-react";
 
-import { useCreateProjectMutation } from "@/lib/api/hooks/projects";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { TemplateStrip } from "@/components/dashboard/template-strip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,56 +19,28 @@ import {
 import {
   Field,
   FieldContent,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { uploadProjectRecording } from "@/lib/editor/upload-project-recording";
+import { createAndUploadProject } from "@/lib/editor/create-from-template";
 import { cn } from "@/lib/utils";
-
-const FORMATS: { id: ExportFormat; label: string }[] = [
-  { id: "16:9", label: "16:9" },
-  { id: "1:1", label: "1:1" },
-  { id: "9:16", label: "9:16" },
-];
-
-const PRESETS = Object.values(STYLE_PRESETS);
-
-const EXAMPLE_BRANDS = [
-  { name: "Linear", url: "https://linear.app", hint: "Linear launch video" },
-  { name: "Notion", url: "https://notion.so", hint: "Notion launch video" },
-  { name: "Cursor", url: "https://cursor.com", hint: "Cursor launch video" },
-  { name: "Framer", url: "https://framer.com", hint: "Framer launch video" },
-] as const;
 
 export function CreateProjectForm() {
   const router = useRouter();
   const { session } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [name, setName] = useState("My launch video");
+  const [name, setName] = useState("");
   const [productUrl, setProductUrl] = useState("");
   const [intent, setIntent] = useState("");
-  const [stylePreset, setStylePreset] = useState<StylePreset>("startup");
-  const [exportFormat, setExportFormat] = useState<ExportFormat>("16:9");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const createProject = useCreateProjectMutation();
-
-  const handleFile = useCallback((next: File) => {
-    if (!next.type.startsWith("video/")) {
-      setError("Please upload a video file (MP4, WebM, or MOV).");
-      return;
-    }
-    setFile(next);
-    setError(null);
-  }, []);
 
   const handleSubmit = async () => {
     if (!file) {
@@ -90,27 +59,20 @@ export function CreateProjectForm() {
     setUploadProgress(0);
 
     try {
-      const { id } = await createProject.mutateAsync({
-        title: name.trim() || "Untitled",
-        platform: "web",
-      });
-
-      await uploadProjectRecording({
+      const { projectId } = await createAndUploadProject({
         accessToken,
-        projectId: id,
-        projectName: name.trim() || "Untitled",
+        title: name.trim() || undefined,
         platform: "web",
-        file,
-        stylePreset,
-        exportFormat,
+        templateId: selectedTemplateId ?? undefined,
         brief: {
           intent: intent.trim() || undefined,
           productUrl: productUrl.trim() || undefined,
         },
+        file,
         onUploadProgress: setUploadProgress,
       });
 
-      router.push(`/editor?projectId=${id}`);
+      router.push(`/editor?projectId=${projectId}`);
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -132,19 +94,19 @@ export function CreateProjectForm() {
 
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="project-name">Project name</FieldLabel>
+          <FieldLabel htmlFor="project-name">Project name (optional)</FieldLabel>
           <FieldContent>
             <Input
               id="project-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Sploy launch video"
+              placeholder="Auto-generated from URL if left blank"
             />
           </FieldContent>
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="product-url">Product URL (optional)</FieldLabel>
+          <FieldLabel htmlFor="product-url">Product URL</FieldLabel>
           <FieldContent>
             <Input
               id="product-url"
@@ -153,24 +115,6 @@ export function CreateProjectForm() {
               onChange={(event) => setProductUrl(event.target.value)}
               placeholder="https://yourproduct.com"
             />
-            <div className="mt-2 flex flex-wrap gap-2">
-              {EXAMPLE_BRANDS.map((brand) => (
-                <Button
-                  key={brand.url}
-                  type="button"
-                  variant="secondary"
-                  size="xs"
-                  onClick={() => {
-                    setProductUrl(brand.url);
-                    if (name === "My launch video") {
-                      setName(brand.hint);
-                    }
-                  }}
-                >
-                  {brand.name}
-                </Button>
-              ))}
-            </div>
           </FieldContent>
         </Field>
 
@@ -188,58 +132,12 @@ export function CreateProjectForm() {
         </Field>
 
         <Field>
-          <FieldLabel>Style preset</FieldLabel>
+          <FieldLabel>Template</FieldLabel>
           <FieldContent>
-            <ToggleGroup
-              value={[stylePreset]}
-              onValueChange={(value) => {
-                const next = value[0] as StylePreset | undefined;
-                if (next) setStylePreset(next);
-              }}
-              variant="outline"
-              spacing={0}
-              className="grid w-full grid-cols-2 sm:grid-cols-4"
-            >
-              {PRESETS.map((preset) => (
-                <ToggleGroupItem
-                  key={preset.id}
-                  value={preset.id}
-                  className="h-auto flex-col gap-1 py-3"
-                >
-                  <span className="text-sm font-medium">{preset.label}</span>
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </FieldContent>
-        </Field>
-
-        <Field>
-          <FieldLabel>Export format</FieldLabel>
-          <FieldContent>
-            <ToggleGroup
-              value={[exportFormat]}
-              onValueChange={(value) => {
-                const next = value[0] as ExportFormat | undefined;
-                if (next) setExportFormat(next);
-              }}
-              variant="outline"
-              spacing={0}
-              className="grid w-full grid-cols-3"
-            >
-              {FORMATS.map((format) => (
-                <ToggleGroupItem
-                  key={format.id}
-                  value={format.id}
-                  className="font-mono"
-                >
-                  {format.label}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-            <FieldDescription>
-              {getExportDimensions(exportFormat).width}×
-              {getExportDimensions(exportFormat).height} output
-            </FieldDescription>
+            <TemplateStrip
+              selectedTemplateId={selectedTemplateId}
+              onSelectTemplate={setSelectedTemplateId}
+            />
           </FieldContent>
         </Field>
 
@@ -263,7 +161,10 @@ export function CreateProjectForm() {
                   event.preventDefault();
                   setDragging(false);
                   const dropped = event.dataTransfer.files[0];
-                  if (dropped) handleFile(dropped);
+                  if (dropped?.type.startsWith("video/")) {
+                    setFile(dropped);
+                    setError(null);
+                  }
                 }}
               >
                 <Upload className="size-8 text-muted-foreground" />
@@ -306,7 +207,10 @@ export function CreateProjectForm() {
                   disabled={submitting}
                   onChange={(event) => {
                     const picked = event.target.files?.[0];
-                    if (picked) handleFile(picked);
+                    if (picked) {
+                      setFile(picked);
+                      setError(null);
+                    }
                   }}
                 />
               </label>

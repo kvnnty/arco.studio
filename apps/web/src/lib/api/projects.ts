@@ -1,4 +1,4 @@
-import type { ArcoProject } from "@arco/project-schema";
+import type { ArcoProject, ExportFormat, StylePreset } from "@arco/project-schema";
 
 import {
   apiCreateProject,
@@ -41,6 +41,8 @@ export function toEditorSession(
         ...project.recording,
         src: recordingSrc,
       },
+      brief: project.brief,
+      template: project.template,
     };
   }
 
@@ -71,14 +73,22 @@ export async function fetchEditorProject(token: string, projectId: string) {
 
 export async function createProject(
   token: string,
-  input: { title: string; platform: ProjectPlatform },
+  input: {
+    title: string;
+    platform: ProjectPlatform;
+    templateId?: string;
+    brief?: { intent?: string; productUrl?: string };
+    stylePreset?: StylePreset;
+    exportFormat?: ExportFormat;
+  },
 ) {
-  const emptyProject = createEmptyProject(input.title, "pending", 1000);
   const record = await apiCreateProject(token, {
     title: input.title,
     platform: input.platform,
-    exportFormat: emptyProject.exportFormat ?? "16:9",
-    projectData: emptyProject,
+    templateId: input.templateId,
+    brief: input.brief,
+    stylePreset: input.stylePreset,
+    exportFormat: input.exportFormat,
   });
   return { id: record.id };
 }

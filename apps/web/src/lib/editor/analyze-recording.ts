@@ -4,6 +4,11 @@ import {
   effectsFromClickEffect,
 } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
+import {
+  applyTemplateBlueprint,
+  buildTemplateContext,
+  getTemplate,
+} from "@arco/project-schema/templates";
 import { apiGenerateDraft } from "@/lib/api/client";
 import { createMarkerId } from "./create-project";
 
@@ -130,6 +135,7 @@ export async function runAnalysis(
     platform?: string;
     intent?: string;
     productUrl?: string;
+    templateId?: string;
     brandContext?: {
       title?: string;
       description?: string;
@@ -138,18 +144,32 @@ export async function runAnalysis(
     };
   },
 ): Promise<DraftAnalysisResult> {
+  const template = input.templateId ? getTemplate(input.templateId) : undefined;
+  const templateContext = template ? buildTemplateContext(template) : undefined;
+
   const draftPromise = apiGenerateDraft(input.accessToken, {
     title: input.title,
     durationMs: input.durationMs,
     platform: input.platform,
     intent: input.intent,
     productUrl: input.productUrl,
+    templateId: input.templateId,
+    templateContext,
     brandContext: input.brandContext,
-  }).catch(() => ({
-    markers: generateDraftMarkers(input.durationMs),
-    stylePreset: "startup" as StylePreset,
-    source: "heuristic" as const,
-  }));
+  }).catch(() => {
+    if (template) {
+      return {
+        markers: applyTemplateBlueprint(template, input.durationMs, input.title),
+        stylePreset: template.stylePreset,
+        source: "heuristic" as const,
+      };
+    }
+    return {
+      markers: generateDraftMarkers(input.durationMs),
+      stylePreset: "startup" as StylePreset,
+      source: "heuristic" as const,
+    };
+  });
 
   let markers: Marker[] = [];
 

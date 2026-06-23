@@ -6,19 +6,41 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateProjectDto } from './dto/create-project.dto.js';
 import { UpdateProjectDto } from './dto/update-project.dto.js';
+import { buildInitialProjectData } from './project-data.util.js';
 
 @Injectable()
 export class ProjectsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateProjectDto) {
+    const projectData = dto.projectData
+      ? dto.projectData
+      : buildInitialProjectData(dto);
+
+    const stylePreset =
+      dto.stylePreset ??
+      (typeof projectData === 'object' &&
+      projectData !== null &&
+      'stylePreset' in projectData
+        ? String((projectData as { stylePreset?: string }).stylePreset)
+        : undefined);
+
+    const exportFormat =
+      dto.exportFormat ??
+      (typeof projectData === 'object' &&
+      projectData !== null &&
+      'exportFormat' in projectData
+        ? String((projectData as { exportFormat?: string }).exportFormat)
+        : undefined);
+
     return this.prisma.project.create({
       data: {
         userId,
         title: dto.title,
-        platform: dto.platform ?? 'youtube',
-        exportFormat: dto.exportFormat ?? 'mp4',
-        projectData: dto.projectData ? JSON.stringify(dto.projectData) : '{}',
+        platform: dto.platform ?? 'web',
+        exportFormat: exportFormat ?? '16:9',
+        stylePreset: stylePreset ?? null,
+        projectData: JSON.stringify(projectData),
       },
     });
   }

@@ -22,6 +22,7 @@ type AnalysisScreenProps = {
   durationMs: number;
   intent?: string;
   productUrl?: string;
+  templateId?: string;
   onComplete: (result: DraftAnalysisResult) => void;
 };
 
@@ -31,6 +32,7 @@ export function AnalysisScreen({
   durationMs,
   intent,
   productUrl,
+  templateId,
   onComplete,
 }: AnalysisScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
@@ -56,6 +58,7 @@ export function AnalysisScreen({
         platform,
         intent,
         productUrl,
+        templateId,
       },
     ).then((result) => {
       if (!cancelled) onComplete(result);
@@ -71,6 +74,7 @@ export function AnalysisScreen({
     platform,
     projectTitle,
     productUrl,
+    templateId,
     session?.accessToken,
   ]);
 

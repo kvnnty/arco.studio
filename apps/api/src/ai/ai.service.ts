@@ -1,5 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { ClickEffect, Marker, StylePreset } from '@arco/project-schema';
+import {
+  applyTemplateBlueprint,
+  getTemplate,
+  mergeTemplateMotionOntoMarkers,
+} from '@arco/project-schema/templates';
 import { GenerateDraftDto } from './dto/generate-draft.dto.js';
 import { RegenerateMarkerDto } from './dto/regenerate-marker.dto.js';
 import { RefineProjectDto } from './dto/refine-project.dto.js';
@@ -60,9 +65,32 @@ export class AiService {
       }
     }
 
+    return this.heuristicDraft(dto);
+  }
+
+  private heuristicDraft(dto: GenerateDraftDto): {
+    markers: Marker[];
+    stylePreset: StylePreset;
+    source: 'heuristic';
+  } {
+    if (dto.templateId) {
+      const template = getTemplate(dto.templateId);
+      if (template) {
+        return {
+          markers: applyTemplateBlueprint(
+            template,
+            dto.durationMs,
+            dto.title,
+          ),
+          stylePreset: template.stylePreset,
+          source: 'heuristic',
+        };
+      }
+    }
+
     return {
       markers: generateHeuristicDraftMarkers(dto.durationMs),
-      stylePreset: 'startup',
+      stylePreset: normalizeStylePreset(dto.templateContext?.stylePreset),
       source: 'heuristic',
     };
   }
@@ -71,10 +99,19 @@ export class AiService {
     dto: GenerateDraftDto,
     apiKey: string,
   ): Promise<{ markers: Marker[]; stylePreset: StylePreset }> {
-    const sceneCount = Math.min(
-      5,
-      Math.max(2, Math.floor(dto.durationMs / 8000)),
-    );
+    const sceneCount = dto.templateContext?.sceneCount
+      ? dto.templateContext.sceneCount
+      : Math.min(5, Math.max(2, Math.floor(dto.durationMs / 8000)));
+
+    const templateLines = dto.templateContext
+      ? [
+          `Video template: ${dto.templateContext.name}`,
+          `Template copy tone: ${dto.templateContext.copyTone}`,
+          `Template style preset: ${dto.templateContext.stylePreset}`,
+          `Scene copy hints: ${dto.templateContext.sceneHints.join(' | ')}`,
+          `Generate exactly ${sceneCount} markers matching this template structure.`,
+        ]
+      : [`Generate ${sceneCount} markers evenly spaced across the timeline.`];
 
     const userPrompt = [
       `Product title: ${dto.title}`,
@@ -91,11 +128,15 @@ export class AiService {
         : null,
       dto.platform ? `Platform: ${dto.platform}` : null,
       `Recording durationMs: ${dto.durationMs}`,
-      `Generate ${sceneCount} markers evenly spaced across the timeline.`,
+      ...templateLines,
       'Return JSON: { "stylePreset": "startup"|"linear"|"stripe"|"apple", "markers": [{ "startMs", "durationMs", "label", "callout": { "text", "subtext?" }, "clickEffect": "ripple"|"zoom"|"spotlight"|"pulse"|"glow"|"none" }] }',
     ]
       .filter(Boolean)
       .join('\n');
+
+    const systemContent = dto.templateContext
+      ? `You write on-screen text for SaaS launch videos following the "${dto.templateContext.name}" template. ${dto.templateContext.copyTone} Match the template scene structure and copy rhythm. No hype clichés. Output JSON only.`
+      : 'You write on-screen text for SaaS launch videos. Tone: confident, minimal, devtool audience. No hype clichés. Output JSON only.';
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -110,8 +151,7 @@ export class AiService {
         messages: [
           {
             role: 'system',
-            content:
-              'You write on-screen text for SaaS launch videos. Tone: confident, minimal, devtool audience. No hype clichés. Output JSON only.',
+            content: systemContent,
           },
           { role: 'user', content: userPrompt },
         ],
@@ -132,7 +172,7 @@ export class AiService {
     }
 
     const parsed = JSON.parse(content) as LlmDraftResponse;
-    const markers = scenesToMarkers(
+    let markers = scenesToMarkers(
       (parsed.markers ?? []).map((marker) => ({
         ...marker,
         clickEffect: normalizeClickEffect(marker.clickEffect),
@@ -140,9 +180,20 @@ export class AiService {
       dto.durationMs,
     );
 
+    if (dto.templateId) {
+      const template = getTemplate(dto.templateId);
+      if (template) {
+        markers = mergeTemplateMotionOntoMarkers(markers, template);
+      }
+    }
+
+    const stylePreset = dto.templateContext?.stylePreset
+      ? normalizeStylePreset(dto.templateContext.stylePreset)
+      : normalizeStylePreset(parsed.stylePreset);
+
     return {
       markers,
-      stylePreset: normalizeStylePreset(parsed.stylePreset),
+      stylePreset,
     };
   }
 

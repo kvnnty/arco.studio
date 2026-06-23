@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsInt,
   IsObject,
   IsOptional,
@@ -27,6 +28,26 @@ class BrandContextDto {
   colors?: { primary: string; background: string };
 }
 
+class TemplateContextDto {
+  @IsString()
+  name!: string;
+
+  @IsString()
+  copyTone!: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  sceneCount!: number;
+
+  @IsArray()
+  @IsString({ each: true })
+  sceneHints!: string[];
+
+  @IsString()
+  stylePreset!: string;
+}
+
 export class GenerateDraftDto {
   @IsString()
   title!: string;
@@ -48,8 +69,17 @@ export class GenerateDraftDto {
   @IsOptional()
   productUrl?: string;
 
+  @IsString()
+  @IsOptional()
+  templateId?: string;
+
   @ValidateNested()
   @Type(() => BrandContextDto)
   @IsOptional()
   brandContext?: BrandContextDto;
+
+  @ValidateNested()
+  @Type(() => TemplateContextDto)
+  @IsOptional()
+  templateContext?: TemplateContextDto;
 }

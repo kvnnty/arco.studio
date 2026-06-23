@@ -106,6 +106,12 @@ export const arcoProjectSchema = z.object({
       productUrl: z.string().max(500).optional(),
     })
     .optional(),
+  template: z
+    .object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+    })
+    .optional(),
   stylePreset: stylePresetSchema.default("startup"),
   exportFormat: exportFormatSchema.default("16:9"),
 });
@@ -129,6 +135,30 @@ export const DEFAULT_FOCUS: FocusRegion = {
 
 export function parseArcoProject(data: unknown): ArcoProject {
   return arcoProjectSchema.parse(data);
+}
+
+/** Empty project before recording upload (recording.src = "pending"). */
+export function createPendingProject(title: string): ArcoProject {
+  return {
+    version: "1",
+    meta: {
+      title,
+      fps: 30,
+      width: 1920,
+      height: 1080,
+    },
+    recording: {
+      src: "pending",
+      durationMs: 1000,
+    },
+    markers: [],
+    brand: {
+      primary: "#55b3ff",
+      background: "#07080a",
+    },
+    stylePreset: "startup",
+    exportFormat: "16:9",
+  };
 }
 
 export function msToFrames(ms: number, fps: number): number {

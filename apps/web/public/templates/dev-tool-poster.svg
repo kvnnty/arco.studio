@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+  <rect width="640" height="360" fill="#08090A"/>
+  <rect x="40" y="40" width="560" height="280" rx="12" fill="#0C0D12" stroke="#5E6AD2" stroke-width="2"/>
+  <text x="320" y="170" fill="#5E6AD2" font-family="system-ui,sans-serif" font-size="28" font-weight="600" text-anchor="middle">Dev Tool Demo</text>
+  <text x="320" y="210" fill="#9CA3AF" font-family="system-ui,sans-serif" font-size="14" text-anchor="middle">Linear-style · Zoom focus</text>
+</svg>

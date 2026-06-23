@@ -1,5 +1,9 @@
 import type { ArcoProject, ExportFormat, StylePreset } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
+import {
+  applyTemplateToProject,
+  getTemplate,
+} from "@arco/project-schema/templates";
 
 import { syncProjectRecord } from "@/lib/api/projects";
 import {
@@ -23,6 +27,7 @@ export type UploadProjectRecordingInput = {
   file: File;
   stylePreset?: StylePreset;
   exportFormat?: ExportFormat;
+  templateId?: string;
   brief?: ArcoProject["brief"];
   onUploadProgress?: (percent: number) => void;
 };
@@ -92,16 +97,20 @@ export async function uploadProjectRecording(
     metadata.height,
   );
 
-  if (input.exportFormat) {
-    project = { ...project, exportFormat: input.exportFormat };
-  }
-
   if (input.brief) {
     project = { ...project, brief: input.brief };
   }
 
-  if (input.stylePreset) {
-    project = applyStylePreset(project, input.stylePreset);
+  const template = input.templateId ? getTemplate(input.templateId) : undefined;
+  if (template) {
+    project = applyTemplateToProject(project, template);
+  } else {
+    if (input.exportFormat) {
+      project = { ...project, exportFormat: input.exportFormat };
+    }
+    if (input.stylePreset) {
+      project = applyStylePreset(project, input.stylePreset);
+    }
   }
 
   await syncProjectRecord(input.accessToken, {

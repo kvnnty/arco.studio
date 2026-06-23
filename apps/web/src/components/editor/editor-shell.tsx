@@ -3,6 +3,7 @@
 import type { ArcoProject, FocusRegion, Marker, StylePreset } from "@arco/project-schema";
 import { getExportDimensions } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
+import { getTemplate } from "@arco/project-schema/templates";
 import type { PlayerRef } from "@remotion/player";
 import Image from "next/image";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -225,17 +226,30 @@ export function EditorShell({
         baseProject = mergeBrandIntoProject(baseProject, kit);
       }
 
+      const template = session.project.template?.id
+        ? getTemplate(session.project.template.id)
+        : undefined;
+
       const suggestedPreset =
+        template?.stylePreset ??
         toneToStylePreset(kit?.tone) ??
         result.stylePreset ??
         session.project.stylePreset ??
         "startup";
 
-      const draftProject = buildDraftProject(
+      let draftProject = buildDraftProject(
         baseProject,
         suggestedPreset,
         result.markers,
       );
+
+      if (template) {
+        draftProject = {
+          ...draftProject,
+          audio: { ...template.audio },
+          template: { id: template.id, name: template.name },
+        };
+      }
 
       const nextSession: EditorSession = {
         ...session,
@@ -538,6 +552,7 @@ export function EditorShell({
             durationMs={project.recording.durationMs}
             intent={project.brief?.intent}
             productUrl={project.brief?.productUrl}
+            templateId={project.template?.id}
             isAnalyzing={isAnalyzing}
             chatReady={chatReady}
             selectedMarker={selectedMarker}

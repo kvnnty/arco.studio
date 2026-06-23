@@ -11,6 +11,7 @@ import {
   Gift,
   HelpCircle,
   LayoutDashboard,
+  LayoutTemplate,
   Library,
   Plus,
   Settings,
@@ -36,6 +37,7 @@ import type { BillingStatus } from "@/lib/api/client";
 const mainNav = [
   { title: "Home", href: "/dashboard", icon: LayoutDashboard, exact: true },
   { title: "Projects", href: "/dashboard/projects", icon: FolderOpen },
+  { title: "Templates", href: "/dashboard/templates", icon: LayoutTemplate },
   { title: "Assets", href: "/dashboard/assets", icon: Library },
 ];
 
