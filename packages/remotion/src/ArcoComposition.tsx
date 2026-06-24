@@ -3,13 +3,16 @@ import {
   projectDurationInFrames,
   parseArcoProject,
   type StylePreset,
+  isScreenshotProject,
 } from "@arco/project-schema";
 import { STYLE_PRESETS } from "@arco/project-schema/style-presets";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { ClickEffects } from "./components/ClickRipple";
 import { LogoOverlay } from "./components/LogoOverlay";
 import { MusicBed } from "./components/MusicBed";
+import { VoiceTrack } from "./components/VoiceTrack";
 import { RecordingLayer } from "./components/RecordingLayer";
+import { ScreenshotStoryboard } from "./components/ScreenshotStoryboard";
 import { TitleCard } from "./components/TitleCard";
 
 export type ArcoCompositionProps = {
@@ -37,33 +40,41 @@ export const ArcoComposition: React.FC<ArcoCompositionProps> = ({
   const style = getStyleConfig(project);
   const primary = project.brand?.primary ?? style.brand.primary;
   const background = project.brand?.background ?? style.brand.background;
+  const screenshotMode = isScreenshotProject(project);
 
   return (
     <AbsoluteFill>
-      <RecordingLayer project={project} frame={frame} />
+      {screenshotMode ? (
+        <ScreenshotStoryboard project={project} />
+      ) : (
+        <RecordingLayer project={project} frame={frame} />
+      )}
       <MusicBed project={project} />
+      <VoiceTrack project={project} />
       <LogoOverlay project={project} />
-      {project.markers.map((marker) => (
-        <ClickEffects
-          key={`effects-${marker.id}`}
-          frame={frame}
-          fps={project.meta.fps}
-          marker={marker}
-          primary={primary}
-          background={background}
-        />
-      ))}
-      {project.markers.map((marker) => (
-        <TitleCard
-          key={`title-${marker.id}`}
-          frame={frame}
-          fps={project.meta.fps}
-          marker={marker}
-          primary={primary}
-          background={background}
-          titleSize={style.motion.titleSize}
-        />
-      ))}
+      {!screenshotMode &&
+        project.markers.map((marker) => (
+          <ClickEffects
+            key={`effects-${marker.id}`}
+            frame={frame}
+            fps={project.meta.fps}
+            marker={marker}
+            primary={primary}
+            background={background}
+          />
+        ))}
+      {!screenshotMode &&
+        project.markers.map((marker) => (
+          <TitleCard
+            key={`title-${marker.id}`}
+            frame={frame}
+            fps={project.meta.fps}
+            marker={marker}
+            primary={primary}
+            background={background}
+            titleSize={style.motion.titleSize}
+          />
+        ))}
     </AbsoluteFill>
   );
 };

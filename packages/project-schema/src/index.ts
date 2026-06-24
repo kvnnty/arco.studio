@@ -38,6 +38,28 @@ export const stylePresetSchema = z.enum([
 
 export const exportFormatSchema = z.enum(["16:9", "1:1", "9:16"]);
 
+export const projectModeSchema = z.enum(["recording", "screenshots"]);
+
+export const screenshotMotionSchema = z.enum([
+  "ken-burns-in",
+  "ken-burns-out",
+  "pan-left",
+  "static",
+]);
+
+export const screenshotSceneSchema = z.object({
+  id: z.string().min(1),
+  imageSrc: z.string().min(1),
+  durationMs: z.number().int().min(1000).max(15000),
+  headline: z.string().max(120).optional(),
+  subheadline: z.string().max(200).optional(),
+  voScript: z.string().max(500).optional(),
+  voAudioSrc: z.string().optional(),
+  voDurationMs: z.number().int().positive().optional(),
+  motion: screenshotMotionSchema.default("ken-burns-in"),
+  transition: z.object({ type: transitionTypeSchema }).optional(),
+});
+
 export const focusRegionSchema = z.object({
   x: z.number().min(0).max(1),
   y: z.number().min(0).max(1),
@@ -98,6 +120,9 @@ export const arcoProjectSchema = z.object({
     .object({
       musicId: z.string().optional(),
       volume: z.number().min(0).max(1).default(0.85),
+      voiceId: z.string().optional(),
+      voiceEnabled: z.boolean().optional(),
+      duckUnderVoice: z.boolean().optional(),
     })
     .optional(),
   brief: z
@@ -114,6 +139,8 @@ export const arcoProjectSchema = z.object({
     .optional(),
   stylePreset: stylePresetSchema.default("startup"),
   exportFormat: exportFormatSchema.default("16:9"),
+  projectMode: projectModeSchema.default("recording"),
+  scenes: z.array(screenshotSceneSchema).optional(),
 });
 
 export type EffectType = z.infer<typeof effectTypeSchema>;
@@ -121,6 +148,9 @@ export type ClickEffect = z.infer<typeof clickEffectSchema>;
 export type TransitionType = z.infer<typeof transitionTypeSchema>;
 export type StylePreset = z.infer<typeof stylePresetSchema>;
 export type ExportFormat = z.infer<typeof exportFormatSchema>;
+export type ProjectMode = z.infer<typeof projectModeSchema>;
+export type ScreenshotMotion = z.infer<typeof screenshotMotionSchema>;
+export type ScreenshotScene = z.infer<typeof screenshotSceneSchema>;
 export type FocusRegion = z.infer<typeof focusRegionSchema>;
 export type MarkerEffect = z.infer<typeof markerEffectSchema>;
 export type Marker = z.infer<typeof markerSchema>;
@@ -158,7 +188,65 @@ export function createPendingProject(title: string): ArcoProject {
     },
     stylePreset: "startup",
     exportFormat: "16:9",
+    projectMode: "recording",
   };
+}
+
+/** Screenshot storyboard project before scenes are finalized. */
+export function createScreenshotPendingProject(
+  title: string,
+  scenes: ScreenshotScene[] = [],
+): ArcoProject {
+  const durationMs =
+    scenes.length > 0
+      ? scenes.reduce((sum, scene) => sum + scene.durationMs, 0)
+      : 1000;
+
+  return {
+    version: "1",
+    meta: {
+      title,
+      fps: 30,
+      width: 1920,
+      height: 1080,
+    },
+    recording: {
+      src: "placeholder",
+      durationMs,
+    },
+    markers: [],
+    brand: {
+      primary: "#55b3ff",
+      background: "#07080a",
+    },
+    stylePreset: "startup",
+    exportFormat: "16:9",
+    projectMode: "screenshots",
+    scenes,
+  };
+}
+
+export function isScreenshotProject(project: ArcoProject): boolean {
+  return project.projectMode === "screenshots";
+}
+
+export function screenshotProjectDurationMs(project: ArcoProject): number {
+  if (!project.scenes?.length) {
+    return project.recording.durationMs;
+  }
+  return project.scenes.reduce((sum, scene) => sum + scene.durationMs, 0);
+}
+
+export function projectHasVoiceover(project: ArcoProject): boolean {
+  if (project.audio?.voiceEnabled === false) return false;
+  return (
+    project.scenes?.some((scene) => Boolean(scene.voAudioSrc)) ?? false
+  );
+}
+
+export function spokenScriptFromScene(scene: ScreenshotScene): string {
+  if (scene.voScript?.trim()) return scene.voScript.trim();
+  return [scene.headline, scene.subheadline].filter(Boolean).join(". ");
 }
 
 export function msToFrames(ms: number, fps: number): number {
@@ -166,7 +254,10 @@ export function msToFrames(ms: number, fps: number): number {
 }
 
 export function projectDurationInFrames(project: ArcoProject): number {
-  return msToFrames(project.recording.durationMs, project.meta.fps);
+  const durationMs = isScreenshotProject(project)
+    ? screenshotProjectDurationMs(project)
+    : project.recording.durationMs;
+  return msToFrames(durationMs, project.meta.fps);
 }
 
 export function getExportDimensions(format: ExportFormat): {

@@ -31,6 +31,16 @@ export class UploadsService {
     return this.s3.uploadObject(key, file.buffer, file.mimetype);
   }
 
+  async uploadStoryboardImage(
+    userId: string,
+    file: Express.Multer.File,
+  ): Promise<{ key: string; url: string }> {
+    const ext = extname(file.originalname) || '.png';
+    const key = `images/${userId}/${randomUUID()}${ext}`;
+
+    return this.s3.uploadObject(key, file.buffer, file.mimetype);
+  }
+
   async streamObject(key: string) {
     try {
       return await this.s3.getObjectStream(key);

@@ -80,6 +80,7 @@ export async function createProject(
     brief?: { intent?: string; productUrl?: string };
     stylePreset?: StylePreset;
     exportFormat?: ExportFormat;
+    projectMode?: string;
   },
 ) {
   const record = await apiCreateProject(token, {
@@ -89,6 +90,7 @@ export async function createProject(
     brief: input.brief,
     stylePreset: input.stylePreset,
     exportFormat: input.exportFormat,
+    projectMode: input.projectMode,
   });
   return { id: record.id };
 }
@@ -110,7 +112,7 @@ export async function syncProjectRecord(
     exportFormat: input.project.exportFormat,
     projectData: input.project,
     recordingSrc: input.recordingSrc || undefined,
-    markerCount: input.project.markers.length,
+    markerCount: input.project.scenes?.length ?? input.project.markers.length,
     thumbnailUrl: input.thumbnailUrl,
   });
 }

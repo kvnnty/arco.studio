@@ -1,5 +1,5 @@
 import type { ArcoProject, Marker, MarkerEffect } from "@arco/project-schema";
-import { DEFAULT_FOCUS } from "@arco/project-schema";
+import { DEFAULT_FOCUS, isScreenshotProject } from "@arco/project-schema";
 
 export type ProjectPlatform = "web" | "mobile" | "both";
 
@@ -55,6 +55,7 @@ export function createEmptyProject(
     },
     stylePreset: "startup",
     exportFormat: "16:9",
+    projectMode: "recording",
   };
 }
 
@@ -129,6 +130,13 @@ export function setEffect(
 }
 
 export function inferJourneyStep(project: ArcoProject): JourneyStep {
+  if (isScreenshotProject(project)) {
+    if (project.scenes && project.scenes.length > 0) {
+      return "edit";
+    }
+    return "upload";
+  }
+
   if (project.markers.length > 0) {
     return "edit";
   }

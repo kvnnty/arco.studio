@@ -4,7 +4,7 @@ User-facing features to ship. Check off as each becomes **real** (not mock UI).
 
 **Status key:** `[x]` shipped · `[~]` partial / mock · `[ ]` not built · `[-]` explicitly out of scope
 
-**Combined MVP target:** [MOTIONFLARE-REFERENCE.md](./MOTIONFLARE-REFERENCE.md) — Motionflare UX + Arco real recordings.
+**Combined MVP target:** [MOTIONFLARE-REFERENCE.md](./MOTIONFLARE-REFERENCE.md) — Motionflare UX + Arco real recordings. **What to borrow (and avoid):** [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md).
 
 **Related:** [PRODUCT.md](./PRODUCT.md) · [BUILD-CHECKLIST.md](./BUILD-CHECKLIST.md) (how to build)
 
@@ -71,7 +71,7 @@ The product loop every user should complete.
 | [ ] | Vision — label screens in recording | Post-MVP |
 | [-] | Text-to-video / fake UI generation | Out of scope |
 | [-] | AI music | Out of scope |
-| [-] | AI voice / TTS | Out of scope |
+| [x] | AI voice / TTS (ElevenLabs) | Screenshot mode — `POST /voice/generate` |
 
 ---
 
@@ -85,7 +85,7 @@ The product loop every user should complete.
 | [x] | Max file size enforcement (500MB) | API multer limit |
 | [ ] | Recording library / assets page | Mock UI |
 | [ ] | Re-use recording across projects | |
-| [ ] | Screenshot import as B-roll | Post-MVP |
+| [x] | Screenshot import as storyboard scenes | Dashboard Screenshots tab + `POST /uploads/image` |
 | [x] | Logo upload for brand kit | Customize panel + thumbnail upload |
 
 ---
@@ -145,8 +145,8 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 | [x] | Music in exported video | Remotion render |
 | [x] | Music track picker | Customize panel |
 | [x] | Volume control | Customize panel + `MusicBed` |
-| [-] | Voiceover | Out of scope v1 |
-| [-] | AI narrator | Out of scope |
+| [-] | Voiceover (manual upload) | Out of scope v1 |
+| [x] | AI narrator (ElevenLabs TTS) | Screenshot projects |
 
 ---
 
@@ -213,8 +213,9 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 | [ ] | Pro plan ($39–49) | |
 | [ ] | Maker plan ($15) | |
 | [x] | Stripe checkout | Launch Offer via Checkout Session |
-| [x] | Export credits / limits | 15/mo on Pro, gated at render |
+| [x] | Export credits / limits | 15/mo on Pro — charged on **completed** export |
 | [~] | Invoices & billing history | Stripe Customer Portal |
+| [x] | Export-on-success billing (code) | `consumeExport()` on completed render |
 
 ---
 
@@ -226,7 +227,7 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 | [x] | Waitlist | |
 | [ ] | Before/after demo video on landing | |
 | [ ] | Public example exports | |
-| [ ] | Referral / invite | |
+| [x] | Referral / invite | |
 | [ ] | Product Hunt launch assets | |
 
 ---
@@ -257,15 +258,51 @@ All must be checked before MVP launch:
 
 ---
 
+## Templates & dashboard quick-create (shipped June 2026)
+
+| | Feature | Status |
+|---|---------|--------|
+| [x] | Dashboard create hero (URL + brief + recording) | `/dashboard` |
+| [x] | Template strip + gallery | `/dashboard/templates` |
+| [x] | Template blueprint → AI draft | `@arco/project-schema/templates` |
+| [x] | Make video → editor analysis | One-step create |
+
+---
+
+## Screenshot storyboard mode (shipped June 2026)
+
+| | Feature | Status |
+|---|---------|--------|
+| [x] | Dashboard Screenshots tab | `/dashboard` create hero |
+| [x] | Multi-image upload (PNG/JPG) | 3–10 images, reorder |
+| [x] | AI storyboard from screenshots + brief | `POST /ai/generate-storyboard` |
+| [x] | Remotion screenshot composition | `ScreenshotStoryboard` + Ken Burns |
+| [x] | Scene editor for screenshot projects | Strip + inspector |
+| [ ] | Hybrid recording + screenshot B-roll | Phase 5 |
+
+---
+
+## Voice & advanced audio
+
+| | Feature | Status |
+|---|---------|--------|
+| [x] | Music track picker | BGM modal + customize panel |
+| [x] | BGM library with preview (Motionflare-style) | 5 tracks — [LICENSES-MUSIC.md](./LICENSES-MUSIC.md) |
+| [x] | BGM on dashboard create | BGM chip + modal |
+| [ ] | Custom music upload | Phase 4 (Pro) |
+| [x] | Language & Voice picker | Dashboard Screenshots tab |
+| [x] | ElevenLabs TTS per scene | `apps/api/src/voice/` |
+| [x] | BGM ducking under voice | Remotion `VoiceTrack` + lowered music volume |
+
+---
+
 ## Priority order (what to ship next)
 
-1. **Cloud projects + upload** — persistence
-2. **AI brief → draft** — real intelligence
-3. **Export MP4** — core value
-4. **Project detail + download** — complete loop
-5. **Brand from URL** — shipped (Phase 4)
-6. **Billing** — shipped (Phase 5)
-7. **Vision / click detection** — quality leap
+1. **Licensed BGM assets** — swap placeholders ([LICENSES-MUSIC.md](./LICENSES-MUSIC.md))
+2. **Custom music upload** — Phase 4
+3. **Vision / click detection** — recording mode quality
+4. **Hybrid mode** — Phase 5
+5. **VO on recording mode** — optional stretch
 
 ---
 

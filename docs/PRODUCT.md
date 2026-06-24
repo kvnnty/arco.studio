@@ -4,7 +4,7 @@
 
 **AI-assisted product motion studio** for web & mobile tech:
 
-- User uploads **real recordings** of their app
+- User uploads **real recordings** of their app (or **screenshots** — Phase 1 roadmap)
 - AI proposes **markers** (clicks, moments) and **motion treatments**
 - User refines in a **simple editor** (not After Effects)
 - Export polished **product demo / launch** videos
@@ -68,8 +68,9 @@ Sidebar (selected marker)
 ## Optional augmentations (not MVP core)
 
 - URL → brand colors, intro/outro copy
-- Screenshots as B-roll between recording segments
-- Music bed (curated library, no VO in v1)
+- **Screenshot storyboard mode** — see [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)
+- Screenshots as B-roll between recording segments (Phase 5 hybrid)
+- Music bed (curated library; voice in Phase 3 of roadmap)
 
 ## Anti-goals
 
@@ -89,4 +90,5 @@ Sidebar (selected marker)
 
 ## Related docs
 
+- [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md) · [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md)
 - [PROJECT-SCHEMA.md](./PROJECT-SCHEMA.md) · [MVP-BUILD.md](./MVP-BUILD.md) · [ICP.md](./ICP.md)

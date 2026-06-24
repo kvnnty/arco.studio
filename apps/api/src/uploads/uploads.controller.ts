@@ -55,6 +55,22 @@ export class UploadsController {
     return this.uploadsService.uploadThumbnail(req.user.id, validFile);
   }
 
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @Post('image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: AuthedRequest,
+  ) {
+    const validFile = this.uploadsService.validateImageFile(file);
+    return this.uploadsService.uploadStoryboardImage(req.user.id, validFile);
+  }
+
   @Get('object')
   async serveObject(
     @Query('key') key: string | undefined,

@@ -1,11 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { ClickEffect, Marker, StylePreset } from '@arco/project-schema';
+import type { ClickEffect, Marker, ScreenshotScene, StylePreset } from '@arco/project-schema';
+import { createScreenshotPendingProject, spokenScriptFromScene } from '@arco/project-schema';
 import {
   applyTemplateBlueprint,
+  applyTemplateToScreenshotProject,
   getTemplate,
   mergeTemplateMotionOntoMarkers,
 } from '@arco/project-schema/templates';
 import { GenerateDraftDto } from './dto/generate-draft.dto.js';
+import { GenerateStoryboardDto } from './dto/generate-storyboard.dto.js';
 import { RegenerateMarkerDto } from './dto/regenerate-marker.dto.js';
 import { RefineProjectDto } from './dto/refine-project.dto.js';
 import { ChatDto } from './dto/chat.dto.js';
@@ -603,5 +606,203 @@ export class AiService {
     }
 
     onChunk({ action: result.action });
+  }
+
+  async generateStoryboard(dto: GenerateStoryboardDto): Promise<{
+    scenes: ScreenshotScene[];
+    stylePreset: StylePreset;
+    source: 'llm' | 'heuristic';
+  }> {
+    const targetDurationMs = dto.targetDurationMs ?? 45000;
+    const intent = dto.intent ?? dto.brief?.intent;
+    const productUrl = dto.productUrl ?? dto.brief?.productUrl;
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (apiKey) {
+      try {
+        const llmScenes = await this.generateStoryboardWithLlm(
+          dto,
+          apiKey,
+          targetDurationMs,
+        );
+        return { ...llmScenes, source: 'llm' };
+      } catch (error) {
+        this.logger.warn(
+          `LLM storyboard failed, using heuristic fallback: ${
+            error instanceof Error ? error.message : error
+          }`,
+        );
+      }
+    }
+
+    return this.heuristicStoryboard(dto, targetDurationMs);
+  }
+
+  private heuristicStoryboard(
+    dto: GenerateStoryboardDto,
+    targetDurationMs: number,
+  ): {
+    scenes: ScreenshotScene[];
+    stylePreset: StylePreset;
+    source: 'heuristic';
+  } {
+    if (dto.templateId) {
+      const template = getTemplate(dto.templateId);
+      if (template) {
+        const pending = createScreenshotPendingProject(dto.title);
+        const withTemplate = applyTemplateToScreenshotProject(
+          pending,
+          template,
+          dto.imageUrls,
+          dto.title,
+          targetDurationMs,
+        );
+        return {
+          scenes: withTemplate.scenes ?? [],
+          stylePreset: template.stylePreset,
+          source: 'heuristic',
+        };
+      }
+    }
+
+    const perSceneMs = Math.max(
+      3000,
+      Math.round(targetDurationMs / dto.imageUrls.length),
+    );
+    const intent = dto.intent ?? dto.brief?.intent;
+
+    const scenes: ScreenshotScene[] = dto.imageUrls.map((imageSrc, index) => {
+      const headline =
+        index === 0
+          ? dto.title
+          : index === dto.imageUrls.length - 1
+            ? 'Start free today'
+            : `Feature ${index + 1}`;
+      const subheadline = intent?.slice(0, 120);
+      return {
+        id: `scene-${index}`,
+        imageSrc,
+        durationMs: perSceneMs,
+        headline,
+        subheadline,
+        voScript: spokenScriptFromScene({
+          id: `scene-${index}`,
+          imageSrc,
+          durationMs: perSceneMs,
+          headline,
+          subheadline,
+          motion: 'ken-burns-in',
+        }),
+        motion: index % 2 === 0 ? 'ken-burns-in' : 'ken-burns-out',
+        transition: { type: 'fade' as const },
+      };
+    });
+
+    return {
+      scenes,
+      stylePreset: 'startup',
+      source: 'heuristic',
+    };
+  }
+
+  private async generateStoryboardWithLlm(
+    dto: GenerateStoryboardDto,
+    apiKey: string,
+    targetDurationMs: number,
+  ): Promise<{ scenes: ScreenshotScene[]; stylePreset: StylePreset }> {
+    const intent = dto.intent ?? dto.brief?.intent;
+    const productUrl = dto.productUrl ?? dto.brief?.productUrl;
+    const template = dto.templateId ? getTemplate(dto.templateId) : undefined;
+
+    const userPrompt = [
+      `Product title: ${dto.title}`,
+      intent ? `Video intent: ${intent}` : null,
+      productUrl ? `Product URL: ${productUrl}` : null,
+      template ? `Template: ${template.name} — ${template.copyTone}` : null,
+      `Screenshot count: ${dto.imageUrls.length}`,
+      `Target total durationMs: ${targetDurationMs}`,
+      'Return JSON: { "stylePreset": "startup"|"linear"|"stripe"|"apple", "scenes": [{ "headline", "subheadline?", "voScript?", "durationMs" }] }',
+      `voScript: spoken narration (1-2 sentences). Can differ from on-screen headline.`,
+      `Generate exactly ${dto.imageUrls.length} scenes, one per screenshot in order.`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
+        temperature: 0.4,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You write headlines for SaaS launch videos from app screenshots. Confident, minimal copy. Output JSON only.',
+          },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`OpenAI error ${response.status}: ${body}`);
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = payload.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error('OpenAI returned empty content');
+    }
+
+    const parsed = JSON.parse(content) as {
+      stylePreset?: string;
+      scenes?: Array<{
+        headline?: string;
+        subheadline?: string;
+        voScript?: string;
+        durationMs?: number;
+      }>;
+    };
+
+    const motions: ScreenshotScene['motion'][] = [
+      'ken-burns-in',
+      'ken-burns-out',
+      'pan-left',
+      'static',
+    ];
+
+    const scenes: ScreenshotScene[] = dto.imageUrls.map((imageSrc, index) => {
+      const llmScene = parsed.scenes?.[index];
+      const defaultMs = Math.max(
+        3000,
+        Math.round(targetDurationMs / dto.imageUrls.length),
+      );
+
+      return {
+        id: `scene-${index}`,
+        imageSrc,
+        durationMs: llmScene?.durationMs ?? defaultMs,
+        headline: llmScene?.headline ?? `Scene ${index + 1}`,
+        subheadline: llmScene?.subheadline,
+        voScript:
+          llmScene?.voScript ??
+          [llmScene?.headline, llmScene?.subheadline].filter(Boolean).join('. '),
+        motion: motions[index % motions.length],
+        transition: { type: 'fade' },
+      };
+    });
+
+    return {
+      scenes,
+      stylePreset: normalizeStylePreset(parsed.stylePreset),
+    };
   }
 }

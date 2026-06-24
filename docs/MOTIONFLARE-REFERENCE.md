@@ -398,7 +398,7 @@ Use this as the **product** checklist — supersedes siloed Arco-only flow.
 
 ### Monetization (Motionflare model — phase 2)
 
-- [ ] Credits per export
+- [ ] Credits per export — **Arco uses subscription export allowance, not credits** ([MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md))
 - [ ] Free watermark / Pro no watermark
 - [ ] Prompt-only mode (Pro)
 
@@ -420,12 +420,24 @@ Use this as the **product** checklist — supersedes siloed Arco-only flow.
 5. **Export MP4**
 6. **Projects grid**
 7. Chat refine + per-scene regen
-8. Voice/TTS (optional parity with Motionflare)
+8. Voice/TTS (optional parity with Motionflare) — see [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)
+
+---
+
+## Screenshot + voice + music (next initiative)
+
+**Master plan:** [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)
+
+**UX + billing contrast:** [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md) — what to borrow from Motionflare, toolbox comparison, export-on-success policy.
+
+Phases: **0** decisions/assets → **1** screenshots → **2** BGM library → **3** ElevenLabs → **4** custom upload → **5** hybrid polish.
 
 ---
 
 ## Related docs
 
+- [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md)
+- [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)
 - [FEATURE-CHECKLIST.md](./FEATURE-CHECKLIST.md)
 - [BUILD-CHECKLIST.md](./BUILD-CHECKLIST.md)
 - [PRODUCT.md](./PRODUCT.md)

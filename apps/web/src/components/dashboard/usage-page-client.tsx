@@ -105,7 +105,10 @@ export function UsagePageClient() {
       <Card className="rounded-2xl">
         <CardHeader>
           <CardTitle className="text-base">Export usage</CardTitle>
-          <CardDescription>{percent}% of monthly allowance used</CardDescription>
+          <CardDescription>
+            {percent}% of monthly allowance used. Exports count when a render
+            completes successfully — failed renders and previews are free.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-2 overflow-hidden rounded-full bg-muted">

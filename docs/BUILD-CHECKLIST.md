@@ -248,6 +248,43 @@ All must pass before calling MVP shipped:
 
 ---
 
+## Phase 6 — Screenshot, BGM, voice (June 2026+)
+
+**Goal:** Motionflare-grade create UX with Arco’s real visuals. Master plan: [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md).
+
+**Do not start until Phase 4 polish is stable for recording mode.**
+
+### Export billing (align code with policy)
+
+- [x] Move export consumption from `POST /renders` queue to render **`completed`**
+- [x] In-flight cap in `assertCanExport`
+- [x] Billing query invalidation on export complete/fail (web)
+
+See [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md) · [MONETIZATION.md](./MONETIZATION.md).
+
+### Phase 1 — Screenshot storyboard
+
+- [x] Schema v2: `projectMode`, `scenes[]` with image assets
+- [x] Image upload API + S3
+- [x] Dashboard Screenshots tab on create hero
+- [x] AI storyboard from images + brief
+- [x] Remotion screenshot composition (device frame + Ken Burns)
+
+### Phase 2 — BGM library
+
+- [x] Ship 5 track MP3 assets (placeholders) + `LICENSES-MUSIC.md`
+- [x] BGM modal on dashboard create (preview + mood tags)
+- [x] Wire all tracks in render + preview
+
+### Phase 3 — ElevenLabs (shipped)
+
+- [x] Voice picker modal on dashboard create (preview + catalog)
+- [x] TTS per scene + BGM ducking (`VoiceTrack`, `musicVolumeForProject`)
+- [x] `ELEVENLABS_API_KEY` env + `apps/api/src/voice/`
+- [ ] Pipeline chat step “Recording voice-over…” (stretch)
+
+---
+
 ## Suggested weekly focus
 
 | Week | Focus | Checklist section |
@@ -272,4 +309,4 @@ pnpm --filter @arco/remotion render:sample  # CLI render test
 
 ---
 
-*Last updated: June 2025 — adjust checkboxes as items ship.*
+*Last updated: June 2026 — adjust checkboxes as items ship.*

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ArcoProject } from "@arco/project-schema";
+import { isScreenshotProject } from "@arco/project-schema";
 import { Upload } from "lucide-react";
 import { useRef } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -15,9 +16,9 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { BgmTrackGrid } from "@/components/dashboard/bgm-track-grid";
 import { uploadThumbnail } from "@/lib/api/client";
-import { MUSIC_TRACKS } from "@/lib/editor/music-tracks";
+import type { MusicTrackId } from "@/lib/editor/music-tracks";
 
 type CustomizePanelProps = {
   project: ArcoProject;
@@ -32,7 +33,11 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
     primary: "#55b3ff",
     background: "#07080a",
   };
-  const audio = project.audio ?? { musicId: "modern-saas", volume: 0.85 };
+  const audio = project.audio ?? {
+    musicId: "modern-saas",
+    volume: 0.85,
+    voiceEnabled: true,
+  };
 
   const updateBrand = (patch: Partial<NonNullable<ArcoProject["brand"]>>) => {
     onChange({
@@ -124,25 +129,40 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
       <Field>
         <FieldLabel>Background music</FieldLabel>
         <FieldContent>
-          <ToggleGroup
-            value={[audio.musicId ?? "modern-saas"]}
-            onValueChange={(value) => {
-              const next = value[0];
-              if (next) updateAudio({ musicId: next });
-            }}
-            variant="outline"
-            size="sm"
-            spacing={0}
-            className="flex w-full flex-wrap"
-          >
-            {MUSIC_TRACKS.map((track) => (
-              <ToggleGroupItem key={track.id} value={track.id}>
-                {track.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+          <BgmTrackGrid
+            compact
+            showNone={false}
+            selectedId={(audio.musicId as MusicTrackId) ?? "modern-saas"}
+            onSelect={(id) => updateAudio({ musicId: id ?? "modern-saas" })}
+          />
         </FieldContent>
       </Field>
+
+      {isScreenshotProject(project) ? (
+        <Field>
+          <FieldLabel>Voiceover</FieldLabel>
+          <FieldContent>
+            <FieldDescription>
+              {audio.voiceEnabled === false
+                ? "Muted — export will use music and on-screen text only."
+                : "Narration is included per scene when generated at create time."}
+            </FieldDescription>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() =>
+                updateAudio({
+                  voiceEnabled: !(audio.voiceEnabled ?? true),
+                })
+              }
+            >
+              {audio.voiceEnabled === false ? "Enable voiceover" : "Mute voiceover"}
+            </Button>
+          </FieldContent>
+        </Field>
+      ) : null}
 
       <Field>
         <FieldLabel>Music volume</FieldLabel>

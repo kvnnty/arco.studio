@@ -3,7 +3,7 @@ import {
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
-import { getExportDimensions, parseArcoProject } from '@arco/project-schema';
+import { getExportDimensions, parseArcoProject, screenshotProjectDurationMs, isScreenshotProject } from '@arco/project-schema';
 import type { ArcoProject, ExportFormat } from '@arco/project-schema';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
@@ -118,6 +118,8 @@ export class RenderProcessorService implements OnModuleInit {
         },
       });
 
+      await this.billing.consumeExport(job.project.userId, jobId);
+
       this.logger.log(`Render completed: ${jobId}`);
     } catch (error) {
       const message =
@@ -130,8 +132,6 @@ export class RenderProcessorService implements OnModuleInit {
           errorMessage: message,
         },
       });
-
-      await this.billing.refundExport(job.project.userId, jobId);
 
       this.logger.error(`Render failed: ${jobId} — ${message}`);
     } finally {
@@ -151,9 +151,30 @@ export class RenderProcessorService implements OnModuleInit {
 
     const exportFormat = (format || project.exportFormat || '16:9') as ExportFormat;
     const dims = getExportDimensions(exportFormat);
-    const recordingSrc = this.resolveRecordingUrl(
-      projectRecord.recordingSrc ?? project.recording.src,
-    );
+    const screenshotMode = isScreenshotProject(project);
+
+    const recordingSrc = screenshotMode
+      ? 'placeholder'
+      : this.resolveAssetUrl(
+          projectRecord.recordingSrc ?? project.recording.src,
+        );
+
+    const durationMs = screenshotMode
+      ? screenshotProjectDurationMs(project)
+      : project.recording.durationMs;
+
+    if (screenshotMode && project.scenes) {
+      project = {
+        ...project,
+        scenes: project.scenes.map((scene) => ({
+          ...scene,
+          imageSrc: this.resolveAssetUrl(scene.imageSrc),
+          voAudioSrc: scene.voAudioSrc
+            ? this.resolveAssetUrl(scene.voAudioSrc)
+            : undefined,
+        })),
+      };
+    }
 
     project = {
       ...project,
@@ -167,15 +188,16 @@ export class RenderProcessorService implements OnModuleInit {
       recording: {
         ...project.recording,
         src: recordingSrc,
+        durationMs,
       },
     };
 
     return project;
   }
 
-  private resolveRecordingUrl(src: string): string {
+  private resolveAssetUrl(src: string): string {
     if (!src || src === 'pending' || src === 'placeholder') {
-      throw new Error('Project has no uploaded recording to render.');
+      throw new Error('Project has no uploaded asset to render.');
     }
 
     if (src.startsWith('http://') || src.startsWith('https://')) {
@@ -190,6 +212,11 @@ export class RenderProcessorService implements OnModuleInit {
     }
 
     return src;
+  }
+
+  /** @deprecated use resolveAssetUrl */
+  private resolveRecordingUrl(src: string): string {
+    return this.resolveAssetUrl(src);
   }
 
   private runRemotionRender(

@@ -42,9 +42,17 @@ Primary renderer. Templates = React components + `scene-schema` props + `staticF
 - **Curated local/CDN MP3/WAV** — no Spotify API, no AI music gen
 - See [AUDIO.md](./AUDIO.md)
 
+## Audio Phase 2–3 (planned)
+
+| Phase | Integration |
+|-------|-------------|
+| 2 | Licensed BGM library (6+ tracks, preview modal) — [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md) |
+| 3 | **ElevenLabs** TTS per scene, BGM ducking — not Vertex TTS ([MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md)) |
+| 4 | User-uploaded music (Pro) |
+
 ## Audio NOT in MVP
 
-- ElevenLabs / TTS
+- TTS / voice (ElevenLabs in Phase 3)
 - Audio sync to generated speech
 - Presenter video APIs
 
@@ -59,7 +67,7 @@ Primary renderer. Templates = React components + `scene-schema` props + `staticF
 
 - Text-to-video
 - AI music
-- AI voice
+- AI voice (ElevenLabs planned Phase 3 — see [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md))
 
 ## Waitlist (existing)
 

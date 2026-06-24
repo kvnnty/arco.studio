@@ -4,9 +4,22 @@
 
 ## Model
 
-**Paid-only subscription** — no free tier. Prevents multi-account credit abuse.
+**Paid-only subscription** — no free tier. Prevents multi-account abuse.
 
 **Launch Offer:** $9 first billing cycle (full Pro), then **$29/month**. Cancel anytime. 14-day money-back via Stripe refunds.
+
+### Export allowance (not credits)
+
+Arco does **not** use Motionflare-style credits on AI generation or scene drafts. See [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md).
+
+| Metered | Not metered (included in subscription) |
+|---------|----------------------------------------|
+| **Successful MP4 export** (1 slot per completed render) | Projects, uploads, AI analyze/draft, chat, regen |
+| | In-browser preview, failed exports |
+
+**Product rule:** Users can iterate freely (edit, preview, regen, retry renders). **Export allowance decreases only when a render completes successfully** — not when queuing a job, not on failure, not on AI steps.
+
+**Planned code change:** ✅ `consumeExport()` on **`status: completed`**. In-flight cap at queue time.
 
 ### Public
 
@@ -30,11 +43,11 @@ Original founding tier ($29/mo flat) is superseded by Launch Offer pricing for n
 
 | Tier | Price | Includes |
 |------|-------|----------|
-| Agency | $99–300/mo + credits | Batch, scene JSON, white-label (roadmap) |
+| Agency | $99–300/mo | Batch exports, scene JSON, white-label (roadmap) — **export allowance**, not per-scene credits |
 
 ## Add-ons (Phase 2+)
 
-- Extra render credits  
+- **Extra exports** per month (Stripe add-on), not opaque “credit packs”
 - Premium template packs  
 - Marketplace revenue share (designers)  
 
@@ -45,7 +58,7 @@ Original founding tier ($29/mo flat) is superseded by Launch Offer pricing for n
 | Freelancer replacement | $300–$2,000 per video |
 | Founder time saved | 2–5 days → &lt;15 minutes |
 | Hourly equivalent | $50–150/hr × hours saved |
-| VO API cost in MVP | $0 (music-only → better margin) |
+| VO API cost in MVP | Low until Phase 3 (ElevenLabs); draft/edit still unmetered |
 | Outcome | “Launch this week”; “look funded” |
 
 ## MRR scenarios
@@ -111,6 +124,7 @@ Introduce when monthly churn is measured: typically **2 months free** on annual.
 
 ## Related docs
 
+- [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md) — UX to borrow; export billing vs Motionflare  
 - [BUSINESS.md](./BUSINESS.md) — models A/B/C, money engines, risks  
 - [LANDING.md](./LANDING.md) — pricing copy  
 - [DECISIONS.md](./DECISIONS.md) — locked business choices  

@@ -8,6 +8,7 @@ import type {
   ClickEffect,
   ExportFormat,
   Marker,
+  ScreenshotScene,
   StylePreset,
   TransitionType,
 } from "./index.js";
@@ -15,6 +16,7 @@ import {
   DEFAULT_FOCUS,
   effectsFromClickEffect,
   getExportDimensions,
+  spokenScriptFromScene,
 } from "./index.js";
 import { STYLE_PRESETS } from "./style-presets.js";
 
@@ -383,6 +385,58 @@ export function applyTemplateBlueprint(
       transition: { type: scene.transition },
     };
   });
+}
+
+export function applyTemplateToScreenshotProject(
+  project: ArcoProject,
+  template: ArcoTemplate,
+  imageSrcs: string[],
+  productTitle: string,
+  targetDurationMs = 45000,
+): ArcoProject {
+  const base = applyTemplateToProject(project, template);
+  const blueprint = template.sceneBlueprint;
+  const sceneCount = Math.min(imageSrcs.length, blueprint.length);
+  const perSceneMs = Math.max(
+    3000,
+    Math.round(targetDurationMs / Math.max(sceneCount, 1)),
+  );
+
+  const scenes: ScreenshotScene[] = imageSrcs.slice(0, sceneCount).map(
+    (imageSrc, index) => {
+      const scene = blueprint[index % blueprint.length];
+      const headline = interpolateCalloutHint(scene.calloutHint, productTitle);
+
+      return {
+        id: `scene-${index}-${template.id}`,
+        imageSrc,
+        durationMs: perSceneMs,
+        headline,
+        voScript: spokenScriptFromScene({
+          id: `scene-${index}-${template.id}`,
+          imageSrc,
+          durationMs: perSceneMs,
+          headline,
+          motion: index % 2 === 0 ? "ken-burns-in" : "ken-burns-out",
+          transition: { type: scene.transition },
+        }),
+        motion: index % 2 === 0 ? "ken-burns-in" : "ken-burns-out",
+        transition: { type: scene.transition },
+      };
+    },
+  );
+
+  const durationMs = scenes.reduce((sum, s) => sum + s.durationMs, 0);
+
+  return {
+    ...base,
+    projectMode: "screenshots",
+    scenes,
+    recording: {
+      src: "placeholder",
+      durationMs,
+    },
+  };
 }
 
 export function applyTemplateToProject(

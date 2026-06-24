@@ -13,8 +13,8 @@
 
 | Decision | Choice |
 |----------|--------|
-| Primary input | **User screen recording** (browse their app) |
-| Secondary | Screenshots, URL brand (v2) |
+| Primary input | **User screen recording** OR **screenshot storyboard** (dual mode) |
+| Secondary | URL brand, templates |
 | Not primary | Prompt-only video, stock footage |
 
 ## AI (locked)
@@ -57,6 +57,12 @@
 | Money score (MVP) | **8/10** |
 | Start pricing | Pro $39–49, Maker $15, Free 1 export |
 | Quality bar | **95%** or users leave |
+| **Billing model** | **Subscription + export allowance** — not credit packs |
+| **What counts** | **Successful MP4 export only** — not AI, preview, or failed renders |
+| **Iteration** | Unlimited draft/regen/preview within subscription |
+| **Code (June 2026)** | `consumeExport()` on render **completed**; in-flight cap at queue |
+
+See [MONETIZATION.md](./MONETIZATION.md) · [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md).
 
 ## Integrations timeline
 
@@ -78,6 +84,20 @@
 
 ## Open questions
 
-- [ ] SQLite vs Postgres for projects
+- [x] SQLite vs Postgres for projects — **Postgres + Prisma**
 - [ ] Render local vs Lambda first
 - [ ] Sample recording bundled for demo
+
+## Under review (Phase 3+)
+
+| Topic | Status |
+|-------|--------|
+| ElevenLabs VO | ✅ Shipped (screenshot mode) |
+| Custom music upload | Phase 4 — not shipped |
+| Hybrid recording + screenshots | Phase 5 — not shipped |
+
+## Related
+
+- [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md)
+- [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)
+- [MOTIONFLARE-REFERENCE.md](./MOTIONFLARE-REFERENCE.md)

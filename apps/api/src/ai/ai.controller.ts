@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { SubscriptionGuard } from '../billing/subscription.guard.js';
 import { AiService } from './ai.service.js';
 import { GenerateDraftDto } from './dto/generate-draft.dto.js';
+import { GenerateStoryboardDto } from './dto/generate-storyboard.dto.js';
 import { RegenerateMarkerDto } from './dto/regenerate-marker.dto.js';
 import { RefineProjectDto } from './dto/refine-project.dto.js';
 import { ChatDto } from './dto/chat.dto.js';
@@ -35,6 +36,12 @@ export class AiController {
   @Post('chat')
   chat(@Body() dto: ChatDto) {
     return this.aiService.chat(dto);
+  }
+
+  @UseGuards(SubscriptionGuard)
+  @Post('generate-storyboard')
+  generateStoryboard(@Body() dto: GenerateStoryboardDto) {
+    return this.aiService.generateStoryboard(dto);
   }
 
   @UseGuards(SubscriptionGuard)

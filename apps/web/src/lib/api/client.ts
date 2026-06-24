@@ -213,6 +213,7 @@ export async function apiCreateProject(
     stylePreset?: string;
     templateId?: string;
     brief?: { intent?: string; productUrl?: string };
+    projectMode?: string;
     projectData?: ArcoProject;
   },
 ): Promise<ApiProjectRecord> {
@@ -271,6 +272,86 @@ export async function uploadThumbnail(
     token,
     method: "POST",
     formData,
+  });
+}
+
+export async function uploadImageWithProgress(
+  token: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<{ key: string; url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return apiRequest<{ key: string; url: string }>("/uploads/image", {
+    token,
+    method: "POST",
+    formData,
+    onUploadProgress: onProgress,
+  });
+}
+
+export type GenerateStoryboardResponse = {
+  scenes: import("@arco/project-schema").ScreenshotScene[];
+  stylePreset: import("@arco/project-schema").StylePreset;
+  source: "llm" | "heuristic";
+};
+
+export async function apiGenerateStoryboard(
+  token: string,
+  input: {
+    title: string;
+    imageUrls: string[];
+    intent?: string;
+    productUrl?: string;
+    templateId?: string;
+    targetDurationMs?: number;
+    brief?: { intent?: string; productUrl?: string };
+  },
+): Promise<GenerateStoryboardResponse> {
+  return apiRequest<GenerateStoryboardResponse>("/ai/generate-storyboard", {
+    token,
+    method: "POST",
+    body: input,
+  });
+}
+
+export type ArcoVoice = {
+  id: string;
+  name: string;
+  accent: string;
+  gender: string;
+  previewText: string;
+};
+
+export async function apiListVoices(): Promise<ArcoVoice[]> {
+  return apiRequest<ArcoVoice[]>("/voice/voices");
+}
+
+export async function apiPreviewVoice(
+  token: string,
+  input: { voiceId: string; text?: string },
+): Promise<{ audioBase64: string; contentType: string }> {
+  return apiRequest<{ audioBase64: string; contentType: string }>(
+    "/voice/preview",
+    { token, method: "POST", body: input },
+  );
+}
+
+export async function apiGenerateVoice(
+  token: string,
+  input: {
+    voiceId?: string;
+    scenes: Array<{ id: string; voScript: string }>;
+  },
+): Promise<{
+  voiceId: string;
+  scenes: Array<{ id: string; voScript: string; voAudioSrc: string }>;
+}> {
+  return apiRequest("/voice/generate", {
+    token,
+    method: "POST",
+    body: input,
   });
 }
 

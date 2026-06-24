@@ -19,6 +19,7 @@ type VideoPreviewProps = {
   playerRef: React.RefObject<PlayerRef | null>;
   selectedMarker: Marker | null;
   cameraMode: boolean;
+  screenshotMode?: boolean;
   onCameraModeChange: (enabled: boolean) => void;
   onFocusChange: (focus: FocusRegion) => void;
 };
@@ -28,6 +29,7 @@ export function VideoPreview({
   playerRef,
   selectedMarker,
   cameraMode,
+  screenshotMode = false,
   onCameraModeChange,
   onFocusChange,
 }: VideoPreviewProps) {
@@ -51,7 +53,7 @@ export function VideoPreview({
           variant={cameraMode ? "secondary" : "outline"}
           size="xs"
           onClick={() => onCameraModeChange(!cameraMode)}
-          disabled={!selectedMarker}
+          disabled={!selectedMarker || screenshotMode}
         >
           <Crop data-icon="inline-start" />
           Camera

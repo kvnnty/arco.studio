@@ -9,6 +9,7 @@ import { UploadsModule } from './uploads/uploads.module.js';
 import { RendersModule } from './renders/renders.module.js';
 import { AiModule } from './ai/ai.module.js';
 import { BrandModule } from './brand/brand.module.js';
+import { VoiceModule } from './voice/voice.module.js';
 import { BillingModule } from './billing/billing.module.js';
 import { ReferralsModule } from './referrals/referrals.module.js';
 import { HealthController } from './health/health.controller.js';
@@ -27,6 +28,7 @@ import { HealthController } from './health/health.controller.js';
     RendersModule,
     AiModule,
     BrandModule,
+    VoiceModule,
   ],
   controllers: [HealthController],
 })

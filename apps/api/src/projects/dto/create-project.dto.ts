@@ -36,6 +36,10 @@ export class CreateProjectDto {
   @IsOptional()
   templateId?: string;
 
+  @IsString()
+  @IsOptional()
+  projectMode?: string;
+
   @ValidateNested()
   @Type(() => ProjectBriefDto)
   @IsOptional()

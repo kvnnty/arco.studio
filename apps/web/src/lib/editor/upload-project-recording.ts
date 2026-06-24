@@ -29,6 +29,7 @@ export type UploadProjectRecordingInput = {
   exportFormat?: ExportFormat;
   templateId?: string;
   brief?: ArcoProject["brief"];
+  musicId?: string | null;
   onUploadProgress?: (percent: number) => void;
 };
 
@@ -112,6 +113,16 @@ export async function uploadProjectRecording(
       project = applyStylePreset(project, input.stylePreset);
     }
   }
+
+  const musicId =
+    input.musicId ?? template?.audio.musicId ?? project.audio?.musicId ?? "modern-saas";
+  project = {
+    ...project,
+    audio: {
+      musicId: musicId ?? undefined,
+      volume: template?.audio.volume ?? project.audio?.volume ?? 0.85,
+    },
+  };
 
   await syncProjectRecord(input.accessToken, {
     projectId: input.projectId,

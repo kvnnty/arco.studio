@@ -1,7 +1,7 @@
 "use client";
 
 import type { ArcoProject, FocusRegion, Marker, StylePreset } from "@arco/project-schema";
-import { getExportDimensions } from "@arco/project-schema";
+import { getExportDimensions, isScreenshotProject } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 import { getTemplate } from "@arco/project-schema/templates";
 import type { PlayerRef } from "@remotion/player";
@@ -23,6 +23,10 @@ import { ChatPanel } from "@/components/editor/chat-panel";
 import { CustomizePanel } from "@/components/editor/customize-panel";
 import { ExportDialog } from "@/components/editor/export-dialog";
 import { SceneInspector } from "@/components/editor/scene-inspector";
+import {
+  ScreenshotSceneInspector,
+  ScreenshotSceneStrip,
+} from "@/components/editor/screenshot-scene-strip";
 import { SceneThumbnailStrip } from "@/components/editor/scene-thumbnail-strip";
 import { StylePresetPicker } from "@/components/editor/style-preset-picker";
 import { VideoPreview } from "@/components/editor/video-preview";
@@ -69,7 +73,9 @@ export function EditorShell({
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(
-    initialSession.project.markers[0]?.id ?? null,
+    initialSession.project.scenes?.[0]?.id ??
+      initialSession.project.markers[0]?.id ??
+      null,
   );
   const [cameraMode, setCameraMode] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -83,12 +89,20 @@ export function EditorShell({
   const chatMutation = useChatMutation();
 
   const project = session.project;
-  const isAnalyzing = session.journeyStep === "analyzing";
+  const screenshotMode = isScreenshotProject(project);
+  const scenes = project.scenes ?? [];
+  const isAnalyzing =
+    session.journeyStep === "analyzing" && !screenshotMode;
   const chatReady = session.journeyStep === "edit";
 
   const selectedMarker = useMemo(
     () => project.markers.find((marker) => marker.id === selectedId) ?? null,
     [project.markers, selectedId],
+  );
+
+  const selectedScene = useMemo(
+    () => scenes.find((scene) => scene.id === selectedId) ?? null,
+    [scenes, selectedId],
   );
 
   const selectedMarkerIndex = useMemo(() => {
@@ -569,12 +583,40 @@ export function EditorShell({
               project={project}
               playerRef={playerRef}
               selectedMarker={selectedMarker}
+              screenshotMode={screenshotMode}
               cameraMode={cameraMode}
               onCameraModeChange={setCameraMode}
               onFocusChange={updateFocus}
             />
 
-            {chatReady ? (
+            {chatReady && screenshotMode ? (
+              <ScreenshotSceneStrip
+                scenes={scenes}
+                selectedId={selectedId}
+                fps={project.meta.fps}
+                playerRef={playerRef}
+                onSelect={(id) => {
+                  setSelectedId(id);
+                  setInspectorOpen(true);
+                }}
+                onDelete={(id) => {
+                  if (scenes.length <= 1) return;
+                  const nextScenes = scenes.filter((s) => s.id !== id);
+                  const durationMs = nextScenes.reduce(
+                    (sum, s) => sum + s.durationMs,
+                    0,
+                  );
+                  updateProject({
+                    ...project,
+                    scenes: nextScenes,
+                    recording: { ...project.recording, durationMs },
+                  });
+                  setSelectedId(nextScenes[0]?.id ?? null);
+                }}
+              />
+            ) : null}
+
+            {chatReady && !screenshotMode ? (
               <SceneThumbnailStrip
                 markers={project.markers}
                 selectedId={selectedId}
@@ -602,7 +644,7 @@ export function EditorShell({
                 variant="outline"
                 size="sm"
                 onClick={() => setInspectorOpen(true)}
-                disabled={!selectedMarker}
+                disabled={!selectedMarker && !selectedScene}
               >
                 <Settings2 data-icon="inline-start" />
                 Scene settings
@@ -629,16 +671,25 @@ export function EditorShell({
           <SheetHeader>
             <SheetTitle>Scene settings</SheetTitle>
           </SheetHeader>
-          <SceneInspector
-            marker={selectedMarker}
-            onChange={updateMarker}
-            cameraMode={cameraMode}
-            projectTitle={project.meta.title}
-            durationMs={project.recording.durationMs}
-            markerCount={project.markers.length}
-            markerIndex={selectedMarkerIndex ?? 0}
-            brief={project.brief}
-          />
+          {screenshotMode ? (
+            <ScreenshotSceneInspector
+              scene={selectedScene}
+              project={project}
+              onChange={() => undefined}
+              onProjectUpdate={(next) => updateProject(next)}
+            />
+          ) : (
+            <SceneInspector
+              marker={selectedMarker}
+              onChange={updateMarker}
+              cameraMode={cameraMode}
+              projectTitle={project.meta.title}
+              durationMs={project.recording.durationMs}
+              markerCount={project.markers.length}
+              markerIndex={selectedMarkerIndex ?? 0}
+              brief={project.brief}
+            />
+          )}
         </SheetContent>
       </Sheet>
 

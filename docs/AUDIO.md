@@ -64,11 +64,14 @@ Motion templates animate these (slide-up, fade, stagger). Music drives **emotion
 
 ## Phase 2+ (optional, demand-driven)
 
-Only add if users explicitly request:
+Full phased plan: **[SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)** · UX reference: **[MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md)**.
 
-- Optional VO layer (separate audio track, user-uploaded or TTS)
-- SRT export for social platforms (in addition to burned-in text)
-- User-uploaded music (rights disclaimer)
+Summary:
+
+- **Phase 2:** Licensed BGM library (6+ tracks, preview on create) — replaces single-track MVP
+- **Phase 3:** ElevenLabs VO per scene, BGM ducking, Language & Voice picker
+- **Phase 4:** User-uploaded music (Pro, rights disclaimer)
+- SRT export for social platforms
 - Sound design SFX (whooshes on transitions)—low priority
 
 ## Demo tip

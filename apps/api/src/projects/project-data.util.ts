@@ -1,4 +1,4 @@
-import { createPendingProject } from '@arco/project-schema';
+import { createPendingProject, createScreenshotPendingProject } from '@arco/project-schema';
 import {
   applyTemplateToProject,
   getTemplate,
@@ -6,7 +6,11 @@ import {
 import type { CreateProjectDto } from './dto/create-project.dto.js';
 
 export function buildInitialProjectData(dto: CreateProjectDto) {
-  let projectData = createPendingProject(dto.title);
+  const isScreenshotMode = dto.projectMode === 'screenshots';
+
+  let projectData = isScreenshotMode
+    ? createScreenshotPendingProject(dto.title)
+    : createPendingProject(dto.title);
 
   if (dto.brief) {
     projectData = {
@@ -37,6 +41,10 @@ export function buildInitialProjectData(dto: CreateProjectDto) {
       ...projectData,
       exportFormat: dto.exportFormat as typeof projectData.exportFormat,
     };
+  }
+
+  if (dto.projectData) {
+    projectData = { ...projectData, ...dto.projectData };
   }
 
   return projectData;

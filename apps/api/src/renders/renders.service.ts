@@ -37,8 +37,6 @@ export class RendersService {
       },
     });
 
-    await this.billing.reserveExport(userId, job.id);
-
     this.renderProcessor.queueJob(job.id);
 
     return job;

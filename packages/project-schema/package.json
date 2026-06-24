@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./style-presets": "./src/style-presets.ts",
-    "./templates": "./src/templates.ts"
+    "./templates": "./src/templates.ts",
+    "./voices": "./src/voices.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

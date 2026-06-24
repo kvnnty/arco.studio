@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Film, FolderOpen, Video, Zap } from "lucide-react";
 
+import { BgmPickerModal } from "@/components/dashboard/bgm-picker-modal";
 import { DashboardCreateHero } from "@/components/dashboard/dashboard-create-hero";
+import { VoicePickerModal } from "@/components/dashboard/voice-picker-modal";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { ProjectPoster } from "@/components/dashboard/project-poster";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
@@ -18,6 +21,9 @@ import {
 } from "@/components/ui/card";
 import { useProjects } from "@/lib/api/hooks/projects";
 import { buildProjectActivity } from "@/lib/dashboard/activity";
+import type { MusicTrackId } from "@/lib/editor/music-tracks";
+import { getMusicTrack } from "@/lib/editor/music-tracks";
+import { getDefaultVoiceId } from "@arco/project-schema/voices";
 
 type DashboardHomeClientProps = {
   userName?: string | null;
@@ -29,6 +35,15 @@ export function DashboardHomeClient({
   initialTemplateId = null,
 }: DashboardHomeClientProps) {
   const { data: projects = [], isLoading } = useProjects();
+  const [bgmOpen, setBgmOpen] = useState(false);
+  const [selectedMusicId, setSelectedMusicId] = useState<MusicTrackId | null>(
+    "modern-saas",
+  );
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>(
+    getDefaultVoiceId(),
+  );
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const recentProjects = projects.slice(0, 3);
   const activity = buildProjectActivity(projects, 8);
 
@@ -51,7 +66,30 @@ export function DashboardHomeClient({
         </p>
       </div>
 
-      <DashboardCreateHero initialTemplateId={initialTemplateId} />
+      <DashboardCreateHero
+        initialTemplateId={initialTemplateId}
+        selectedMusicId={selectedMusicId}
+        onOpenBgm={() => setBgmOpen(true)}
+        selectedVoiceId={selectedVoiceId}
+        voiceEnabled={voiceEnabled}
+        onOpenVoice={() => setVoiceOpen(true)}
+      />
+
+      <BgmPickerModal
+        open={bgmOpen}
+        onOpenChange={setBgmOpen}
+        selectedId={selectedMusicId}
+        onSelect={setSelectedMusicId}
+      />
+
+      <VoicePickerModal
+        open={voiceOpen}
+        onOpenChange={setVoiceOpen}
+        selectedVoiceId={selectedVoiceId}
+        voiceEnabled={voiceEnabled}
+        onSelectVoice={setSelectedVoiceId}
+        onToggleEnabled={setVoiceEnabled}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard

@@ -37,11 +37,19 @@ export function deriveProjectStatus(record: ApiProjectRecord): ProjectStatus {
     return "completed";
   }
 
-  if (record.recordingSrc && record.markerCount === 0) {
+  if (
+    record.recordingSrc &&
+    record.recordingSrc !== "placeholder" &&
+    record.markerCount === 0
+  ) {
     return "analyzing";
   }
 
-  if (record.recordingSrc && record.markerCount > 0) {
+  if (record.recordingSrc && record.recordingSrc !== "placeholder" && record.markerCount > 0) {
+    return "draft";
+  }
+
+  if (record.markerCount > 0) {
     return "draft";
   }
 

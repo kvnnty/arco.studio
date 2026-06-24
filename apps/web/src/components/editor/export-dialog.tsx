@@ -20,11 +20,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useBillingStatus } from "@/lib/api/hooks/billing";
 import {
   useCreateRenderMutation,
   useRenderJob,
 } from "@/lib/api/hooks/renders";
+import { queryKeys } from "@/lib/api/query-keys";
 
 const FORMATS: { id: ExportFormat; label: string; description: string }[] = [
   { id: "16:9", label: "16:9", description: "YouTube, landing hero" },
@@ -79,6 +82,7 @@ export function ExportDialog({
   const [error, setError] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
   const { data: billing } = useBillingStatus();
   const createRender = useCreateRenderMutation();
   const { data: job } = useRenderJob(jobId, !!jobId);
@@ -89,6 +93,8 @@ export function ExportDialog({
     if (job.status === "completed" && job.outputUrl) {
       setPhase("completed");
       setOutputUrl(job.outputUrl);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.billing.status });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.billing.usage });
       toast.success("Export ready");
       return;
     }
@@ -97,12 +103,13 @@ export function ExportDialog({
       const message = job.errorMessage ?? "Render failed.";
       setPhase("failed");
       setError(message);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.billing.status });
       toast.error(message);
       return;
     }
 
     setPhase(phaseFromStatus(job.status));
-  }, [job]);
+  }, [job, queryClient]);
 
   const handleExport = async () => {
     setPhase("queued");
@@ -182,8 +189,9 @@ export function ExportDialog({
         <DialogHeader>
           <DialogTitle>Export video</DialogTitle>
           <DialogDescription>
-            Render <strong>{projectTitle}</strong> as a 1080p MP4. This may take
-            a minute depending on video length.
+            Render <strong>{projectTitle}</strong> as a 1080p MP4. Your export
+            allowance is used only when the render completes successfully — retries
+            after a failure are free.
           </DialogDescription>
         </DialogHeader>
 

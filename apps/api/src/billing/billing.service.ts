@@ -87,15 +87,34 @@ export class BillingService {
       where: { id: userId },
     });
 
-    if (user.exportsUsedThisPeriod >= user.exportAllowance) {
+    const inFlight = await this.prisma.renderJob.count({
+      where: {
+        project: { userId },
+        status: { in: ['queued', 'rendering', 'uploading'] },
+      },
+    });
+
+    const committed = user.exportsUsedThisPeriod + inFlight;
+    if (committed >= user.exportAllowance) {
       throw new HttpException(
-        'You have used all exports for this billing period. Manage your plan or wait for renewal.',
+        inFlight > 0 && user.exportsUsedThisPeriod < user.exportAllowance
+          ? 'An export is already in progress. Wait for it to finish or fail before starting another.'
+          : 'You have used all exports for this billing period. Manage your plan or wait for renewal.',
         HttpStatus.PAYMENT_REQUIRED,
       );
     }
   }
 
-  async reserveExport(userId: string, renderJobId: string): Promise<void> {
+  async consumeExport(userId: string, renderJobId: string): Promise<void> {
+    const existing = await this.prisma.usageEvent.findFirst({
+      where: {
+        userId,
+        type: 'export',
+        metadata: { contains: renderJobId },
+      },
+    });
+    if (existing) return;
+
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: userId },
@@ -105,25 +124,6 @@ export class BillingService {
         data: {
           userId,
           type: 'export',
-          metadata: JSON.stringify({ renderJobId }),
-        },
-      }),
-    ]);
-  }
-
-  async refundExport(userId: string, renderJobId: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.exportsUsedThisPeriod <= 0) return;
-
-    await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id: userId },
-        data: { exportsUsedThisPeriod: { decrement: 1 } },
-      }),
-      this.prisma.usageEvent.create({
-        data: {
-          userId,
-          type: 'export_refund',
           metadata: JSON.stringify({ renderJobId }),
         },
       }),
