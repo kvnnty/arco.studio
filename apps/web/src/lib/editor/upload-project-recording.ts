@@ -30,6 +30,7 @@ export type UploadProjectRecordingInput = {
   templateId?: string;
   brief?: ArcoProject["brief"];
   musicId?: string | null;
+  customMusicSrc?: string | null;
   onUploadProgress?: (percent: number) => void;
 };
 
@@ -119,7 +120,8 @@ export async function uploadProjectRecording(
   project = {
     ...project,
     audio: {
-      musicId: musicId ?? undefined,
+      musicId: input.customMusicSrc ? undefined : musicId ?? undefined,
+      customMusicSrc: input.customMusicSrc ?? undefined,
       volume: template?.audio.volume ?? project.audio?.volume ?? 0.85,
     },
   };

@@ -17,7 +17,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { BgmTrackGrid } from "@/components/dashboard/bgm-track-grid";
+import {
+  CustomMusicUpload,
+  type CustomMusicSelection,
+} from "@/components/dashboard/custom-music-upload";
 import { uploadThumbnail } from "@/lib/api/client";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
 import type { MusicTrackId } from "@/lib/editor/music-tracks";
 
 type CustomizePanelProps = {
@@ -27,6 +32,7 @@ type CustomizePanelProps = {
 
 export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
   const { session } = useAuth();
+  const { data: billing } = useBillingStatus();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const brand = project.brand ?? {
@@ -50,6 +56,29 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
     onChange({
       ...project,
       audio: { ...audio, ...patch },
+    });
+  };
+
+  const customMusicSelection: CustomMusicSelection | null =
+    audio.customMusicSrc
+      ? {
+          url: audio.customMusicSrc,
+          filename: audio.customMusicSrc.split("/").pop() ?? "Custom track",
+        }
+      : null;
+
+  const handleCustomMusicSelect = (selection: CustomMusicSelection | null) => {
+    if (selection) {
+      updateAudio({
+        customMusicSrc: selection.url,
+        musicId: undefined,
+      });
+      return;
+    }
+
+    updateAudio({
+      customMusicSrc: undefined,
+      musicId: audio.musicId ?? "modern-saas",
     });
   };
 
@@ -128,13 +157,27 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
 
       <Field>
         <FieldLabel>Background music</FieldLabel>
-        <FieldContent>
-          <BgmTrackGrid
+        <FieldContent className="space-y-3">
+          <CustomMusicUpload
             compact
-            showNone={false}
-            selectedId={(audio.musicId as MusicTrackId) ?? "modern-saas"}
-            onSelect={(id) => updateAudio({ musicId: id ?? "modern-saas" })}
+            accessToken={session?.accessToken}
+            canUpload={billing?.canUploadCustomMusic ?? false}
+            selected={customMusicSelection}
+            onSelect={handleCustomMusicSelect}
           />
+          {!customMusicSelection ? (
+            <BgmTrackGrid
+              compact
+              showNone={false}
+              selectedId={(audio.musicId as MusicTrackId) ?? "modern-saas"}
+              onSelect={(id) =>
+                updateAudio({
+                  musicId: id ?? "modern-saas",
+                  customMusicSrc: undefined,
+                })
+              }
+            />
+          ) : null}
         </FieldContent>
       </Field>
 

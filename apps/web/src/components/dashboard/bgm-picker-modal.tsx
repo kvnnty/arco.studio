@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   Dialog,
   DialogContent,
@@ -7,38 +9,87 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BgmTrackGrid } from "@/components/dashboard/bgm-track-grid";
+import {
+  CustomMusicUpload,
+  type CustomMusicSelection,
+} from "@/components/dashboard/custom-music-upload";
 import type { MusicTrackId } from "@/lib/editor/music-tracks";
 
 type BgmPickerModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedId: MusicTrackId | null;
-  onSelect: (id: MusicTrackId | null) => void;
+  onSelectLibrary: (id: MusicTrackId | null) => void;
+  customMusic: CustomMusicSelection | null;
+  onSelectCustom: (selection: CustomMusicSelection | null) => void;
+  accessToken?: string;
+  canUploadCustomMusic?: boolean;
 };
 
 export function BgmPickerModal({
   open,
   onOpenChange,
   selectedId,
-  onSelect,
+  onSelectLibrary,
+  customMusic,
+  onSelectCustom,
+  accessToken,
+  canUploadCustomMusic = false,
 }: BgmPickerModalProps) {
+  const [tab, setTab] = useState<"library" | "custom">("library");
+
+  useEffect(() => {
+    if (open) {
+      setTab(customMusic ? "custom" : "library");
+    }
+  }, [open, customMusic]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Background music</DialogTitle>
           <DialogDescription>
-            Pick a track for your launch video. Preview before you create.
+            Pick a library track or upload your own (Pro).
           </DialogDescription>
         </DialogHeader>
-        <BgmTrackGrid
-          selectedId={selectedId}
-          onSelect={(id) => {
-            onSelect(id);
-            onOpenChange(false);
-          }}
-        />
+
+        <Tabs
+          value={tab}
+          onValueChange={(value) => setTab(value as "library" | "custom")}
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="library">Library</TabsTrigger>
+            <TabsTrigger value="custom">Your upload</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="library" className="mt-4">
+            <BgmTrackGrid
+              selectedId={customMusic ? null : selectedId}
+              onSelect={(id) => {
+                onSelectCustom(null);
+                onSelectLibrary(id);
+                onOpenChange(false);
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="custom" className="mt-4">
+            <CustomMusicUpload
+              accessToken={accessToken}
+              canUpload={canUploadCustomMusic}
+              selected={customMusic}
+              onSelect={(selection) => {
+                onSelectCustom(selection);
+                if (selection) {
+                  onOpenChange(false);
+                }
+              }}
+            />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

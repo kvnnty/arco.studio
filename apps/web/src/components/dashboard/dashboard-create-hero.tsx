@@ -30,6 +30,7 @@ import {
 import { createScreenshotProject } from "@/lib/editor/create-screenshot-project";
 import type { MusicTrackId } from "@/lib/editor/music-tracks";
 import { getMusicTrack } from "@/lib/editor/music-tracks";
+import type { CustomMusicSelection } from "@/components/dashboard/custom-music-upload";
 import { cn } from "@/lib/utils";
 
 type CreateMode = "recording" | "screenshots";
@@ -37,6 +38,7 @@ type CreateMode = "recording" | "screenshots";
 type DashboardCreateHeroProps = {
   initialTemplateId?: string | null;
   selectedMusicId?: MusicTrackId | null;
+  customMusic?: CustomMusicSelection | null;
   onOpenBgm?: () => void;
   selectedVoiceId?: string | null;
   voiceEnabled?: boolean;
@@ -46,6 +48,7 @@ type DashboardCreateHeroProps = {
 export function DashboardCreateHero({
   initialTemplateId = null,
   selectedMusicId = null,
+  customMusic = null,
   onOpenBgm,
   selectedVoiceId = null,
   voiceEnabled = true,
@@ -123,6 +126,7 @@ export function DashboardCreateHero({
           intent: brief.trim() || undefined,
         },
         musicId: selectedMusicId,
+        customMusicSrc: customMusic?.url,
         file,
         onUploadProgress: setUploadProgress,
       });
@@ -177,6 +181,7 @@ export function DashboardCreateHero({
           intent: brief.trim() || undefined,
         },
         musicId: selectedMusicId,
+        customMusicSrc: customMusic?.url,
         voiceId: voiceEnabled ? selectedVoiceId ?? undefined : undefined,
         voiceEnabled,
         files: screenshotFiles.slice(0, MAX_SCREENSHOTS),
@@ -331,9 +336,11 @@ export function DashboardCreateHero({
           >
             <Music2 data-icon="inline-start" />
             BGM
-            {selectedMusicId
-              ? `: ${getMusicTrack(selectedMusicId)?.label ?? selectedMusicId}`
-              : ""}
+            {customMusic
+              ? `: ${customMusic.filename}`
+              : selectedMusicId
+                ? `: ${getMusicTrack(selectedMusicId)?.label ?? selectedMusicId}`
+                : ""}
           </Button>
         ) : null}
 

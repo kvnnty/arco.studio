@@ -15,13 +15,18 @@ type MusicBedProps = {
 };
 
 export function MusicBed({ project }: MusicBedProps) {
+  const customSrc = project.audio?.customMusicSrc;
   const musicId = project.audio?.musicId;
-  if (!musicId) return null;
-
-  const src = MUSIC_FILES[musicId];
-  if (!src) return null;
-
   const volume = musicVolumeForProject(project);
 
-  return <Audio src={staticFile(src)} volume={volume} />;
+  if (customSrc) {
+    return <Audio src={customSrc} volume={volume} />;
+  }
+
+  if (!musicId) return null;
+
+  const librarySrc = MUSIC_FILES[musicId];
+  if (!librarySrc) return null;
+
+  return <Audio src={staticFile(librarySrc)} volume={volume} />;
 }

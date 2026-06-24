@@ -283,6 +283,13 @@ See [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md) · [MONETIZATION.
 - [x] `ELEVENLABS_API_KEY` env + `apps/api/src/voice/`
 - [ ] Pipeline chat step “Recording voice-over…” (stretch)
 
+### Phase 4 — Custom music (shipped)
+
+- [x] `POST /uploads/music` (MP3/WAV, 10MB, Pro gate)
+- [x] `audio.customMusicSrc` in schema + Remotion `MusicBed`
+- [x] Rights affirmation checkbox on upload
+- [x] BGM modal + customize panel upload UI
+
 ---
 
 ## Suggested weekly focus

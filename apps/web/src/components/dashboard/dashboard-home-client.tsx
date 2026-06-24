@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Film, FolderOpen, Video, Zap } from "lucide-react";
 
 import { BgmPickerModal } from "@/components/dashboard/bgm-picker-modal";
+import type { CustomMusicSelection } from "@/components/dashboard/custom-music-upload";
 import { DashboardCreateHero } from "@/components/dashboard/dashboard-create-hero";
 import { VoicePickerModal } from "@/components/dashboard/voice-picker-modal";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -20,6 +21,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useProjects } from "@/lib/api/hooks/projects";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
+import { useAuth } from "@/components/providers/auth-provider";
 import { buildProjectActivity } from "@/lib/dashboard/activity";
 import type { MusicTrackId } from "@/lib/editor/music-tracks";
 import { getMusicTrack } from "@/lib/editor/music-tracks";
@@ -35,9 +38,14 @@ export function DashboardHomeClient({
   initialTemplateId = null,
 }: DashboardHomeClientProps) {
   const { data: projects = [], isLoading } = useProjects();
+  const { session } = useAuth();
+  const { data: billing } = useBillingStatus();
   const [bgmOpen, setBgmOpen] = useState(false);
   const [selectedMusicId, setSelectedMusicId] = useState<MusicTrackId | null>(
     "modern-saas",
+  );
+  const [customMusic, setCustomMusic] = useState<CustomMusicSelection | null>(
+    null,
   );
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>(
@@ -68,7 +76,8 @@ export function DashboardHomeClient({
 
       <DashboardCreateHero
         initialTemplateId={initialTemplateId}
-        selectedMusicId={selectedMusicId}
+        selectedMusicId={customMusic ? null : selectedMusicId}
+        customMusic={customMusic}
         onOpenBgm={() => setBgmOpen(true)}
         selectedVoiceId={selectedVoiceId}
         voiceEnabled={voiceEnabled}
@@ -79,7 +88,14 @@ export function DashboardHomeClient({
         open={bgmOpen}
         onOpenChange={setBgmOpen}
         selectedId={selectedMusicId}
-        onSelect={setSelectedMusicId}
+        onSelectLibrary={(id) => {
+          setCustomMusic(null);
+          setSelectedMusicId(id);
+        }}
+        customMusic={customMusic}
+        onSelectCustom={setCustomMusic}
+        accessToken={session?.accessToken}
+        canUploadCustomMusic={billing?.canUploadCustomMusic ?? false}
       />
 
       <VoicePickerModal

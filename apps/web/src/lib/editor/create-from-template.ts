@@ -17,6 +17,7 @@ export type CreateAndUploadProjectInput = {
   stylePreset?: StylePreset;
   exportFormat?: ExportFormat;
   musicId?: string | null;
+  customMusicSrc?: string | null;
   file: File;
   onUploadProgress?: (percent: number) => void;
 };
@@ -82,6 +83,7 @@ export async function createAndUploadProject(
     exportFormat: input.exportFormat ?? template?.exportFormat,
     brief: input.brief,
     musicId: input.musicId,
+    customMusicSrc: input.customMusicSrc,
     onUploadProgress: input.onUploadProgress,
   });
 

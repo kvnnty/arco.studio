@@ -1,6 +1,6 @@
 # Current state
 
-**Updated:** ElevenLabs voiceover (Phase 3) shipped (June 2026).
+**Updated:** Custom music upload (Phase 4) shipped (June 2026).
 
 ## Implemented
 
@@ -12,6 +12,7 @@
 | **Screenshot storyboard** | Upload 3–10 PNGs → AI storyboard → editor → export |
 | **ElevenLabs voiceover** | Per-scene TTS, BGM ducking, mute option |
 | **BGM library** | 5 tracks with preview modal on create + customize panel |
+| **Custom music upload** | Pro ($29/mo) — MP3/WAV upload with rights checkbox |
 | **Template gallery** | `/dashboard/templates` + blueprint-driven drafts |
 | Brand from URL | `POST /brand/analyze-url` + chat analyze pipeline |
 | Export MP4 | Render worker + screenshot + recording compositions |
@@ -36,7 +37,6 @@ Set `ELEVENLABS_API_KEY` in `apps/api/.env` for voice generation. See [`DEPLOY.m
 
 ## Next
 
-- Phase 4: Custom music upload (Pro)
 - Phase 5: Hybrid recording + screenshots, i18n
 - Licensed BGM tracks ([LICENSES-MUSIC.md](./LICENSES-MUSIC.md))
 - VO on recording-mode projects (optional)

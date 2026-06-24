@@ -119,6 +119,7 @@ export const arcoProjectSchema = z.object({
   audio: z
     .object({
       musicId: z.string().optional(),
+      customMusicSrc: z.string().optional(),
       volume: z.number().min(0).max(1).default(0.85),
       voiceId: z.string().optional(),
       voiceEnabled: z.boolean().optional(),
@@ -242,6 +243,10 @@ export function projectHasVoiceover(project: ArcoProject): boolean {
   return (
     project.scenes?.some((scene) => Boolean(scene.voAudioSrc)) ?? false
   );
+}
+
+export function projectHasCustomMusic(project: ArcoProject): boolean {
+  return Boolean(project.audio?.customMusicSrc);
 }
 
 export function spokenScriptFromScene(scene: ScreenshotScene): string {

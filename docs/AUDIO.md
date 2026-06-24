@@ -69,8 +69,8 @@ Full phased plan: **[SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC
 Summary:
 
 - **Phase 2:** Licensed BGM library (6+ tracks, preview on create) — replaces single-track MVP
-- **Phase 3:** ElevenLabs VO per scene, BGM ducking, Language & Voice picker
-- **Phase 4:** User-uploaded music (Pro, rights disclaimer)
+- **Phase 3:** ElevenLabs VO per scene, BGM ducking, Language & Voice picker — **shipped**
+- **Phase 4:** User-uploaded music (Pro $29/mo, rights disclaimer) — **shipped**
 - SRT export for social platforms
 - Sound design SFX (whooshes on transitions)—low priority
 

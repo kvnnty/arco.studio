@@ -28,6 +28,7 @@ export type CreateScreenshotProjectInput = {
   stylePreset?: StylePreset;
   exportFormat?: ExportFormat;
   musicId?: string | null;
+  customMusicSrc?: string | null;
   voiceId?: string | null;
   voiceEnabled?: boolean;
   files: File[];
@@ -140,7 +141,8 @@ export async function createScreenshotProject(
     projectMode: "screenshots",
     scenes: finalScenes,
     audio: {
-      musicId: musicId ?? undefined,
+      musicId: input.customMusicSrc ? undefined : musicId ?? undefined,
+      customMusicSrc: input.customMusicSrc ?? undefined,
       volume: template?.audio.volume ?? 0.85,
       voiceId: voiceEnabled ? voiceId : undefined,
       voiceEnabled,

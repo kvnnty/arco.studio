@@ -93,7 +93,7 @@ See [MONETIZATION.md](./MONETIZATION.md) · [MOTIONFLARE-INSPIRATION.md](./MOTIO
 | Topic | Status |
 |-------|--------|
 | ElevenLabs VO | ✅ Shipped (screenshot mode) |
-| Custom music upload | Phase 4 — not shipped |
+| Custom music upload | ✅ Shipped (Pro $29/mo) |
 | Hybrid recording + screenshots | Phase 5 — not shipped |
 
 ## Related

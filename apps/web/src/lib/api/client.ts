@@ -291,6 +291,23 @@ export async function uploadImageWithProgress(
   });
 }
 
+export async function uploadMusic(
+  token: string,
+  file: File,
+): Promise<{ key: string; url: string; filename: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return apiRequest<{ key: string; url: string; filename: string }>(
+    "/uploads/music",
+    {
+      token,
+      method: "POST",
+      formData,
+    },
+  );
+}
+
 export type GenerateStoryboardResponse = {
   scenes: import("@arco/project-schema").ScreenshotScene[];
   stylePreset: import("@arco/project-schema").StylePreset;
@@ -547,6 +564,7 @@ export type BillingStatus = {
   periodEnd: string | null;
   hadLaunchOffer: boolean;
   canUseProduct: boolean;
+  canUploadCustomMusic: boolean;
 };
 
 export type BillingUsage = {

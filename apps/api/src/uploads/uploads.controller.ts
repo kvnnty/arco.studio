@@ -15,6 +15,7 @@ import { memoryStorage } from 'multer';
 import type { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { SubscriptionGuard } from '../billing/subscription.guard.js';
+import { ProPlanGuard } from '../billing/pro-plan.guard.js';
 import { UploadsService } from './uploads.service.js';
 
 type AuthedRequest = Request & { user: { id: string; email: string } };
@@ -69,6 +70,22 @@ export class UploadsController {
   ) {
     const validFile = this.uploadsService.validateImageFile(file);
     return this.uploadsService.uploadStoryboardImage(req.user.id, validFile);
+  }
+
+  @UseGuards(JwtAuthGuard, SubscriptionGuard, ProPlanGuard)
+  @Post('music')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  async uploadMusic(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: AuthedRequest,
+  ) {
+    const validFile = this.uploadsService.validateMusicFile(file);
+    return this.uploadsService.uploadMusic(req.user.id, validFile);
   }
 
   @Get('object')

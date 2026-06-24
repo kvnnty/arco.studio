@@ -289,7 +289,7 @@ All must be checked before MVP launch:
 | [x] | Music track picker | BGM modal + customize panel |
 | [x] | BGM library with preview (Motionflare-style) | 5 tracks — [LICENSES-MUSIC.md](./LICENSES-MUSIC.md) |
 | [x] | BGM on dashboard create | BGM chip + modal |
-| [ ] | Custom music upload | Phase 4 (Pro) |
+| [x] | Custom music upload | Pro — `POST /uploads/music` + rights checkbox |
 | [x] | Language & Voice picker | Dashboard Screenshots tab |
 | [x] | ElevenLabs TTS per scene | `apps/api/src/voice/` |
 | [x] | BGM ducking under voice | Remotion `VoiceTrack` + lowered music volume |
@@ -299,9 +299,8 @@ All must be checked before MVP launch:
 ## Priority order (what to ship next)
 
 1. **Licensed BGM assets** — swap placeholders ([LICENSES-MUSIC.md](./LICENSES-MUSIC.md))
-2. **Custom music upload** — Phase 4
-3. **Vision / click detection** — recording mode quality
-4. **Hybrid mode** — Phase 5
+2. **Vision / click detection** — recording mode quality
+3. **Hybrid mode** — Phase 5
 5. **VO on recording mode** — optional stretch
 
 ---

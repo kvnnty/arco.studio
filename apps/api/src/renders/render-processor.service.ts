@@ -176,6 +176,16 @@ export class RenderProcessorService implements OnModuleInit {
       };
     }
 
+    if (project.audio?.customMusicSrc) {
+      project = {
+        ...project,
+        audio: {
+          ...project.audio,
+          customMusicSrc: this.resolveAssetUrl(project.audio.customMusicSrc),
+        },
+      };
+    }
+
     project = {
       ...project,
       exportFormat,

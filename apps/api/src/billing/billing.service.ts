@@ -19,6 +19,7 @@ export type BillingStatus = {
   periodEnd: string | null;
   hadLaunchOffer: boolean;
   canUseProduct: boolean;
+  canUploadCustomMusic: boolean;
 };
 
 @Injectable()
@@ -64,7 +65,22 @@ export class BillingService {
       periodEnd: user.periodEnd?.toISOString() ?? null,
       hadLaunchOffer: user.hadLaunchOffer,
       canUseProduct: user.planStatus === 'active',
+      canUploadCustomMusic:
+        user.planStatus === 'active' && user.plan === 'pro',
     };
+  }
+
+  async assertProPlan(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
+
+    if (user.planStatus !== 'active' || user.plan !== 'pro') {
+      throw new HttpException(
+        'Custom music upload requires Pro ($29/mo). Upgrade your plan to continue.',
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
   }
 
   async assertActive(userId: string): Promise<void> {

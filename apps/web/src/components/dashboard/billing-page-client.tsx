@@ -28,6 +28,7 @@ const PRO_FEATURES = [
   "Brand from URL + customize panel",
   "1080p in 16:9, 1:1, and 9:16",
   "Music bed + logo overlay",
+  "Custom music upload (Pro)",
 ];
 
 const TRIAL_FEATURES = [
