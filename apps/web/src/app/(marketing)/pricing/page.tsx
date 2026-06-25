@@ -11,7 +11,7 @@ import { createPageMetadata } from "@/lib/marketing/metadata";
 export const metadata: Metadata = createPageMetadata({
   title: "Pricing",
   description:
-    "Simple, transparent pricing for product demo videos. $9 Intro, $29 Pro, or $79 Team.",
+    "Simple pricing for indie hackers and product owners. $9 Intro or $29 Pro.",
   path: "/pricing",
 });
 
@@ -22,7 +22,7 @@ export default function PricingPage() {
         <div className="marketing-container">
           <SectionHeader
             eyebrow="Pricing"
-            title="Simple pricing for every stage"
+            title="Simple pricing for solo builders"
             description="Start with Intro at $9/month, or go straight to Pro at $29/month when you're ready to ship."
           />
           <div className="mt-16">

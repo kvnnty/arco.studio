@@ -181,7 +181,7 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 | [~] | Assets library page | Project recordings + exports |
 | [~] | Notifications | Derived from export/render status |
 | [x] | Billing & plans | Stripe Launch Offer + portal |
-| [~] | Team / members | Coming soon empty state |
+| [-] | Team / members | Out of scope — solo founders only |
 | [x] | Settings — profile | |
 | [x] | Help page | |
 | [ ] | Workspace switcher (real) | UI only |

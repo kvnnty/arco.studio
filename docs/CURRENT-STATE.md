@@ -40,4 +40,4 @@ Set `ELEVENLABS_API_KEY` in `apps/api/.env` for voice generation. See [`DEPLOY.m
 - Phase 5: Hybrid recording + screenshots, i18n
 - Licensed BGM tracks ([LICENSES-MUSIC.md](./LICENSES-MUSIC.md))
 - VO on recording-mode projects (optional)
-- Vision / click detection, landing demo video, team tier
+- Vision / click detection, landing demo video

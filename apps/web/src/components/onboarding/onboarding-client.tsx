@@ -128,7 +128,7 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
             <div className="rounded-xl border p-4">
               <p className="font-medium">Intro — $9/mo</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Get started with 5 exports. Upgrade to Pro or Team when you&apos;re
+                Get started with 5 exports. Upgrade to Pro when you&apos;re
                 ready.
               </p>
               <Button

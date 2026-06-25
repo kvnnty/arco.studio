@@ -15,7 +15,8 @@ export const pricingPlans: PricingPlan[] = [
   {
     id: "trial",
     name: "Intro",
-    description: "Try Arco at a lower price before you commit to a full plan.",
+    description:
+      "Try Arco at a lower price before you commit — built for indie hackers validating a launch.",
     monthlyPrice: 9,
     annualPrice: 9,
     features: [
@@ -26,12 +27,13 @@ export const pricingPlans: PricingPlan[] = [
     ],
     cta: "Get started",
     href: "/signup?plan=trial",
-    priceNote: "Entry plan — upgrade to Pro or Team anytime",
+    priceNote: "Entry plan — upgrade to Pro anytime",
   },
   {
     id: "pro",
     name: "Pro",
-    description: "Everything you need to ship polished product demos every week.",
+    description:
+      "Everything you need to ship polished product demos every week as a solo founder or product owner.",
     monthlyPrice: 29,
     annualPrice: 24,
     features: [
@@ -46,23 +48,6 @@ export const pricingPlans: PricingPlan[] = [
     cta: "Start Pro — $29/mo",
     href: "/signup?plan=pro",
     popular: true,
-  },
-  {
-    id: "team",
-    name: "Team",
-    description: "For growing product teams that need shared workspaces.",
-    monthlyPrice: 79,
-    annualPrice: 66,
-    features: [
-      "Everything in Pro",
-      "Unlimited team members",
-      "Shared brand kits",
-      "50 exports per month",
-      "Audit logs",
-      "Dedicated support",
-    ],
-    cta: "Email sales",
-    href: "mailto:hello@arco.app?subject=Arco%20Team%20Plan",
   },
 ];
 
@@ -80,7 +65,12 @@ export const pricingFaqs = [
   {
     question: "What's the difference between Intro and Pro?",
     answer:
-      "Intro is $9/month with a smaller export limit — a low-commitment way to try Arco. Pro is $29/month from day one with full features. Choose Pro at checkout if you're already ready to ship demos every week.",
+      "Intro is $9/month with a smaller export limit — a low-commitment way to try Arco. Pro is $29/month with full features including brand from URL, custom music, and all aspect ratios. Choose Pro at checkout if you're already ready to ship demos every week.",
+  },
+  {
+    question: "Do you offer team or seat-based plans?",
+    answer:
+      "No. Arco is built for indie hackers and product owners working solo — one account, one workspace. No team seats or shared workspaces.",
   },
   {
     question: "Do you offer annual billing?",
@@ -89,8 +79,7 @@ export const pricingFaqs = [
   },
   {
     question: "What payment methods do you accept?",
-    answer:
-      "We accept all major credit cards through Stripe. Invoicing is available for Team plans on request.",
+    answer: "We accept all major credit cards through Stripe.",
   },
 ];
 
@@ -99,27 +88,29 @@ export const featureComparison = {
     {
       name: "Exports",
       features: [
-        { name: "Monthly exports", trial: "5", pro: "15", team: "50" },
-        { name: "Resolution", trial: "1080p", pro: "1080p", team: "1080p" },
-        { name: "Aspect ratios", trial: "16:9", pro: "16:9, 1:1, 9:16", team: "16:9, 1:1, 9:16" },
+        { name: "Monthly exports", trial: "5", pro: "15" },
+        { name: "Resolution", trial: "1080p", pro: "1080p" },
+        {
+          name: "Aspect ratios",
+          trial: "16:9",
+          pro: "16:9, 1:1, 9:16",
+        },
       ],
     },
     {
       name: "Editor",
       features: [
-        { name: "AI assistant", trial: true, pro: true, team: true },
-        { name: "Brand from URL", trial: false, pro: true, team: true },
-        { name: "Music + logo overlay", trial: false, pro: true, team: true },
-        { name: "Custom music upload", trial: false, pro: true, team: true },
-        { name: "Shared brand kits", trial: false, pro: false, team: true },
+        { name: "AI assistant", trial: true, pro: true },
+        { name: "Brand from URL", trial: false, pro: true },
+        { name: "Music + logo overlay", trial: false, pro: true },
+        { name: "Custom music upload", trial: false, pro: true },
       ],
     },
     {
       name: "Support",
       features: [
-        { name: "Community support", trial: true, pro: true, team: true },
-        { name: "Priority support", trial: false, pro: true, team: true },
-        { name: "Dedicated support", trial: false, pro: false, team: true },
+        { name: "Community support", trial: true, pro: true },
+        { name: "Priority support", trial: false, pro: true },
       ],
     },
   ],

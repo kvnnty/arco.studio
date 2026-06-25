@@ -25,9 +25,10 @@ Arco does **not** use Motionflare-style credits on AI generation or scene drafts
 
 | Tier | Price | Includes |
 |------|-------|----------|
-| Pro (Launch Offer) | $9 first month, then $29/mo | 15 exports/mo, full editor, brand kit, 1080p all formats |
-| Team | Coming soon | Seats, shared brand, priority render |
-| Enterprise | Custom | SSO, invoice billing, custom limits |
+| Intro | $9/mo | 5 exports/mo, full editor, 1080p 16:9 |
+| Pro | $29/mo | 15 exports/mo, brand kit, all formats, custom music, AI assistant |
+
+No team or seat-based tiers — Arco is solo-founder / product-owner focused.
 
 ### Founding note
 

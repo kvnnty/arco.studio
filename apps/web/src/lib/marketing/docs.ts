@@ -252,7 +252,7 @@ const docsPages: Record<string, DocPage> = {
       {
         type: "callout",
         variant: "info",
-        text: "API access is available on Pro and Team plans. Keys are scoped to your workspace.",
+        text: "API access is available on Pro. Keys are scoped to your workspace.",
       },
     ],
   },

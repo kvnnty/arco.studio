@@ -49,8 +49,8 @@ const faqs = [
     a: "Yes — open any project in the editor to adjust scenes, timing, and motion.",
   },
   {
-    q: "Is team collaboration available?",
-    a: "Pro and Enterprise plans include team workspaces with role-based access.",
+    q: "Is there a team or workspace plan?",
+    a: "No. Arco is built for solo founders and product owners — one account, one workspace. No team seats.",
   },
 ];
 

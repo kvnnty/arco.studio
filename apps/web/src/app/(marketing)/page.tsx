@@ -69,7 +69,7 @@ export default function HomePage() {
           <SectionHeader
             eyebrow="Features"
             title="Everything you need to ship product videos"
-            description="From upload to export, Arco handles the motion design so your team can focus on the product."
+            description="From upload to export, Arco handles the motion design so you can focus on shipping."
           />
           <div className="mt-16">
             <FeatureGrid features={coreFeatures} />
@@ -88,8 +88,8 @@ export default function HomePage() {
         <div className="marketing-container">
           <SectionHeader
             eyebrow="Testimonials"
-            title="Loved by product teams"
-            description="Teams ship demos faster and convert more visitors with Arco."
+            title="Loved by solo founders"
+            description="Indie hackers and product owners ship demos faster with Arco."
           />
           <div className="mt-16">
             <TestimonialGrid testimonials={testimonials} />

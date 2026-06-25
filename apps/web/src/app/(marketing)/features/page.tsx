@@ -31,7 +31,7 @@ export default function FeaturesPage() {
 
       <section className="border-y border-marketing-border bg-marketing-surface py-24 sm:py-32">
         <div className="marketing-container">
-          <SectionHeader title="Built for product teams" />
+          <SectionHeader title="Built for solo builders" />
           <div className="mt-16 grid gap-12 lg:grid-cols-2">
             <div className="space-y-8">
               {workflowSteps.map((step) => (

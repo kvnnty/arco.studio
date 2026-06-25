@@ -78,7 +78,7 @@ export function PricingCards({
       </MotionStagger>
       ) : null}
 
-      <MotionStagger className="grid gap-6 lg:grid-cols-3" stagger={0.1}>
+      <MotionStagger className="grid gap-6 sm:grid-cols-2 lg:max-w-3xl lg:mx-auto" stagger={0.1}>
         {plans.map((plan) => {
           const price = annual ? plan.annualPrice : plan.monthlyPrice;
           const isTrial = plan.id === "trial";

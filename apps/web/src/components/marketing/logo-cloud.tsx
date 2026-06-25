@@ -13,7 +13,7 @@ type LogoCloudProps = {
 
 export function LogoCloud({
   logos,
-  label = "Trusted by product teams at",
+  label = "Trusted by indie hackers and product owners at",
 }: LogoCloudProps) {
   const reduced = useReducedMotion();
 

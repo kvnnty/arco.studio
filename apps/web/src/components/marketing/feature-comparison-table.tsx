@@ -21,7 +21,7 @@ export function FeatureComparisonTable() {
   return (
     <MotionReveal variant="scale-in">
       <div className="overflow-x-auto rounded-2xl border border-marketing-border">
-        <table className="w-full min-w-[640px] border-collapse text-left">
+        <table className="w-full min-w-[480px] border-collapse text-left">
           <thead>
             <tr className="border-b border-marketing-border bg-marketing-surface">
               <th className="px-6 py-4 text-[13px] font-medium text-marketing-muted">
@@ -31,7 +31,6 @@ export function FeatureComparisonTable() {
               <th className="px-6 py-4 text-center text-[13px] font-semibold text-primary">
                 Pro
               </th>
-              <th className="px-6 py-4 text-center text-[13px] font-semibold">Team</th>
             </tr>
           </thead>
           <tbody>
@@ -39,7 +38,7 @@ export function FeatureComparisonTable() {
               <Fragment key={category.name}>
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={3}
                     className="bg-marketing-hover px-6 py-3 text-[12px] font-semibold uppercase tracking-wider text-marketing-subtle"
                   >
                     {category.name}
@@ -56,9 +55,6 @@ export function FeatureComparisonTable() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <CellValue value={feature.pro} />
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <CellValue value={feature.team} />
                     </td>
                   </tr>
                 ))}

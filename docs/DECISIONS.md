@@ -88,6 +88,14 @@ See [MONETIZATION.md](./MONETIZATION.md) · [MOTIONFLARE-INSPIRATION.md](./MOTIO
 - [ ] Render local vs Lambda first
 - [ ] Sample recording bundled for demo
 
+## Billing & ICP (locked)
+
+| Decision | Choice |
+|----------|--------|
+| Target users | **Indie hackers** and **solo product owners** — not agencies or teams |
+| Plans | **Intro ($9/mo)** and **Pro ($29/mo)** only |
+| No team tier | No seats, shared workspaces, or enterprise SSO in product roadmap |
+
 ## Under review (Phase 3+)
 
 | Topic | Status |

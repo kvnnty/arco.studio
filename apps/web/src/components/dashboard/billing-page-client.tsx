@@ -1,7 +1,6 @@
 "use client";
 
-import { CreditCard, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
@@ -35,7 +34,7 @@ const TRIAL_FEATURES = [
   "5 MP4 exports",
   "Full editor access",
   "1080p export",
-  "Upgrade to Pro or Team anytime",
+  "Upgrade to Pro anytime",
 ];
 
 export function BillingPageClient() {
@@ -52,7 +51,7 @@ export function BillingPageClient() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <PageHeader
           title="Billing"
-          description="Intro at $9/month, Pro at $29/month, or Team at $79/month."
+          description="Intro at $9/month or Pro at $29/month — built for indie hackers and product owners."
         />
         <p className="text-sm text-muted-foreground">Loading billing…</p>
       </div>
@@ -91,7 +90,7 @@ export function BillingPageClient() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <PageHeader
         title="Billing"
-        description="Intro at $9/month, Pro at $29/month, or Team at $79/month."
+        description="Intro at $9/month or Pro at $29/month — built for indie hackers and product owners."
       />
 
       {welcome && !isActive ? (
@@ -230,41 +229,6 @@ export function BillingPageClient() {
           </CardContent>
         </Card>
       ) : null}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="rounded-2xl opacity-80">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Team</CardTitle>
-              <Badge variant="outline">$79/mo</Badge>
-            </div>
-            <CardDescription>Shared workspace, seats, priority render</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Pooled exports, shared brand kits, and team billing.
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-base">Enterprise</CardTitle>
-            <CardDescription>Custom limits, SSO, invoice billing</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-muted">
-                <CreditCard className="size-5 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Contact us for agency and team deployments.
-              </p>
-            </div>
-            <Button variant="outline" render={<Link href="mailto:hello@arco.video?subject=Arco%20Enterprise" />}>
-              Contact us
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
 
       {isActive ? (
         <Card className="rounded-2xl">
