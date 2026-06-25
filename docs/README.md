@@ -1,40 +1,29 @@
 # Arco documentation
 
-**Product demo & motion design workflow** for web/mobile tech — upload recordings, enhance with zooms/ripples/callouts, edit, export.
+Product demo & motion design workflow — upload recordings or screenshots, enhance with motion presets, edit, export.
 
-## Start building
+## Docs (9 files)
 
-1. **[MOTIONFLARE-REFERENCE.md](./MOTIONFLARE-REFERENCE.md)** — competitor flow + combined Arco MVP (formerly LaunchVideo)
-2. **[MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md)** — UX to borrow, toolbox comparison, export billing policy
-3. **[SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)** — screenshot mode, ElevenLabs VO, BGM library (phased)
-4. **[FEATURE-CHECKLIST.md](./FEATURE-CHECKLIST.md)** — product features to ship
-5. [BUILD-CHECKLIST.md](./BUILD-CHECKLIST.md) — engineering tasks
-6. [MVP-BUILD.md](./MVP-BUILD.md) — week-by-week plan
-7. [PROJECT-SCHEMA.md](./PROJECT-SCHEMA.md) — data model
-8. `packages/project-schema` + `packages/remotion` — code
+| Doc | Contents |
+|-----|----------|
+| [PRODUCT.md](./PRODUCT.md) | Vision, positioning, workflow, ICP, landing copy |
+| [BUSINESS.md](./BUSINESS.md) | Pricing, market, competition, GTM |
+| [STATUS.md](./STATUS.md) | **What's shipped** — snapshot + feature matrix + eng checklist |
+| [ROADMAP.md](./ROADMAP.md) | **What's next** — polish phases, backlog, screenshot/voice initiative |
+| [TECHNICAL.md](./TECHNICAL.md) | Auth, deploy, schema, output spec, prompts, integrations |
+| [AUDIO.md](./AUDIO.md) | BGM licensing, voice, mix standards |
+| [DECISIONS.md](./DECISIONS.md) | Locked product & technical choices |
+| [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md) | Motionflare competitor reference + what to borrow |
+| [`apps/web/DESIGN.md`](../apps/web/DESIGN.md) | Visual design system |
 
-## Quick links
+## Quick start
 
-| Goal | Doc |
-|------|-----|
-| Vision | [VISION.md](./VISION.md) |
-| Product | [PRODUCT.md](./PRODUCT.md) |
-| Money | [MONEY.md](./MONEY.md) |
-| Features | [FEATURE-CHECKLIST.md](./FEATURE-CHECKLIST.md) |
-| Screenshot / voice / music | [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md) |
-| Motionflare UX + billing contrast | [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md) |
-| Build MVP | [BUILD-CHECKLIST.md](./BUILD-CHECKLIST.md) · [MVP-BUILD.md](./MVP-BUILD.md) |
-| Decisions | [DECISIONS.md](./DECISIONS.md) |
-| Schema | [PROJECT-SCHEMA.md](./PROJECT-SCHEMA.md) |
-| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) |
-| ICP & GTM | [ICP.md](./ICP.md) · [GTM.md](./GTM.md) |
-| Landing copy | [LANDING.md](./LANDING.md) |
-| Repo state | [CURRENT-STATE.md](./CURRENT-STATE.md) |
+```bash
+pnpm install
+pnpm --filter @arco/api exec prisma db push
+pnpm --filter @arco/api dev
+pnpm --filter @arco/web dev
+pnpm --filter @arco/remotion dev   # Remotion Studio
+```
 
-## Design
-
-[`../apps/web/DESIGN.md`](../apps/web/DESIGN.md)
-
-## Legacy
-
-[SCENE-SCHEMA.md](./SCENE-SCHEMA.md) — superseded by recording-first [PROJECT-SCHEMA.md](./PROJECT-SCHEMA.md).
+Code: `packages/project-schema` · `packages/remotion` · `apps/web` · `apps/api`

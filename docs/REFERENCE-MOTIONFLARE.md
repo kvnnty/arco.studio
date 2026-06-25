@@ -1,4 +1,4 @@
-# Motionflare.ai — reference & combined Arco MVP
+﻿# Motionflare.ai — reference & combined Arco MVP
 
 **Source:** [motionflare.ai/features](https://motionflare.ai/features) (June 2026).
 
@@ -13,7 +13,7 @@
 > “URL in. Video out.” — No screen recorder. No editor. Just a URL.
 
 **Input:** Product URL **or** text prompt (Pro).  
-**Output:** ~30–76s motion video with AI voiceover, generated/animated scenes, brand styling, MP4 export.  
+**Output:** ~30â€“76s motion video with AI voiceover, generated/animated scenes, brand styling, MP4 export.  
 **No user screen recording** — visuals are AI-generated from website scrape + scene prompts.
 
 Landing tagline: “Turn any website into studio-quality Motion Video.”
@@ -27,7 +27,7 @@ flowchart TD
   A[Landing / Sign up] --> B[Dashboard: What would you like to create?]
   B --> C{Input mode}
   C -->|Website| D[Paste product URL]
-  C -->|Prompt Pro| E[Describe video 50–5000 chars]
+  C -->|Prompt Pro| E[Describe video 50â€“5000 chars]
   D --> F[Language & Voice + BGM]
   E --> F
   F --> G[Make video]
@@ -78,7 +78,7 @@ flowchart TD
 
 | Field | Detail |
 |-------|--------|
-| Describe your video | 50–5000 chars — “Describe your idea, Motionflare will bring it to life…” |
+| Describe your video | 50â€“5000 chars — “Describe your idea, Motionflare will bring it to life…” |
 | Style | Auto (and other presets) |
 | Language & Voice | Same as Website |
 | BGM | Same |
@@ -398,7 +398,7 @@ Use this as the **product** checklist — supersedes siloed Arco-only flow.
 
 ### Monetization (Motionflare model — phase 2)
 
-- [ ] Credits per export — **Arco uses subscription export allowance, not credits** ([MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md))
+- [ ] Credits per export — **Arco uses subscription export allowance, not credits** ([REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md#part-2--what-to-borrow-and-avoid))
 - [ ] Free watermark / Pro no watermark
 - [ ] Prompt-only mode (Pro)
 
@@ -420,15 +420,15 @@ Use this as the **product** checklist — supersedes siloed Arco-only flow.
 5. **Export MP4**
 6. **Projects grid**
 7. Chat refine + per-scene regen
-8. Voice/TTS (optional parity with Motionflare) — see [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)
+8. Voice/TTS (optional parity with Motionflare) — see [ROADMAP.md](./ROADMAP.md#part-3--screenshot--voice--music-initiative)
 
 ---
 
 ## Screenshot + voice + music (next initiative)
 
-**Master plan:** [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)
+**Master plan:** [ROADMAP.md](./ROADMAP.md#part-3--screenshot--voice--music-initiative)
 
-**UX + billing contrast:** [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md) — what to borrow from Motionflare, toolbox comparison, export-on-success policy.
+**UX + billing contrast:** [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md#part-2--what-to-borrow-and-avoid) — what to borrow from Motionflare, toolbox comparison, export-on-success policy.
 
 Phases: **0** decisions/assets → **1** screenshots → **2** BGM library → **3** ElevenLabs → **4** custom upload → **5** hybrid polish.
 
@@ -436,9 +436,167 @@ Phases: **0** decisions/assets → **1** screenshots → **2** BGM library → *
 
 ## Related docs
 
-- [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md)
-- [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)
-- [FEATURE-CHECKLIST.md](./FEATURE-CHECKLIST.md)
-- [BUILD-CHECKLIST.md](./BUILD-CHECKLIST.md)
+- [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md#part-2--what-to-borrow-and-avoid)
+- [ROADMAP.md](./ROADMAP.md#part-3--screenshot--voice--music-initiative)
+- [STATUS.md](./STATUS.md#feature-checklist)
+- [STATUS.md](./STATUS.md#engineering-checklist)
 - [PRODUCT.md](./PRODUCT.md)
-- [PROMPTS-AND-STYLE.md](./PROMPTS-AND-STYLE.md)
+- [TECHNICAL.md](./TECHNICAL.md#prompts-and-style)
+
+---
+
+# Part 2 — What to borrow (and avoid)
+
+
+**Purpose:** Capture UX and product ideas worth taking from [Motionflare](https://motionflare.ai/dashboard), contrast their [disclosed stack](https://motionflare.ai/privacy) with Arco’s, and document billing philosophy Arco intentionally rejects.
+
+**Related:** [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md) · [ROADMAP.md](./ROADMAP.md#part-3--screenshot--voice--music-initiative) · [BUSINESS.md](./BUSINESS.md)
+
+---
+
+## Strategic stance
+
+Motionflare’s **product UX and create flow** are strong. Their **output quality** often disappoints because visuals are **AI-generated or scraped**, not the user’s real product in motion.
+
+> **Borrow their interface patterns. Do not borrow their visual pipeline or credit-metered generation.**
+
+**Arco positioning:**
+
+> Motionflare makes videos *about* your product from a URL.  
+> **Arco makes videos *of* your product** — recordings and real screenshots — with Motionflare-grade create UX, voice, and music.
+
+---
+
+## Ideas to adopt (UX & product)
+
+### Create surface
+
+| Idea | Motionflare | Arco plan |
+|------|-------------|-----------|
+| “What would you like to create?” hero | ✅ | ✅ Shipped (`/dashboard`) |
+| Input mode tabs | Website · Prompt | **Recording · Screenshots ·** (optional URL) |
+| **Language & Voice** chip before generate | ✅ | Phase 3 — [roadmap](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md) |
+| **BGM** modal — library + preview + None | ✅ (Warm Launch, Up Bit, …) | Phase 2 |
+| **Upload your BGM** (Pro) | ✅ | Phase 4 |
+| Example brand chips (Cursor, Stripe, …) | ✅ | Add under create hero |
+| Make video → workspace (not wizard pages) | ✅ | ✅ Shipped |
+
+### BGM modal pattern (copy this UI)
+
+Observed library tracks with mood tags and play buttons:
+
+- Warm Launch (WARM)
+- Bright Pulse (BRIGHT)
+- Launch Drive (DRIVING)
+- Calm Focus (STEADY)
+- Mountain Rise (CINEMATIC)
+- **Up Bit** (UPBEAT)
+
+Arco should match: **None**, grid with **mood tag + duration + play preview**, optional Pro upload.
+
+### Generation workspace
+
+| Idea | Adopt? |
+|------|--------|
+| Chat left, preview right | ✅ Already in editor |
+| Timed pipeline messages (“Analyzing…”, “Recording voice-over…”) | ✅ Extend chat for Phase 3 |
+| “Ask me to change something…” after draft | ✅ Chat panel |
+| Per-scene **Regenerate** | ✅ Marker/scene regen |
+| Right-side stepper (Analyze → Draft → Voice → …) | ✅ Add Voice step when TTS ships |
+
+### Growth & trust (later)
+
+| Idea | Priority |
+|------|----------|
+| Public share links for exports | Phase 2+ |
+| Curated showcase gallery | Maps to template gallery |
+| Product update emails | Resend — already wired |
+| Watermark on free tier | N/A — Arco is paid-only today |
+
+---
+
+## Do NOT adopt
+
+| Motionflare pattern | Why Arco avoids it |
+|---------------------|-------------------|
+| **Credits pre-deducted on scene generation** | Punishes iteration; Arco includes draft/AI in subscription |
+| **AI-generated scene footage** | Generic, untrustworthy UI |
+| **Firecrawl + Gemini as primary visual source** | Output “feels AI”; Arco uses real recordings/screenshots |
+| **Vertex TTS as default** (per their privacy policy) | Quality varies; Arco plans **ElevenLabs** in Phase 3 |
+| Credit packs as primary monetization | Arco uses **subscription + export allowance** |
+
+---
+
+## Toolbox comparison
+
+Sources: [Motionflare Privacy](https://motionflare.ai/privacy) · [Motionflare Terms](https://motionflare.ai/terms) · Arco codebase.
+
+| Category | Motionflare | Arco today |
+|----------|-------------|------------|
+| **AI text** | Google Vertex AI (Gemini) | OpenAI (optional) + heuristic fallback |
+| **Voice** | Vertex AI TTS | None → **ElevenLabs** (planned) |
+| **URL / brand** | Firecrawl (scrape + screenshots) | Cheerio + fetch (OG, logo, colors) |
+| **Visual source** | AI / scraped scenes | **User screen recording** (+ screenshots planned) |
+| **Motion** | AI per-scene animation | **Remotion presets** + templates |
+| **Render** | AWS Remotion Lambda | Local Remotion + FFmpeg in API |
+| **Storage** | Cloudflare R2 | S3 / MinIO |
+| **Auth** | OAuth + email | OAuth + email + magic link |
+| **Billing** | Stripe + **credit ledger** | Stripe + **exports/month** |
+| **Email** | Resend | Resend |
+| **Errors** | Sentry (API) | Sentry (web, consent-gated) |
+| **Analytics** | GA (opt-in) | GA (opt-in) |
+
+**When to add Motionflare-like vendors:**
+
+| Vendor | Add when |
+|--------|----------|
+| Firecrawl | URL-only create is a priority; optional — user screenshot upload first |
+| Remotion Lambda | Export queue latency or scale pain |
+| ElevenLabs | Phase 3 voice (quality wedge vs Vertex TTS) |
+
+---
+
+## Billing: Arco vs Motionflare
+
+### Motionflare ([Terms §6](https://motionflare.ai/terms))
+
+- Credits **pre-deducted** at start of chargeable actions (scene gen, export).
+- Refund on permanent failure.
+- Monthly subscription credits + purchasable packs.
+
+### Arco policy (locked June 2026)
+
+**No credit system.** Subscription unlocks the product; **export allowance** meters delivered value only.
+
+| Included in subscription (unlimited) | Counts toward export allowance |
+|--------------------------------------|--------------------------------|
+| Create project, upload recording/screenshots | |
+| AI analyze, draft, storyboard, chat | |
+| Regenerate copy / scenes | |
+| In-browser preview (`@remotion/player`) | |
+| Failed export renders | |
+| | **Successful completed MP4 export only** |
+
+**User expectation:** Iterate freely (100+ previews/regens); **pay the export slot only when a final MP4 completes successfully.**
+
+### Implementation status
+
+| Behavior | Target | Code today |
+|----------|--------|------------|
+| AI / draft / preview | Free | ✅ Not metered |
+| Failed export | Free | ✅ No charge (nothing reserved at queue) |
+| Successful export | Counts 1 | ✅ `consumeExport()` on **completed** |
+| Re-export after failure | Free retry | ✅ In-flight cap prevents over-queue |
+
+---
+
+## Build queue (next)
+
+1. **Phase 3** — ElevenLabs + Language & Voice modal
+2. **Licensed BGM** — replace placeholders ([AUDIO.md](./AUDIO.md))
+3. **Example brand chips** on create hero
+4. **Phase 5** — hybrid recording + screenshots
+
+---
+
+*Last updated: June 2026*

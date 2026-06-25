@@ -1,79 +1,118 @@
-# Audio strategy
+# Audio
 
-## MVP decision: music-only
+Strategy, BGM licensing, voice (ElevenLabs), and mix standards.
 
-Arco MVP ships **curated music + on-screen text**. No voiceovers.
+**See also:** [ROADMAP.md](./ROADMAP.md) Phase A (replace placeholders) · [TECHNICAL.md](./TECHNICAL.md)
 
-This matches modern SaaS launch creative (Linear, Raycast, Vercel, Framer): music, motion graphics, product UI, text callouts—often **no narrator**.
+---
 
-## Why skip voiceovers in v1
+## Strategy
 
-| Benefit | Detail |
+Arco ships **curated music + on-screen text** for recording mode; **music + ElevenLabs VO** for screenshot storyboard mode. Matches Linear/Raycast/Vercel launch aesthetic—music, motion, real UI, text callouts.
+
+**Do not build music generation.** License real tracks.
+
+### Pipeline
+
+```
+Draft scenes → motion template → render → mix music (+ optional VO) → MP4
+```
+
+### Shipped (June 2026)
+
+- 5-track BGM picker + preview modal on create
+- Custom music upload (Pro) — `POST /uploads/music`
+- ElevenLabs TTS per scene (screenshot mode) + BGM ducking
+- `MusicBed` + `VoiceTrack` in Remotion
+
+### Stretch
+
+- SRT export · transition SFX · VO on recording-mode title cards only
+- Pipeline chat step: "Recording voice-over…"
+
+---
+
+## BGM library — production status
+
+**Status:** Development placeholders — **not launch-ready**
+
+All files in `apps/web/public/music/` and `packages/remotion/public/music/`:
+
+| Track ID | Label | Mood | Status |
+|----------|-------|------|--------|
+| `modern-saas` | Modern SaaS | UPBEAT | Placeholder (sine bed) |
+| `ambient-tech` | Ambient Tech | STEADY | Copy of placeholder |
+| `corporate-clean` | Corporate Clean | BRIGHT | Copy of placeholder |
+| `startup-launch` | Startup Launch | WARM | Copy of placeholder |
+| `energetic-reveal` | Energetic Reveal | DRIVING | Copy of placeholder |
+
+**Problem:** Picker shows five moods but all sound identical.
+
+**Before public launch:** Replace with **distinct** licensed tracks. Keep track IDs stable.
+
+### Target library (5–10 beds)
+
+| Track ID | Mood | Duration | Use case |
+|----------|------|----------|----------|
+| `modern-saas` | UPBEAT | 60–90s | Default launch |
+| `ambient-tech` | STEADY | 90–120s | Dev tools walkthrough |
+| `corporate-clean` | BRIGHT | 60–90s | Enterprise |
+| `startup-launch` | WARM | 60–90s | Indie / PH |
+| `energetic-reveal` | DRIVING | 45–75s | Feature drop |
+
+### Sourcing
+
+| Source | Notes |
+|--------|-------|
+| Epidemic Sound / Artlist | Fast commercial license |
+| Uppbeat / Pixabay | Check attribution |
+| Commission original | Unique brand sound |
+
+**Recommendation:** 5 unique beds before launch; expand to 10 post-launch.
+
+### Replacement checklist
+
+1. [ ] Normalize to **-14 LUFS**; peak **-1 dBTP**
+2. [ ] Copy to both `apps/web/public/music/` and `packages/remotion/public/music/`
+3. [ ] Update `durationSec` in `apps/web/src/lib/editor/music-tracks.ts`
+4. [ ] QA: BGM modal preview === export; ducking balanced with VO
+5. [ ] Fill production registry below
+
+### Production registry
+
+| Track ID | Source | License | Attribution | Date | Notes |
+|----------|--------|---------|-------------|------|-------|
+| `modern-saas` | | | | | |
+| `ambient-tech` | | | | | |
+| `corporate-clean` | | | | | |
+| `startup-launch` | | | | | |
+| `energetic-reveal` | | | | | |
+
+### Custom upload (Pro)
+
+`POST /uploads/music` — MP3/WAV, 10MB, rights checkbox. Stored as `audio.customMusicSrc`.
+
+### Code references
+
+- `apps/web/src/lib/editor/music-tracks.ts` — catalog
+- `packages/remotion/src/components/MusicBed.tsx` — render
+- `packages/remotion/src/components/VoiceTrack.tsx` — VO + ducking
+
+---
+
+## Mix standards (export)
+
+| Element | Target |
 |---------|--------|
-| Lower cost | No TTS APIs, no audio sync pipeline |
-| Cleaner output | VO can feel generic, salesy, templated |
-| Faster pipeline | No script → generate → timing → lip-sync adjacency |
-| Premium feel | Music + motion reads more “designed” than AI narration |
-| Less complexity | No pronunciation, pacing, or multilingual issues |
+| BGM (no VO) | -14 to -16 LUFS integrated |
+| BGM under VO | ~-12 dB duck |
+| Peak | -1 dBTP max |
+| Fade out | Last 1–2s |
 
-## MVP pipeline (audio)
+---
 
-```
-URL → analysis → storyboard (text scenes)
-  → motion template → render video
-  → mix selected music track → MP4
-```
+## On-screen text = narrative (recording mode)
 
-**Not** in MVP:
+Even without VO: hook → features → CTA. Music drives emotion; text drives message.
 
-```
-storyboard → voice script → TTS → align to timeline → video
-```
-
-## Curated music library
-
-**Do not build music generation.** License or source **5–10 tracks** for MVP.
-
-### Suggested categories
-
-| ID | Mood | Use case |
-|----|------|----------|
-| `ambient-tech` | Ambient Tech | Calm B2B, dev tools |
-| `modern-saas` | Modern SaaS | Default launch vibe |
-| `corporate-clean` | Corporate Clean | Enterprise tone |
-| `startup-launch` | Startup Launch | Product Hunt, upbeat |
-| `energetic-reveal` | Energetic Product Reveal | High-energy feature drop |
-
-### Implementation notes
-
-- Store tracks as licensed MP3/WAV in `packages/remotion/assets/music/` or CDN
-- User selects track in storyboard step; preview with `@remotion/player` + audio
-- Normalize loudness across tracks (LUFS ~-14 to -16 for web)
-- Duck music slightly under nothing in MVP (no VO); optional brief dip on CTA hit via template
-- Document licenses in `docs/LICENSES-MUSIC.md` when tracks are added
-
-## On-screen text = the narrative
-
-Even without VO, storyboard must produce strong **text scenes**:
-
-- Hook: “Stop losing files”
-- Features: “Sync across devices”, “Collaborate in real time”
-- CTA: “Start free today”
-
-Motion templates animate these (slide-up, fade, stagger). Music drives **emotion**; text drives **message**.
-
-## Phase 2+ (optional, demand-driven)
-
-Full phased plan: **[SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)** · UX reference: **[MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md)**.
-
-Summary:
-
-- **Phase 2:** Licensed BGM library (6+ tracks, preview on create) — replaces single-track MVP
-- **Phase 3:** ElevenLabs VO per scene, BGM ducking, Language & Voice picker — **shipped**
-- **Phase 4:** User-uploaded music (Pro $29/mo, rights disclaimer) — **shipped**
-- SRT export for social platforms
-- Sound design SFX (whooshes on transitions)—low priority
-
-## Demo tip
-
-Strongest early demo: paste URL → **~30 seconds** → music-driven launch video with UI motion and text—no narrator, no uncanny voice.
+*Last updated: June 2026*

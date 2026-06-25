@@ -62,7 +62,7 @@
 | **Iteration** | Unlimited draft/regen/preview within subscription |
 | **Billing (June 2026)** | Active **project slots** per plan; unlimited re-exports; Studio 4K + social pack |
 
-See [MONETIZATION.md](./MONETIZATION.md) · [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md).
+See [BUSINESS.md](./BUSINESS.md) · [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md#part-2--what-to-borrow-and-avoid).
 
 ## Integrations timeline
 
@@ -106,6 +106,6 @@ See [MONETIZATION.md](./MONETIZATION.md) · [MOTIONFLARE-INSPIRATION.md](./MOTIO
 
 ## Related
 
-- [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md)
-- [SCREENSHOT-VOICE-MUSIC-ROADMAP.md](./SCREENSHOT-VOICE-MUSIC-ROADMAP.md)
-- [MOTIONFLARE-REFERENCE.md](./MOTIONFLARE-REFERENCE.md)
+- [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md#part-2--what-to-borrow-and-avoid)
+- [ROADMAP.md](./ROADMAP.md#part-3--screenshot--voice--music-initiative)
+- [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md)

@@ -9,7 +9,7 @@ pnpm install
 pnpm --filter @arco/remotion dev    # Remotion Studio — preview composition
 ```
 
-**Docs:** [docs/README.md](./docs/README.md) · **Build plan:** [docs/MVP-BUILD.md](./docs/MVP-BUILD.md)
+**Docs:** [docs/README.md](./docs/README.md) · **Status:** [docs/STATUS.md](./docs/STATUS.md) · **Roadmap:** [docs/ROADMAP.md](./docs/ROADMAP.md)
 
 ## Packages
 
