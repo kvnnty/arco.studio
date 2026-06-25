@@ -9,6 +9,11 @@ import { AnalyzeUrlDto } from './dto/analyze-url.dto.js';
 export class BrandController {
   constructor(private readonly brandService: BrandService) {}
 
+  @Post('preview-url')
+  previewUrl(@Body() dto: AnalyzeUrlDto) {
+    return this.brandService.analyzeUrl(dto);
+  }
+
   @UseGuards(SubscriptionGuard)
   @Post('analyze-url')
   analyzeUrl(@Body() dto: AnalyzeUrlDto) {

@@ -3,6 +3,7 @@ model RenderJob {
   projectId    String
   status       String   @default("queued")
   format       String   @default("16:9")
+  quality      String   @default("1080p")
   outputUrl    String?
   errorMessage String?
   createdAt    DateTime @default(now())

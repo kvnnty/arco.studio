@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { Sparkles, Upload } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
+import { ProductUrlInput } from "@/components/dashboard/product-url-input";
 import { TemplateStrip } from "@/components/dashboard/template-strip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -108,12 +109,11 @@ export function CreateProjectForm() {
         <Field>
           <FieldLabel htmlFor="product-url">Product URL</FieldLabel>
           <FieldContent>
-            <Input
+            <ProductUrlInput
               id="product-url"
-              type="url"
               value={productUrl}
-              onChange={(event) => setProductUrl(event.target.value)}
-              placeholder="https://yourproduct.com"
+              onChange={setProductUrl}
+              inputClassName="h-10"
             />
           </FieldContent>
         </Field>

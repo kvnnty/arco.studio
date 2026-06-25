@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export class CreateRenderDto {
   @IsString()
@@ -7,4 +7,8 @@ export class CreateRenderDto {
   @IsString()
   @IsOptional()
   format?: string;
+
+  @IsIn(['1080p', '4k'])
+  @IsOptional()
+  quality?: '1080p' | '4k';
 }

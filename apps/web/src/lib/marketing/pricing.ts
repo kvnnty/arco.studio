@@ -16,46 +16,63 @@ export const pricingPlans: PricingPlan[] = [
     id: "trial",
     name: "Intro",
     description:
-      "Try Arco at a lower price before you commit — built for indie hackers validating a launch.",
+      "Try Arco at a lower price — built for indie hackers validating a launch.",
     monthlyPrice: 9,
     annualPrice: 9,
     features: [
-      "5 MP4 exports",
+      "5 active projects",
+      "Unlimited re-exports per project",
+      "1080p · 16:9 only",
       "Full editor access",
-      "1080p export",
       "Community support",
     ],
     cta: "Get started",
     href: "/signup?plan=trial",
-    priceNote: "Entry plan — upgrade to Pro anytime",
+    priceNote: "Delete a project to free a slot for a new one",
   },
   {
     id: "pro",
     name: "Pro",
     description:
-      "Everything you need to ship polished product demos every week as a solo founder or product owner.",
+      "Ship polished demos every week as a solo founder or product owner.",
     monthlyPrice: 29,
     annualPrice: 24,
     features: [
-      "15 MP4 exports per month",
-      "Full editor + AI assistant",
-      "Brand from URL + customize panel",
+      "15 active projects",
+      "Unlimited re-exports per project",
       "1080p in 16:9, 1:1, and 9:16",
-      "Music bed + logo overlay",
-      "Custom music upload (MP3/WAV)",
+      "Brand from URL + custom music",
+      "AI assistant + voiceover",
       "Priority support",
     ],
     cta: "Start Pro — $29/mo",
     href: "/signup?plan=pro",
     popular: true,
   },
+  {
+    id: "studio",
+    name: "Studio",
+    description:
+      "For founders shipping across every channel — 4K, social packs, no project cap.",
+    monthlyPrice: 59,
+    annualPrice: 49,
+    features: [
+      "Unlimited active projects",
+      "4K export + social format pack",
+      "Everything in Pro",
+      "Batch export all aspect ratios",
+      "Priority render queue",
+    ],
+    cta: "Start Studio — $59/mo",
+    href: "/signup?plan=studio",
+  },
 ];
 
 export const pricingFaqs = [
   {
-    question: "What counts as an export?",
+    question: "What counts toward my limit?",
     answer:
-      "Each rendered MP4 file counts as one export. Preview renders in the editor do not count toward your limit.",
+      "Active projects in your workspace. Delete a project to free a slot and create a new one. Re-exporting the same project unlimited times does not use extra slots.",
   },
   {
     question: "Can I cancel anytime?",
@@ -63,14 +80,14 @@ export const pricingFaqs = [
       "Yes. Cancel from your billing settings and your subscription ends at the close of the current billing period.",
   },
   {
-    question: "What's the difference between Intro and Pro?",
+    question: "What's the difference between Intro, Pro, and Studio?",
     answer:
-      "Intro is $9/month with a smaller export limit — a low-commitment way to try Arco. Pro is $29/month with full features including brand from URL, custom music, and all aspect ratios. Choose Pro at checkout if you're already ready to ship demos every week.",
+      "Intro ($9) gives 5 active projects and 16:9 exports. Pro ($29) gives 15 projects, all social aspect ratios at 1080p, and full brand/audio features. Studio ($59) adds unlimited projects, 4K, and one-click social export packs.",
   },
   {
     question: "Do you offer team or seat-based plans?",
     answer:
-      "No. Arco is built for indie hackers and product owners working solo — one account, one workspace. No team seats or shared workspaces.",
+      "No. Arco is built for indie hackers and product owners working solo — one account, one workspace.",
   },
   {
     question: "Do you offer annual billing?",
@@ -86,31 +103,34 @@ export const pricingFaqs = [
 export const featureComparison = {
   categories: [
     {
-      name: "Exports",
+      name: "Workspace",
       features: [
-        { name: "Monthly exports", trial: "5", pro: "15" },
-        { name: "Resolution", trial: "1080p", pro: "1080p" },
+        { name: "Active projects", trial: "5", pro: "15", studio: "Unlimited" },
         {
-          name: "Aspect ratios",
-          trial: "16:9",
-          pro: "16:9, 1:1, 9:16",
+          name: "Re-exports per project",
+          trial: "Unlimited",
+          pro: "Unlimited",
+          studio: "Unlimited",
         },
+      ],
+    },
+    {
+      name: "Export",
+      features: [
+        { name: "1080p", trial: true, pro: true, studio: true },
+        { name: "4K", trial: false, pro: false, studio: true },
+        { name: "16:9", trial: true, pro: true, studio: true },
+        { name: "1:1 + 9:16 social", trial: false, pro: true, studio: true },
+        { name: "Batch social export pack", trial: false, pro: false, studio: true },
       ],
     },
     {
       name: "Editor",
       features: [
-        { name: "AI assistant", trial: true, pro: true },
-        { name: "Brand from URL", trial: false, pro: true },
-        { name: "Music + logo overlay", trial: false, pro: true },
-        { name: "Custom music upload", trial: false, pro: true },
-      ],
-    },
-    {
-      name: "Support",
-      features: [
-        { name: "Community support", trial: true, pro: true },
-        { name: "Priority support", trial: false, pro: true },
+        { name: "AI assistant", trial: true, pro: true, studio: true },
+        { name: "Brand from URL", trial: false, pro: true, studio: true },
+        { name: "Custom music upload", trial: false, pro: true, studio: true },
+        { name: "Voiceover", trial: true, pro: true, studio: true },
       ],
     },
   ],

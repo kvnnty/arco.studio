@@ -30,7 +30,11 @@ export function useCreateRenderMutation() {
   const { token } = useApiClient();
 
   return useMutation({
-    mutationFn: (input: { projectId: string; format: string }) => {
+    mutationFn: (input: {
+      projectId: string;
+      format: string;
+      quality?: "1080p" | "4k";
+    }) => {
       if (!token) throw new Error("Not authenticated");
       return apiCreateRender(token, input);
     },

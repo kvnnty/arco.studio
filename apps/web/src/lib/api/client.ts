@@ -391,7 +391,7 @@ export type GenerateDraftResponse = {
 
 export async function apiCreateRender(
   token: string,
-  input: { projectId: string; format: string },
+  input: { projectId: string; format: string; quality?: "1080p" | "4k" },
 ): Promise<RenderJobRecord> {
   return apiRequest<RenderJobRecord>("/renders", {
     token,
@@ -555,16 +555,31 @@ export async function apiAnalyzeBrandUrl(
   });
 }
 
+export async function apiPreviewBrandUrl(
+  token: string,
+  url: string,
+): Promise<BrandKitResponse> {
+  return apiRequest<BrandKitResponse>("/brand/preview-url", {
+    token,
+    method: "POST",
+    body: { url },
+  });
+}
+
 export type BillingStatus = {
   planStatus: string;
   plan: string | null;
-  exportAllowance: number;
-  exportsUsedThisPeriod: number;
-  exportsRemaining: number;
+  activeProjectCount: number;
+  activeProjectLimit: number;
+  activeProjectsRemaining: number;
+  hasUnlimitedProjects: boolean;
   periodEnd: string | null;
   hadLaunchOffer: boolean;
   canUseProduct: boolean;
   canUploadCustomMusic: boolean;
+  canExport4k: boolean;
+  canExportAllFormats: boolean;
+  canBatchSocialExport: boolean;
 };
 
 export type BillingUsage = {
@@ -585,7 +600,7 @@ export async function apiGetBillingUsage(token: string): Promise<BillingUsage> {
   return apiRequest<BillingUsage>("/billing/usage", { token });
 }
 
-export type CheckoutPlan = "trial" | "pro";
+export type CheckoutPlan = "trial" | "pro" | "studio";
 
 export async function apiCreateBillingCheckout(
   token: string,

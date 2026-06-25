@@ -1,6 +1,6 @@
-import { IsIn } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export class CreateCheckoutDto {
-  @IsIn(['trial', 'pro'])
-  plan!: 'trial' | 'pro';
+  @IsIn(['trial', 'pro', 'studio'])
+  plan!: 'trial' | 'pro' | 'studio';
 }

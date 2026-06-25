@@ -21,20 +21,25 @@ import {
 } from "@/lib/api/hooks/billing";
 import type { CheckoutPlan } from "@/lib/api/client";
 
-const PRO_FEATURES = [
-  "15 MP4 exports per month",
-  "Full editor + AI assistant",
-  "Brand from URL + customize panel",
-  "1080p in 16:9, 1:1, and 9:16",
-  "Music bed + logo overlay",
-  "Custom music upload (Pro)",
+const TRIAL_FEATURES = [
+  "5 active projects",
+  "Unlimited re-exports per project",
+  "1080p · 16:9 only",
+  "Upgrade anytime",
 ];
 
-const TRIAL_FEATURES = [
-  "5 MP4 exports",
-  "Full editor access",
-  "1080p export",
-  "Upgrade to Pro anytime",
+const PRO_FEATURES = [
+  "15 active projects",
+  "All social formats (1080p)",
+  "Brand from URL + custom music",
+  "AI assistant + voiceover",
+];
+
+const STUDIO_FEATURES = [
+  "Unlimited active projects",
+  "4K export",
+  "Batch social export pack",
+  "Everything in Pro",
 ];
 
 export function BillingPageClient() {
@@ -51,7 +56,7 @@ export function BillingPageClient() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <PageHeader
           title="Billing"
-          description="Intro at $9/month or Pro at $29/month — built for indie hackers and product owners."
+          description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
         />
         <p className="text-sm text-muted-foreground">Loading billing…</p>
       </div>
@@ -86,11 +91,40 @@ export function BillingPageClient() {
     });
   };
 
+  const renderPlanActions = (plan: CheckoutPlan, label: string) => {
+    if (isActive && status.plan === plan) {
+      return (
+        <div className="flex flex-col items-start gap-2">
+          <Badge variant="outline" className="border-primary/30 text-primary">
+            Active — {label}
+          </Badge>
+          <Button
+            variant="outline"
+            disabled={portalMutation.isPending}
+            onClick={handlePortal}
+          >
+            Manage subscription
+          </Button>
+        </div>
+      );
+    }
+    if (isActive) return null;
+    return (
+      <Button
+        variant={plan === "pro" ? "default" : "outline"}
+        disabled={checkoutMutation.isPending}
+        onClick={() => handleCheckout(plan)}
+      >
+        Start {label}
+      </Button>
+    );
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <PageHeader
         title="Billing"
-        description="Intro at $9/month or Pro at $29/month — built for indie hackers and product owners."
+        description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
       />
 
       {welcome && !isActive ? (
@@ -98,8 +132,8 @@ export function BillingPageClient() {
           <CardHeader>
             <CardTitle className="text-base">Welcome to Arco</CardTitle>
             <CardDescription>
-              Choose Intro at $9/month to get started, or subscribe to Pro at
-              $29/month from day one. No free tier.
+              Pick Intro, Pro, or Studio. Your plan limits active projects — not
+              how many times you can re-export.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -116,23 +150,21 @@ export function BillingPageClient() {
       {checkout === "canceled" ? (
         <Card className="rounded-2xl">
           <CardContent className="pt-6 text-sm text-muted-foreground">
-            Checkout canceled. Pick Intro or Pro whenever you&apos;re ready.
+            Checkout canceled. Pick a plan whenever you&apos;re ready.
           </CardContent>
         </Card>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card className="rounded-2xl">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Sparkles className="size-4 text-primary" />
               <CardTitle className="text-base">Intro</CardTitle>
             </div>
-            <CardDescription>
-              Get started at a lower price. Upgrade when you&apos;re ready to scale.
-            </CardDescription>
+            <CardDescription>Validate your launch at a lower price.</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
                 $9
@@ -144,39 +176,16 @@ export function BillingPageClient() {
                 ))}
               </ul>
             </div>
-            {isActive && status.plan === "trial" ? (
-              <div className="flex flex-col items-start gap-2">
-                <Badge variant="outline" className="border-primary/30 text-primary">
-                  Active — Intro
-                </Badge>
-                <Button
-                  variant="outline"
-                  disabled={portalMutation.isPending}
-                  onClick={handlePortal}
-                >
-                  Manage subscription
-                </Button>
-              </div>
-            ) : isActive ? null : (
-              <Button
-                variant="outline"
-                disabled={checkoutMutation.isPending}
-                onClick={() => handleCheckout("trial")}
-              >
-                Start Intro — $9/mo
-              </Button>
-            )}
+            {renderPlanActions("trial", "Intro — $9/mo")}
           </CardContent>
         </Card>
 
         <Card className="rounded-2xl border-primary/20">
           <CardHeader>
             <CardTitle className="text-base">Pro</CardTitle>
-            <CardDescription>
-              Full access at $29/month from day one — Intro pricing not included.
-            </CardDescription>
+            <CardDescription>Full 1080p toolkit for weekly shipping.</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
                 $29
@@ -188,59 +197,70 @@ export function BillingPageClient() {
                 ))}
               </ul>
             </div>
-            {isActive && status.plan === "pro" ? (
-              <div className="flex flex-col items-start gap-2">
-                <Badge variant="outline" className="border-primary/30 text-primary">
-                  Active — Pro
-                </Badge>
-                <Button
-                  variant="outline"
-                  disabled={portalMutation.isPending}
-                  onClick={handlePortal}
-                >
-                  Manage subscription
-                </Button>
-              </div>
-            ) : isActive ? null : (
-              <Button
-                disabled={checkoutMutation.isPending}
-                onClick={() => handleCheckout("pro")}
-              >
-                Start Pro — $29/mo
-              </Button>
-            )}
+            {renderPlanActions("pro", "Pro — $29/mo")}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-base">Studio</CardTitle>
+            <CardDescription>4K, unlimited projects, social packs.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-6">
+            <div>
+              <p className="text-3xl font-semibold tracking-tight">
+                $59
+                <span className="text-base font-normal text-muted-foreground">/mo</span>
+              </p>
+              <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
+                {STUDIO_FEATURES.map((feature) => (
+                  <li key={feature}>✓ {feature}</li>
+                ))}
+              </ul>
+            </div>
+            {renderPlanActions("studio", "Studio — $59/mo")}
           </CardContent>
         </Card>
       </div>
 
-      {isActive && status.plan !== "trial" && status.plan !== "pro" ? (
-        <Card className="rounded-2xl">
-          <CardContent className="flex items-center justify-between pt-6">
-            <Badge variant="outline" className="border-primary/30 text-primary">
-              Active — {status.plan}
-            </Badge>
-            <Button
-              variant="outline"
-              disabled={portalMutation.isPending}
-              onClick={handlePortal}
-            >
-              Manage subscription
-            </Button>
-          </CardContent>
-        </Card>
-      ) : null}
-
       {isActive ? (
         <Card className="rounded-2xl">
           <CardHeader>
-            <CardTitle className="text-base">Usage this period</CardTitle>
+            <CardTitle className="text-base">Workspace usage</CardTitle>
             <CardDescription>
-              {status.exportsRemaining} of {status.exportAllowance} exports remaining
+              {status.hasUnlimitedProjects
+                ? `${status.activeProjectCount} active projects · unlimited plan`
+                : `${status.activeProjectCount} of ${status.activeProjectLimit} active projects · ${status.activeProjectsRemaining} slots remaining`}
               {status.periodEnd
                 ? ` · Renews ${new Date(status.periodEnd).toLocaleDateString()}`
                 : null}
             </CardDescription>
           </CardHeader>
+          {!status.hasUnlimitedProjects ? (
+            <CardContent>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      status.activeProjectLimit > 0
+                        ? Math.round(
+                            (status.activeProjectCount /
+                              status.activeProjectLimit) *
+                              100,
+                          )
+                        : 0,
+                    )}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Delete a project to free a slot. Re-exports do not count toward this
+                limit.
+              </p>
+            </CardContent>
+          ) : null}
         </Card>
       ) : null}
     </div>

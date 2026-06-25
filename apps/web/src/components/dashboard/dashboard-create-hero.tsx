@@ -11,6 +11,7 @@ import {
   ScreenshotUploadZone,
 } from "@/components/dashboard/screenshot-upload-zone";
 import { TemplateStrip } from "@/components/dashboard/template-strip";
+import { ProductUrlInput } from "@/components/dashboard/product-url-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -223,12 +223,10 @@ export function DashboardCreateHero({
           </TabsList>
 
           <div className="mt-4 space-y-3">
-            <Input
-              type="url"
+            <ProductUrlInput
               value={productUrl}
-              onChange={(event) => setProductUrl(event.target.value)}
-              placeholder="https://yourproduct.com"
-              className="h-11"
+              onChange={setProductUrl}
+              disabled={submitting}
             />
             <Textarea
               value={brief}

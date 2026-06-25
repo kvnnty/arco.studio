@@ -4,15 +4,20 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { BillingService } from '../billing/billing.service.js';
 import { CreateProjectDto } from './dto/create-project.dto.js';
 import { UpdateProjectDto } from './dto/update-project.dto.js';
 import { buildInitialProjectData } from './project-data.util.js';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly billing: BillingService,
+  ) {}
 
   async create(userId: string, dto: CreateProjectDto) {
+    await this.billing.assertCanCreateProject(userId);
     const projectData = dto.projectData
       ? dto.projectData
       : buildInitialProjectData(dto);

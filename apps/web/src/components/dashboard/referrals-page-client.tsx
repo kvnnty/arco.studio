@@ -27,7 +27,7 @@ export function ReferralsPageClient() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <PageHeader
           title="Invite & earn"
-          description="Share Arco with friends and earn bonus export credits."
+          description="Share Arco with friends and earn bonus project slots."
         />
         <p className="text-sm text-muted-foreground">Loading referrals…</p>
       </div>
@@ -51,14 +51,14 @@ export function ReferralsPageClient() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <PageHeader
         title="Invite & earn"
-        description="Share Arco with friends and earn bonus export credits when they subscribe."
+        description="Share Arco with friends and earn bonus project slots when they subscribe."
       />
 
       <Card className="rounded-2xl border-primary/20 bg-primary/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Gift className="size-4" />
-            Earn {data.creditsPerReferral} export credits per referral
+            Earn {data.creditsPerReferral} bonus project slots per referral
           </CardTitle>
           <CardDescription>
             When someone signs up with your link and subscribes, you get{" "}

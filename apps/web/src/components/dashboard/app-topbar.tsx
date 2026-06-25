@@ -25,13 +25,15 @@ type AppTopbarProps = {
     name?: string | null;
     email?: string | null;
   };
-  exportsRemaining?: number;
+  projectSlotsRemaining?: number;
+  unlimitedProjects?: boolean;
   planActive?: boolean;
 };
 
 export function AppTopbar({
   user,
-  exportsRemaining = 0,
+  projectSlotsRemaining = 0,
+  unlimitedProjects = false,
   planActive = false,
 }: AppTopbarProps) {
   const { openPreferences } = useConsent();
@@ -50,7 +52,11 @@ export function AppTopbar({
       <Separator orientation="vertical" className="mr-1 h-4" />
       <WorkspaceSwitcher name={user.name} email={user.email} />
       <div className="flex-1" />
-      <ExportsBadge remaining={exportsRemaining} planActive={planActive} />
+      <ExportsBadge
+        remaining={projectSlotsRemaining}
+        unlimited={unlimitedProjects}
+        planActive={planActive}
+      />
       <Button
         variant="ghost"
         size="icon-sm"

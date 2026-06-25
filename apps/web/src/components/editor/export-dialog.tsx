@@ -1,7 +1,8 @@
 "use client";
 
-import type { ExportFormat } from "@arco/project-schema";
-import { Download } from "lucide-react";
+import type { ExportFormat, ExportQuality } from "@arco/project-schema";
+import { Download, Layers } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -29,11 +30,17 @@ import {
 } from "@/lib/api/hooks/renders";
 import { queryKeys } from "@/lib/api/query-keys";
 
-const FORMATS: { id: ExportFormat; label: string; description: string }[] = [
-  { id: "16:9", label: "16:9", description: "YouTube, landing hero" },
-  { id: "1:1", label: "1:1", description: "LinkedIn, Product Hunt" },
-  { id: "9:16", label: "9:16", description: "TikTok, Reels, Stories" },
+const FORMATS: {
+  id: ExportFormat;
+  label: string;
+  description: string;
+}[] = [
+  { id: "16:9", label: "16:9", description: "YouTube, website" },
+  { id: "1:1", label: "1:1", description: "LinkedIn, PH" },
+  { id: "9:16", label: "9:16", description: "TikTok, Reels" },
 ];
+
+const SOCIAL_FORMATS: ExportFormat[] = ["16:9", "1:1", "9:16"];
 
 type ExportDialogProps = {
   open: boolean;
@@ -81,6 +88,8 @@ export function ExportDialog({
   const [phase, setPhase] = useState<ExportPhase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
+  const [quality, setQuality] = useState<ExportQuality>("1080p");
+  const [batchProgress, setBatchProgress] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const { data: billing } = useBillingStatus();
@@ -93,7 +102,6 @@ export function ExportDialog({
     if (job.status === "completed" && job.outputUrl) {
       setPhase("completed");
       setOutputUrl(job.outputUrl);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.billing.status });
       void queryClient.invalidateQueries({ queryKey: queryKeys.billing.usage });
       toast.success("Export ready");
       return;
@@ -103,7 +111,7 @@ export function ExportDialog({
       const message = job.errorMessage ?? "Render failed.";
       setPhase("failed");
       setError(message);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.billing.status });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.billing.usage });
       toast.error(message);
       return;
     }
@@ -111,41 +119,55 @@ export function ExportDialog({
     setPhase(phaseFromStatus(job.status));
   }, [job, queryClient]);
 
+  const isFormatLocked = (id: ExportFormat) =>
+    !billing?.canExportAllFormats && id !== "16:9";
+
+  const startRender = async (
+    renderFormat: ExportFormat,
+    renderQuality: ExportQuality,
+  ) => {
+    if (!billing?.canUseProduct) {
+      throw new Error("Subscribe to export videos.");
+    }
+    if (isFormatLocked(renderFormat)) {
+      throw new Error(
+        "Intro plan exports 16:9 only. Upgrade to Pro for social formats.",
+      );
+    }
+    if (renderQuality === "4k" && !billing.canExport4k) {
+      throw new Error("4K export requires Studio ($59/mo).");
+    }
+
+    const created = await createRender.mutateAsync({
+      projectId,
+      format: renderFormat,
+      quality: renderQuality,
+    });
+    setJobId(created.id);
+
+    if (created.status === "completed" && created.outputUrl) {
+      setPhase("completed");
+      setOutputUrl(created.outputUrl);
+      toast.success("Export ready");
+      return;
+    }
+
+    if (created.status === "failed") {
+      throw new Error(created.errorMessage ?? "Render failed.");
+    }
+
+    setPhase(phaseFromStatus(created.status));
+  };
+
   const handleExport = async () => {
     setPhase("queued");
     setError(null);
     setOutputUrl(null);
     setJobId(null);
+    setBatchProgress(null);
 
     try {
-      if (!billing?.canUseProduct) {
-        throw new Error("Subscribe to export videos.");
-      }
-      if (billing.exportsRemaining <= 0) {
-        throw new Error(
-          "No exports remaining this period. Manage your plan in Billing.",
-        );
-      }
-
-      const created = await createRender.mutateAsync({ projectId, format });
-      setJobId(created.id);
-
-      if (created.status === "completed" && created.outputUrl) {
-        setPhase("completed");
-        setOutputUrl(created.outputUrl);
-        toast.success("Export ready");
-        return;
-      }
-
-      if (created.status === "failed") {
-        const message = created.errorMessage ?? "Render failed.";
-        setPhase("failed");
-        setError(message);
-        toast.error(message);
-        return;
-      }
-
-      setPhase(phaseFromStatus(created.status));
+      await startRender(format, quality);
     } catch (exportError) {
       const message =
         exportError instanceof Error
@@ -153,6 +175,44 @@ export function ExportDialog({
           : "Could not start export.";
       setPhase("failed");
       setError(message);
+      toast.error(message);
+    }
+  };
+
+  const handleBatchSocial = async () => {
+    setPhase("queued");
+    setError(null);
+    setOutputUrl(null);
+    setJobId(null);
+
+    try {
+      if (!billing?.canBatchSocialExport) {
+        throw new Error(
+          "Social export pack requires Studio ($59/mo).",
+        );
+      }
+
+      for (let i = 0; i < SOCIAL_FORMATS.length; i += 1) {
+        const nextFormat = SOCIAL_FORMATS[i]!;
+        setBatchProgress(
+          `Rendering ${nextFormat} (${i + 1}/${SOCIAL_FORMATS.length})…`,
+        );
+        await startRender(nextFormat, quality);
+        if (i < SOCIAL_FORMATS.length - 1) {
+          setJobId(null);
+          setPhase("queued");
+        }
+      }
+      setBatchProgress(null);
+      toast.success("Social export pack queued — check each format when ready.");
+    } catch (exportError) {
+      const message =
+        exportError instanceof Error
+          ? exportError.message
+          : "Could not start batch export.";
+      setPhase("failed");
+      setError(message);
+      setBatchProgress(null);
       toast.error(message);
     }
   };
@@ -172,6 +232,8 @@ export function ExportDialog({
   const isBusy =
     phase === "queued" || phase === "rendering" || phase === "uploading";
 
+  const qualityLabel = quality === "4k" ? "4K" : "1080p";
+
   return (
     <Dialog
       open={open}
@@ -181,6 +243,7 @@ export function ExportDialog({
           setPhase("idle");
           setError(null);
           setOutputUrl(null);
+          setBatchProgress(null);
         }
         onOpenChange(next);
       }}
@@ -189,9 +252,8 @@ export function ExportDialog({
         <DialogHeader>
           <DialogTitle>Export video</DialogTitle>
           <DialogDescription>
-            Render <strong>{projectTitle}</strong> as a 1080p MP4. Your export
-            allowance is used only when the render completes successfully — retries
-            after a failure are free.
+            Render <strong>{projectTitle}</strong> as MP4. Re-exports are
+            unlimited — your plan limits active projects, not export retries.
           </DialogDescription>
         </DialogHeader>
 
@@ -202,29 +264,62 @@ export function ExportDialog({
               value={[format]}
               onValueChange={(value) => {
                 const next = value[0] as ExportFormat | undefined;
-                if (next) onFormatChange(next);
+                if (!next || isFormatLocked(next)) return;
+                onFormatChange(next);
               }}
               variant="outline"
               spacing={0}
               className="grid w-full grid-cols-3"
               disabled={isBusy || phase === "completed"}
             >
-              {FORMATS.map((item) => (
-                <ToggleGroupItem
-                  key={item.id}
-                  value={item.id}
-                  className="h-auto flex-col gap-1 py-3"
-                >
-                  <span className="font-mono text-sm">{item.label}</span>
-                  <span className="text-[10px] font-normal text-muted-foreground">
-                    {item.description}
-                  </span>
-                </ToggleGroupItem>
-              ))}
+              {FORMATS.map((item) => {
+                const locked = isFormatLocked(item.id);
+                return (
+                  <ToggleGroupItem
+                    key={item.id}
+                    value={item.id}
+                    disabled={locked}
+                    className="h-auto flex-col gap-1 py-3"
+                  >
+                    <span className="font-mono text-sm">{item.label}</span>
+                    <span className="text-[10px] font-normal text-muted-foreground">
+                      {locked ? "Pro+" : item.description}
+                    </span>
+                  </ToggleGroupItem>
+                );
+              })}
             </ToggleGroup>
-            <FieldDescription>
-              Preview aspect ratio updates when you change format.
-            </FieldDescription>
+            {!billing?.canExportAllFormats ? (
+              <FieldDescription>
+                <Link href="/dashboard/billing" className="text-primary hover:underline">
+                  Upgrade to Pro
+                </Link>{" "}
+                for 1:1 and 9:16 social formats.
+              </FieldDescription>
+            ) : null}
+          </FieldContent>
+        </Field>
+
+        <Field>
+          <FieldLabel>Resolution</FieldLabel>
+          <FieldContent>
+            <ToggleGroup
+              value={[quality]}
+              onValueChange={(value) => {
+                const next = value[0] as ExportQuality | undefined;
+                if (!next) return;
+                if (next === "4k" && !billing?.canExport4k) return;
+                setQuality(next);
+              }}
+              variant="outline"
+              className="grid w-full grid-cols-2"
+              disabled={isBusy || phase === "completed"}
+            >
+              <ToggleGroupItem value="1080p">1080p</ToggleGroupItem>
+              <ToggleGroupItem value="4k" disabled={!billing?.canExport4k}>
+                4K {billing?.canExport4k ? "" : "(Studio)"}
+              </ToggleGroupItem>
+            </ToggleGroup>
           </FieldContent>
         </Field>
 
@@ -232,13 +327,13 @@ export function ExportDialog({
           phase === "rendering" ||
           phase === "uploading") && (
           <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-            {PHASE_LABELS[phase]}
+            {batchProgress ?? `${PHASE_LABELS[phase]} (${qualityLabel})`}
           </p>
         )}
 
         {phase === "completed" && outputUrl ? (
           <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-            Export ready. Download your MP4 below.
+            Export ready at {qualityLabel}. Download your MP4 below.
           </p>
         ) : null}
 
@@ -254,18 +349,32 @@ export function ExportDialog({
             Download MP4
           </Button>
         ) : (
-          <Button
-            className="w-full"
-            onClick={() => void handleExport()}
-            disabled={isBusy || phase === "completed" || createRender.isPending}
-          >
-            <Download data-icon="inline-start" />
-            {isBusy
-              ? PHASE_LABELS[phase]
-              : phase === "failed"
-                ? "Retry export"
-                : "Export MP4"}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              className="w-full"
+              onClick={() => void handleExport()}
+              disabled={isBusy || phase === "completed" || createRender.isPending}
+            >
+              <Download data-icon="inline-start" />
+              {isBusy
+                ? PHASE_LABELS[phase]
+                : phase === "failed"
+                  ? "Retry export"
+                  : `Export ${qualityLabel} MP4`}
+            </Button>
+            {billing?.canBatchSocialExport ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={isBusy || createRender.isPending}
+                onClick={() => void handleBatchSocial()}
+              >
+                <Layers data-icon="inline-start" />
+                Export all social formats
+              </Button>
+            ) : null}
+          </div>
         )}
       </DialogContent>
     </Dialog>

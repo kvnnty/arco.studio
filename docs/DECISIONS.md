@@ -60,7 +60,7 @@
 | **Billing model** | **Subscription + export allowance** — not credit packs |
 | **What counts** | **Successful MP4 export only** — not AI, preview, or failed renders |
 | **Iteration** | Unlimited draft/regen/preview within subscription |
-| **Code (June 2026)** | `consumeExport()` on render **completed**; in-flight cap at queue |
+| **Billing (June 2026)** | Active **project slots** per plan; unlimited re-exports; Studio 4K + social pack |
 
 See [MONETIZATION.md](./MONETIZATION.md) · [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md).
 
@@ -93,7 +93,7 @@ See [MONETIZATION.md](./MONETIZATION.md) · [MOTIONFLARE-INSPIRATION.md](./MOTIO
 | Decision | Choice |
 |----------|--------|
 | Target users | **Indie hackers** and **solo product owners** — not agencies or teams |
-| Plans | **Intro ($9/mo)** and **Pro ($29/mo)** only |
+| Plans | **Intro ($9)** and **Pro ($29)** and **Studio ($59)** only |
 | No team tier | No seats, shared workspaces, or enterprise SSO in product roadmap |
 
 ## Under review (Phase 3+)

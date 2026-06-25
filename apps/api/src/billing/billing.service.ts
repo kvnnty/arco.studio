@@ -9,18 +9,34 @@ import {
 import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ReferralsService } from '../referrals/referrals.service.js';
+import {
+  activeProjectLimit,
+  canBatchSocialExport,
+  canUploadCustomMusic,
+  canUse4k,
+  canUseAspectFormat,
+  hasUnlimitedProjects,
+  parsePlan,
+  type ArcoPlan,
+} from './plans.js';
 
 export type BillingStatus = {
   planStatus: string;
   plan: string | null;
-  exportAllowance: number;
-  exportsUsedThisPeriod: number;
-  exportsRemaining: number;
+  activeProjectCount: number;
+  activeProjectLimit: number;
+  activeProjectsRemaining: number;
+  hasUnlimitedProjects: boolean;
   periodEnd: string | null;
   hadLaunchOffer: boolean;
   canUseProduct: boolean;
   canUploadCustomMusic: boolean;
+  canExport4k: boolean;
+  canExportAllFormats: boolean;
+  canBatchSocialExport: boolean;
 };
+
+export type CheckoutPlan = ArcoPlan;
 
 @Injectable()
 export class BillingService {
@@ -46,38 +62,50 @@ export class BillingService {
     return this.stripe;
   }
 
-  async getStatus(userId: string): Promise<BillingStatus> {
+  private async getUserPlanContext(userId: string) {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
     });
+    const plan = parsePlan(user.plan);
+    const limit = activeProjectLimit(plan) + user.extraProjectSlots;
+    const activeProjectCount = await this.prisma.project.count({
+      where: { userId },
+    });
 
-    const exportsRemaining = Math.max(
-      0,
-      user.exportAllowance - user.exportsUsedThisPeriod,
-    );
+    return { user, plan, limit, activeProjectCount };
+  }
+
+  async getStatus(userId: string): Promise<BillingStatus> {
+    const { user, plan, limit, activeProjectCount } =
+      await this.getUserPlanContext(userId);
+
+    const activeProjectsRemaining = Math.max(0, limit - activeProjectCount);
 
     return {
       planStatus: user.planStatus,
       plan: user.plan,
-      exportAllowance: user.exportAllowance,
-      exportsUsedThisPeriod: user.exportsUsedThisPeriod,
-      exportsRemaining,
+      activeProjectCount,
+      activeProjectLimit: limit,
+      activeProjectsRemaining,
+      hasUnlimitedProjects: hasUnlimitedProjects(plan),
       periodEnd: user.periodEnd?.toISOString() ?? null,
       hadLaunchOffer: user.hadLaunchOffer,
       canUseProduct: user.planStatus === 'active',
-      canUploadCustomMusic:
-        user.planStatus === 'active' && user.plan === 'pro',
+      canUploadCustomMusic: canUploadCustomMusic(plan, user.planStatus),
+      canExport4k: user.planStatus === 'active' && canUse4k(plan),
+      canExportAllFormats:
+        user.planStatus === 'active' && plan !== null && plan !== 'trial',
+      canBatchSocialExport:
+        user.planStatus === 'active' && canBatchSocialExport(plan),
     };
   }
 
   async assertProPlan(userId: string): Promise<void> {
-    const user = await this.prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-    });
+    const { user, plan } = await this.getUserPlanContext(userId);
 
-    if (user.planStatus !== 'active' || user.plan !== 'pro') {
+    if (!canUploadCustomMusic(plan, user.planStatus)) {
       throw new HttpException(
-        'Custom music upload requires Pro ($29/mo). Upgrade your plan to continue.',
+        'Custom music upload requires Pro ($29/mo) or Studio ($59/mo).',
         HttpStatus.PAYMENT_REQUIRED,
       );
     }
@@ -90,18 +118,55 @@ export class BillingService {
 
     if (user.planStatus !== 'active') {
       throw new HttpException(
-        'An active subscription is required. Choose Intro ($9) or Pro ($29) to continue.',
+        'An active subscription is required. Choose Intro ($9), Pro ($29), or Studio ($59).',
         HttpStatus.PAYMENT_REQUIRED,
       );
     }
   }
 
-  async assertCanExport(userId: string): Promise<void> {
+  async assertCanCreateProject(userId: string): Promise<void> {
     await this.assertActive(userId);
 
-    const user = await this.prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-    });
+    const { plan, limit, activeProjectCount } =
+      await this.getUserPlanContext(userId);
+
+    if (activeProjectCount >= limit) {
+      const upgradeHint =
+        plan === 'trial'
+          ? ' Upgrade to Pro or Studio for more project slots.'
+          : plan === 'pro'
+            ? ' Upgrade to Studio for unlimited projects, or delete a project to free a slot.'
+            : '';
+
+      throw new HttpException(
+        `You have ${activeProjectCount} of ${limit} active projects. Delete a project to create a new one.${upgradeHint}`,
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
+  }
+
+  async assertCanRender(
+    userId: string,
+    format: string,
+    quality: string,
+  ): Promise<void> {
+    await this.assertActive(userId);
+
+    const { plan } = await this.getUserPlanContext(userId);
+
+    if (!canUseAspectFormat(plan, format)) {
+      throw new HttpException(
+        'Intro plan exports 16:9 only. Upgrade to Pro for social aspect ratios.',
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
+
+    if (quality === '4k' && !canUse4k(plan)) {
+      throw new HttpException(
+        '4K export requires Studio ($59/mo).',
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
 
     const inFlight = await this.prisma.renderJob.count({
       where: {
@@ -110,18 +175,15 @@ export class BillingService {
       },
     });
 
-    const committed = user.exportsUsedThisPeriod + inFlight;
-    if (committed >= user.exportAllowance) {
+    if (inFlight >= 3) {
       throw new HttpException(
-        inFlight > 0 && user.exportsUsedThisPeriod < user.exportAllowance
-          ? 'An export is already in progress. Wait for it to finish or fail before starting another.'
-          : 'You have used all exports for this billing period. Manage your plan or wait for renewal.',
-        HttpStatus.PAYMENT_REQUIRED,
+        'Too many exports in progress. Wait for one to finish before starting another.',
+        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
   }
 
-  async consumeExport(userId: string, renderJobId: string): Promise<void> {
+  async recordExport(userId: string, renderJobId: string): Promise<void> {
     const existing = await this.prisma.usageEvent.findFirst({
       where: {
         userId,
@@ -131,19 +193,13 @@ export class BillingService {
     });
     if (existing) return;
 
-    await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id: userId },
-        data: { exportsUsedThisPeriod: { increment: 1 } },
-      }),
-      this.prisma.usageEvent.create({
-        data: {
-          userId,
-          type: 'export',
-          metadata: JSON.stringify({ renderJobId }),
-        },
-      }),
-    ]);
+    await this.prisma.usageEvent.create({
+      data: {
+        userId,
+        type: 'export',
+        metadata: JSON.stringify({ renderJobId }),
+      },
+    });
   }
 
   async recordAiUsage(userId: string, type: string, metadata?: object): Promise<void> {
@@ -178,7 +234,7 @@ export class BillingService {
   async createCheckoutSession(
     userId: string,
     email: string,
-    plan: 'trial' | 'pro',
+    plan: CheckoutPlan,
   ): Promise<{ url: string }> {
     const stripe = this.requireStripe();
     const user = await this.prisma.user.findUniqueOrThrow({
@@ -192,12 +248,17 @@ export class BillingService {
     const priceId =
       plan === 'trial'
         ? process.env.STRIPE_PRICE_TRIAL_MONTHLY
-        : process.env.STRIPE_PRICE_PRO_MONTHLY;
+        : plan === 'studio'
+          ? process.env.STRIPE_PRICE_STUDIO_MONTHLY
+          : process.env.STRIPE_PRICE_PRO_MONTHLY;
+
     if (!priceId) {
       throw new ServiceUnavailableException(
         plan === 'trial'
           ? 'STRIPE_PRICE_TRIAL_MONTHLY is not configured.'
-          : 'STRIPE_PRICE_PRO_MONTHLY is not configured.',
+          : plan === 'studio'
+            ? 'STRIPE_PRICE_STUDIO_MONTHLY is not configured.'
+            : 'STRIPE_PRICE_PRO_MONTHLY is not configured.',
       );
     }
 
@@ -300,20 +361,32 @@ export class BillingService {
     }
   }
 
+  private resolvePlanFromMetadata(
+    metadataPlan: string | undefined,
+    planStatus: string,
+  ): ArcoPlan | null {
+    if (planStatus !== 'active') return null;
+    if (metadataPlan === 'trial') return 'trial';
+    if (metadataPlan === 'studio') return 'studio';
+    return 'pro';
+  }
+
   private async onCheckoutCompleted(session: Stripe.Checkout.Session) {
     const userId = session.metadata?.userId;
     if (!userId) return;
 
-    const plan = session.metadata?.plan === 'trial' ? 'trial' : 'pro';
+    const metadataPlan = session.metadata?.plan;
+    const plan: ArcoPlan =
+      metadataPlan === 'trial'
+        ? 'trial'
+        : metadataPlan === 'studio'
+          ? 'studio'
+          : 'pro';
+
     const subscriptionId =
       typeof session.subscription === 'string'
         ? session.subscription
         : session.subscription?.id;
-
-    const exportAllowance =
-      plan === 'trial'
-        ? Number(process.env.EXPORT_ALLOWANCE_TRIAL ?? 5)
-        : Number(process.env.EXPORT_ALLOWANCE_PRO ?? 15);
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -321,8 +394,6 @@ export class BillingService {
         planStatus: 'active',
         plan,
         stripeSubscriptionId: subscriptionId ?? undefined,
-        exportAllowance,
-        exportsUsedThisPeriod: 0,
       },
     });
 
@@ -359,12 +430,10 @@ export class BillingService {
       planStatus = 'canceled';
     }
 
-    const plan =
-      subscription.metadata?.plan === 'trial'
-        ? 'trial'
-        : planStatus === 'active'
-          ? 'pro'
-          : null;
+    const plan = this.resolvePlanFromMetadata(
+      subscription.metadata?.plan,
+      planStatus,
+    );
 
     const periodEndUnix =
       subscription.items.data[0]?.current_period_end ??
@@ -400,10 +469,7 @@ export class BillingService {
     if (invoice.billing_reason === 'subscription_cycle') {
       await this.prisma.user.update({
         where: { id: user.id },
-        data: {
-          exportsUsedThisPeriod: 0,
-          planStatus: 'active',
-        },
+        data: { planStatus: 'active' },
       });
     }
   }

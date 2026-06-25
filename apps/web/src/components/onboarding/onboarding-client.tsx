@@ -120,16 +120,14 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
           <CardHeader>
             <CardTitle className="text-base">Choose your plan</CardTitle>
             <CardDescription>
-              No free tier. Start with Intro at $9/month or Pro at $29/month from day
-              one.
+              No free tier. Intro $9, Pro $29, or Studio $59 from day one.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-xl border p-4">
               <p className="font-medium">Intro — $9/mo</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Get started with 5 exports. Upgrade to Pro when you&apos;re
-                ready.
+                5 active projects. Upgrade when you need more slots or social formats.
               </p>
               <Button
                 className="mt-4"
@@ -143,11 +141,25 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
               <p className="font-medium">Pro — $29/mo</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Full access from day one. 15 exports per month, all aspect ratios, AI
-                assistant, brand from URL.
+                15 active projects, all social formats at 1080p, brand from URL,
+                custom music, AI assistant.
               </p>
               <Button className="mt-4" onClick={() => startCheckout("pro")} disabled={pending}>
                 Start Pro — $29/mo
+              </Button>
+            </div>
+            <div className="rounded-xl border p-4">
+              <p className="font-medium">Studio — $59/mo</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Unlimited projects, 4K export, and batch social format packs.
+              </p>
+              <Button
+                className="mt-4"
+                variant="outline"
+                onClick={() => startCheckout("studio")}
+                disabled={pending}
+              >
+                Start Studio — $59/mo
               </Button>
             </div>
             <Button variant="ghost" onClick={goToBilling} disabled={pending}>

@@ -11,7 +11,7 @@ import { createPageMetadata } from "@/lib/marketing/metadata";
 export const metadata: Metadata = createPageMetadata({
   title: "Pricing",
   description:
-    "Simple pricing for indie hackers and product owners. $9 Intro or $29 Pro.",
+    "Simple pricing for indie hackers and product owners. Intro $9, Pro $29, Studio $59.",
   path: "/pricing",
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import { FolderOpen, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,17 +36,22 @@ export function UsagePageClient() {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <PageHeader
-          title="Usage & exports"
-          description="Track exports and activity for this billing period."
+          title="Usage"
+          description="Active projects and activity for your workspace."
         />
         <p className="text-sm text-muted-foreground">Loading usage…</p>
       </div>
     );
   }
 
-  const used = status.exportsUsedThisPeriod;
-  const allowance = status.exportAllowance;
-  const percent = allowance > 0 ? Math.round((used / allowance) * 100) : 0;
+  const projectPercent = status.hasUnlimitedProjects
+    ? 0
+    : status.activeProjectLimit > 0
+      ? Math.round(
+          (status.activeProjectCount / status.activeProjectLimit) * 100,
+        )
+      : 0;
+
   const chartData = buildWeeklyExportChart(usage.events);
 
   const breakdown = Object.entries(usage.counts)
@@ -59,8 +64,8 @@ export function UsagePageClient() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <PageHeader
-        title="Usage & exports"
-        description="Track exports and activity for this billing period."
+        title="Usage"
+        description="Active projects and activity for your workspace."
       >
         {status.planStatus === "active" ? (
           <Button variant="outline" render={<Link href="/dashboard/billing" />}>
@@ -76,49 +81,55 @@ export function UsagePageClient() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="rounded-2xl">
           <CardHeader className="pb-2">
-            <CardDescription>Exports remaining</CardDescription>
-            <CardTitle className="text-3xl">{status.exportsRemaining}</CardTitle>
+            <CardDescription>Active projects</CardDescription>
+            <CardTitle className="text-3xl">{status.activeProjectCount}</CardTitle>
           </CardHeader>
         </Card>
         <Card className="rounded-2xl">
           <CardHeader className="pb-2">
-            <CardDescription>Used this period</CardDescription>
-            <CardTitle className="text-3xl">{used}</CardTitle>
+            <CardDescription>Slots remaining</CardDescription>
+            <CardTitle className="text-3xl">
+              {status.hasUnlimitedProjects ? "∞" : status.activeProjectsRemaining}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="text-xs text-muted-foreground">
-            of {allowance} included
-          </CardContent>
         </Card>
         <Card className="rounded-2xl">
           <CardHeader className="pb-2">
-            <CardDescription>Monthly allowance</CardDescription>
-            <CardTitle className="text-3xl">{allowance}</CardTitle>
+            <CardDescription>Plan limit</CardDescription>
+            <CardTitle className="text-3xl">
+              {status.hasUnlimitedProjects ? "Unlimited" : status.activeProjectLimit}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">
             {status.periodEnd
               ? `Renews ${new Date(status.periodEnd).toLocaleDateString()}`
-              : "Subscribe to unlock exports"}
+              : "Subscribe to create projects"}
           </CardContent>
         </Card>
       </div>
 
-      <Card className="rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-base">Export usage</CardTitle>
-          <CardDescription>
-            {percent}% of monthly allowance used. Exports count when a render
-            completes successfully — failed renders and previews are free.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-2 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${Math.min(100, percent)}%` }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {!status.hasUnlimitedProjects ? (
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <FolderOpen className="size-4" />
+              Project slots
+            </CardTitle>
+            <CardDescription>
+              {projectPercent}% used. Delete a project to create a new one.
+              Re-exports are unlimited.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${Math.min(100, projectPercent)}%` }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card className="rounded-2xl">
         <CardHeader>
@@ -149,9 +160,9 @@ export function UsagePageClient() {
 
       <Card className="rounded-2xl border-primary/15 bg-primary/5">
         <CardHeader>
-          <CardTitle className="text-base">Earn more exports</CardTitle>
+          <CardTitle className="text-base">Earn more project slots</CardTitle>
           <CardDescription>
-            Invite friends to Arco and earn bonus export credits when they subscribe.
+            Invite friends to Arco and earn bonus project slots when they subscribe.
           </CardDescription>
         </CardHeader>
         <CardContent>

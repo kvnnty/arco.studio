@@ -10,25 +10,21 @@
 
 ### Export allowance (not credits)
 
-Arco does **not** use Motionflare-style credits on AI generation or scene drafts. See [MOTIONFLARE-INSPIRATION.md](./MOTIONFLARE-INSPIRATION.md).
+Arco meters **active projects** per plan — not exports. Delete a project to free a slot.
 
 | Metered | Not metered (included in subscription) |
 |---------|----------------------------------------|
-| **Successful MP4 export** (1 slot per completed render) | Projects, uploads, AI analyze/draft, chat, regen |
-| | In-browser preview, failed exports |
+| **Active projects** in workspace | Re-exports per project, AI, preview, chat |
 
-**Product rule:** Users can iterate freely (edit, preview, regen, retry renders). **Export allowance decreases only when a render completes successfully** — not when queuing a job, not on failure, not on AI steps.
-
-**Planned code change:** ✅ `consumeExport()` on **`status: completed`**. In-flight cap at queue time.
+**Product rule:** Users can re-export the same project unlimited times. Intro/Pro must delete a project to create a new one when at cap.
 
 ### Public
 
 | Tier | Price | Includes |
 |------|-------|----------|
-| Intro | $9/mo | 5 exports/mo, full editor, 1080p 16:9 |
-| Pro | $29/mo | 15 exports/mo, brand kit, all formats, custom music, AI assistant |
-
-No team or seat-based tiers — Arco is solo-founder / product-owner focused.
+| Intro | $9/mo | 5 active projects, 1080p 16:9 |
+| Pro | $29/mo | 15 active projects, all formats 1080p, brand, custom music |
+| Studio | $59/mo | Unlimited projects, 4K, social export pack |
 
 ### Founding note
 

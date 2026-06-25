@@ -177,7 +177,7 @@ export class ReferralsService {
       }),
       this.prisma.user.update({
         where: { id: referral.referrerUserId },
-        data: { exportAllowance: { increment: credits } },
+        data: { extraProjectSlots: { increment: credits } },
       }),
       this.prisma.usageEvent.create({
         data: {
@@ -192,7 +192,7 @@ export class ReferralsService {
     ]);
 
     this.logger.log(
-      `Awarded ${credits} export credits to referrer ${referral.referrerUserId} for referral ${referral.id}`,
+      `Awarded ${credits} bonus project slots to referrer ${referral.referrerUserId} for referral ${referral.id}`,
     );
   }
 

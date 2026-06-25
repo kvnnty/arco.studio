@@ -4,7 +4,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { getExportDimensions, parseArcoProject, screenshotProjectDurationMs, isScreenshotProject } from '@arco/project-schema';
-import type { ArcoProject, ExportFormat } from '@arco/project-schema';
+import type { ArcoProject, ExportFormat, ExportQuality } from '@arco/project-schema';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
@@ -92,7 +92,11 @@ export class RenderProcessorService implements OnModuleInit {
     try {
       await mkdir(tempDir, { recursive: true });
 
-      const project = this.buildRenderProject(job.project, job.format);
+      const project = this.buildRenderProject(
+        job.project,
+        job.format,
+        job.quality ?? '1080p',
+      );
       await writeFile(
         propsPath,
         JSON.stringify({ project }),
@@ -118,7 +122,7 @@ export class RenderProcessorService implements OnModuleInit {
         },
       });
 
-      await this.billing.consumeExport(job.project.userId, jobId);
+      await this.billing.recordExport(job.project.userId, jobId);
 
       this.logger.log(`Render completed: ${jobId}`);
     } catch (error) {
@@ -146,11 +150,16 @@ export class RenderProcessorService implements OnModuleInit {
       title: string;
     },
     format: string,
+    quality: string,
   ): ArcoProject {
     let project = parseArcoProject(JSON.parse(projectRecord.projectData));
 
     const exportFormat = (format || project.exportFormat || '16:9') as ExportFormat;
-    const dims = getExportDimensions(exportFormat);
+    const exportQuality = quality === '4k' ? '4k' : '1080p';
+    const dims = getExportDimensions(
+      exportFormat,
+      exportQuality as ExportQuality,
+    );
     const screenshotMode = isScreenshotProject(project);
 
     const recordingSrc = screenshotMode

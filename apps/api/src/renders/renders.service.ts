@@ -27,12 +27,16 @@ export class RendersService {
       throw new ForbiddenException('Access denied');
     }
 
-    await this.billing.assertCanExport(userId);
+    const format = dto.format ?? project.exportFormat ?? '16:9';
+    const quality = dto.quality ?? '1080p';
+
+    await this.billing.assertCanRender(userId, format, quality);
 
     const job = await this.prisma.renderJob.create({
       data: {
         projectId: dto.projectId,
-        format: dto.format ?? project.exportFormat ?? '16:9',
+        format,
+        quality,
         status: 'queued',
       },
     });

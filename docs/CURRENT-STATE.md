@@ -1,43 +1,33 @@
 # Current state
 
-**Updated:** Custom music upload (Phase 4) shipped (June 2026).
+**Updated:** Studio tier ($59), project-slot billing, 4K export (June 2026).
 
 ## Implemented
 
 | Area | Status |
 |------|--------|
-| Auth + API JWT bridge | Done |
-| Durable projects (API + S3 + sync) | Done |
-| **Dashboard quick-create** | Recording + Screenshots tabs, BGM + Voice pickers |
-| **Screenshot storyboard** | Upload 3–10 PNGs → AI storyboard → editor → export |
-| **ElevenLabs voiceover** | Per-scene TTS, BGM ducking, mute option |
-| **BGM library** | 5 tracks with preview modal on create + customize panel |
-| **Custom music upload** | Pro ($29/mo) — MP3/WAV upload with rights checkbox |
-| **Template gallery** | `/dashboard/templates` + blueprint-driven drafts |
-| Brand from URL | `POST /brand/analyze-url` + chat analyze pipeline |
+| **Billing tiers** | Intro $9 · Pro $29 · **Studio $59** |
+| **Project slots** | 5 / 15 / unlimited — delete to free a slot |
+| **Exports** | Unlimited re-exports per project |
+| **Studio export** | 4K + batch social format pack |
+| Screenshot storyboard + ElevenLabs VO + custom music (Pro+) | Done |
 | Export MP4 | Render worker + screenshot + recording compositions |
-| **Export allowance** | Charged on **completed** render only |
-| **Stripe billing** | Launch Offer $9 → $29/mo Pro |
 
-## Core loop
+## Plans at a glance
 
-```
-Sign up → Billing → Create (recording or screenshots + BGM/voice) → Editor → Export MP4
-```
+| Plan | Active projects | Export |
+|------|-----------------|--------|
+| Intro | 5 | 1080p 16:9 |
+| Pro | 15 | 1080p all formats |
+| Studio | Unlimited | 4K + social pack |
 
 ## Local dev
 
 ```bash
 pnpm install
+pnpm --filter @arco/api exec prisma db push
 pnpm --filter @arco/api dev
 pnpm --filter @arco/web dev
 ```
 
-Set `ELEVENLABS_API_KEY` in `apps/api/.env` for voice generation. See [`DEPLOY.md`](./DEPLOY.md).
-
-## Next
-
-- Phase 5: Hybrid recording + screenshots, i18n
-- Licensed BGM tracks ([LICENSES-MUSIC.md](./LICENSES-MUSIC.md))
-- VO on recording-mode projects (optional)
-- Vision / click detection, landing demo video
+Add `STRIPE_PRICE_STUDIO_MONTHLY` in `apps/api/.env` for Studio checkout.

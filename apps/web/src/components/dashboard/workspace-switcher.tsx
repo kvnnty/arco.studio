@@ -27,9 +27,11 @@ export function WorkspaceSwitcher({ name, email }: WorkspaceSwitcherProps) {
 export function ExportsBadge({
   remaining,
   planActive,
+  unlimited = false,
 }: {
   remaining: number;
   planActive: boolean;
+  unlimited?: boolean;
 }) {
   return (
     <Button
@@ -43,8 +45,8 @@ export function ExportsBadge({
       <Zap className="size-3.5 text-primary" />
       {planActive ? (
         <>
-          <span className="font-medium">{remaining}</span>
-          <span className="text-muted-foreground">exports</span>
+          <span className="font-medium">{unlimited ? "∞" : remaining}</span>
+          <span className="text-muted-foreground">slots</span>
         </>
       ) : (
         <span className="font-medium">Subscribe</span>

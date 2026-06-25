@@ -38,6 +38,8 @@ export const stylePresetSchema = z.enum([
 
 export const exportFormatSchema = z.enum(["16:9", "1:1", "9:16"]);
 
+export const exportQualitySchema = z.enum(["1080p", "4k"]);
+
 export const projectModeSchema = z.enum(["recording", "screenshots"]);
 
 export const screenshotMotionSchema = z.enum([
@@ -149,6 +151,7 @@ export type ClickEffect = z.infer<typeof clickEffectSchema>;
 export type TransitionType = z.infer<typeof transitionTypeSchema>;
 export type StylePreset = z.infer<typeof stylePresetSchema>;
 export type ExportFormat = z.infer<typeof exportFormatSchema>;
+export type ExportQuality = z.infer<typeof exportQualitySchema>;
 export type ProjectMode = z.infer<typeof projectModeSchema>;
 export type ScreenshotMotion = z.infer<typeof screenshotMotionSchema>;
 export type ScreenshotScene = z.infer<typeof screenshotSceneSchema>;
@@ -265,17 +268,22 @@ export function projectDurationInFrames(project: ArcoProject): number {
   return msToFrames(durationMs, project.meta.fps);
 }
 
-export function getExportDimensions(format: ExportFormat): {
+export function getExportDimensions(
+  format: ExportFormat,
+  quality: ExportQuality = "1080p",
+): {
   width: number;
   height: number;
 } {
+  const scale = quality === "4k" ? 2 : 1;
+
   switch (format) {
     case "1:1":
-      return { width: 1080, height: 1080 };
+      return { width: 1080 * scale, height: 1080 * scale };
     case "9:16":
-      return { width: 1080, height: 1920 };
+      return { width: 1080 * scale, height: 1920 * scale };
     default:
-      return { width: 1920, height: 1080 };
+      return { width: 1920 * scale, height: 1080 * scale };
   }
 }
 
