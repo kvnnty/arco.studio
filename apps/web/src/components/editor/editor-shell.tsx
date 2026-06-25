@@ -22,6 +22,7 @@ import { apiChatStream } from "@/lib/api/client";
 import { ChatPanel } from "@/components/editor/chat-panel";
 import { CustomizePanel } from "@/components/editor/customize-panel";
 import { ExportDialog } from "@/components/editor/export-dialog";
+import { PipelinePanel } from "@/components/editor/pipeline-panel";
 import { SceneInspector } from "@/components/editor/scene-inspector";
 import {
   ScreenshotSceneInspector,
@@ -56,6 +57,11 @@ import {
   saveEditorSession,
   type EditorSession,
 } from "@/lib/editor/create-project";
+import { getUrlHostname } from "@/lib/editor/chat-types";
+import {
+  createInitialPipelineState,
+  type PipelineState,
+} from "@/lib/editor/generation-pipeline";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -81,6 +87,10 @@ export function EditorShell({
   const [exportOpen, setExportOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [pipeline, setPipeline] = useState<PipelineState>(
+    createInitialPipelineState(),
+  );
+  const [pipelineMarkers, setPipelineMarkers] = useState<Marker[]>([]);
   const brandKitRef = useRef<BrandKit | null>(null);
   const playerRef = useRef<PlayerRef>(null);
   const syncProject = useSyncProjectMutation();
@@ -94,6 +104,17 @@ export function EditorShell({
   const isAnalyzing =
     session.journeyStep === "analyzing" && !screenshotMode;
   const chatReady = session.journeyStep === "edit";
+  const productHostname = project.brief?.productUrl
+    ? getUrlHostname(project.brief.productUrl)
+    : undefined;
+
+  const handlePipelineChange = useCallback(
+    (nextPipeline: PipelineState, markers: Marker[]) => {
+      setPipeline(nextPipeline);
+      setPipelineMarkers(markers);
+    },
+    [],
+  );
 
   const selectedMarker = useMemo(
     () => project.markers.find((marker) => marker.id === selectedId) ?? null,
@@ -558,8 +579,8 @@ export function EditorShell({
       </header>
       <Separator />
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]">
-        <aside className="hidden min-h-0 border-r border-border lg:flex lg:flex-col">
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)]">
+        <aside className="flex max-h-[42vh] min-h-0 flex-col border-b border-border lg:max-h-none lg:border-b-0 lg:border-r">
           <ChatPanel
             projectTitle={session.projectName}
             platform={session.platform}
@@ -570,8 +591,10 @@ export function EditorShell({
             isAnalyzing={isAnalyzing}
             chatReady={chatReady}
             selectedMarker={selectedMarker}
+            pipelineMarkers={pipelineMarkers}
             onBrandAnalyzed={handleBrandAnalyzed}
             onAnalysisComplete={handleAnalysisComplete}
+            onPipelineChange={handlePipelineChange}
             onSendMessage={handleSendMessage}
             onRegenerateScene={handleRegenerateScene}
           />
@@ -579,15 +602,24 @@ export function EditorShell({
 
         <main className="flex min-h-0 flex-col overflow-y-auto p-4 sm:p-6">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
-            <VideoPreview
-              project={project}
-              playerRef={playerRef}
-              selectedMarker={selectedMarker}
-              screenshotMode={screenshotMode}
-              cameraMode={cameraMode}
-              onCameraModeChange={setCameraMode}
-              onFocusChange={updateFocus}
-            />
+            {isAnalyzing ? (
+              <PipelinePanel
+                pipeline={pipeline}
+                isGenerating={!chatReady}
+                markers={pipelineMarkers}
+                productHostname={productHostname}
+              />
+            ) : (
+              <>
+                <VideoPreview
+                  project={project}
+                  playerRef={playerRef}
+                  selectedMarker={selectedMarker}
+                  screenshotMode={screenshotMode}
+                  cameraMode={cameraMode}
+                  onCameraModeChange={setCameraMode}
+                  onFocusChange={updateFocus}
+                />
 
             {chatReady && screenshotMode ? (
               <ScreenshotSceneStrip
@@ -650,6 +682,8 @@ export function EditorShell({
                 Scene settings
               </Button>
             </div>
+              </>
+            )}
           </div>
         </main>
       </div>

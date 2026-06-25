@@ -13,6 +13,8 @@ export type BrandKitResult = {
   description?: string;
   screenshotUrl?: string;
   logoUrl?: string;
+  pageContent?: string;
+  pageContentChars?: number;
   colors: { primary: string; background: string };
   tone?: 'technical' | 'consumer' | 'enterprise';
   source: 'scrape' | 'fallback';
@@ -101,6 +103,13 @@ export class BrandService {
     const ogImage = meta('og:image');
     const themeColor = meta('theme-color');
 
+    const bodyText = $('body')
+      .text()
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 4000);
+    const pageContent = bodyText || description || title || undefined;
+
     const faviconHref =
       $('link[rel="apple-touch-icon"]').attr('href') ||
       $('link[rel="icon"]').attr('href') ||
@@ -120,6 +129,8 @@ export class BrandService {
       description,
       screenshotUrl,
       logoUrl,
+      pageContent,
+      pageContentChars: pageContent?.length,
       colors,
       tone,
       source: 'scrape',

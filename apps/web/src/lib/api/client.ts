@@ -539,6 +539,8 @@ export type BrandKitResponse = {
   description?: string;
   screenshotUrl?: string;
   logoUrl?: string;
+  pageContent?: string;
+  pageContentChars?: number;
   colors: { primary: string; background: string };
   tone?: "technical" | "consumer" | "enterprise";
   source: "scrape" | "fallback";
