@@ -2,12 +2,20 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Download, Film, Search } from "lucide-react";
+import { Download, Film, MoreHorizontal, Search, Trash2 } from "lucide-react";
 
+import { DeleteProjectTrigger } from "@/components/dashboard/delete-project-dialog";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { ProjectPoster } from "@/components/dashboard/project-poster";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -42,7 +50,7 @@ export function ProjectsListClient() {
         description="Create your first launch video — upload a screen recording and Arco handles the motion design."
         action={{
           label: "Create first project",
-          href: "/dashboard/projects/new",
+          href: "/dashboard",
         }}
       />
     );
@@ -67,8 +75,14 @@ export function ProjectsListClient() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((project) => (
-            <Link key={project.id} href={`/dashboard/projects/${project.id}`}>
-              <Card className="h-full overflow-hidden rounded-2xl py-0 transition-colors hover:bg-muted/30">
+            <Card
+              key={project.id}
+              className="relative h-full overflow-hidden rounded-2xl py-0 transition-colors hover:bg-muted/30"
+            >
+              <Link
+                href={`/dashboard/projects/${project.id}`}
+                className="block"
+              >
                 <div className="relative">
                   <ProjectPoster
                     title={project.title}
@@ -78,7 +92,7 @@ export function ProjectsListClient() {
                     compact
                     className="rounded-none rounded-t-2xl"
                   />
-                  <div className="absolute right-2 top-2">
+                  <div className="absolute right-2 top-2 flex items-center gap-1">
                     <ProjectStatusBadge status={project.status} />
                   </div>
                   {project.status === "completed" && project.latestExportUrl ? (
@@ -109,8 +123,39 @@ export function ProjectsListClient() {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
-            </Link>
+              </Link>
+              <div className="absolute left-2 top-2">
+                <DeleteProjectTrigger
+                  projectId={project.id}
+                  projectTitle={project.title}
+                >
+                  {({ onClick }) => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="icon-sm"
+                            className="size-8 bg-background/90 shadow-sm"
+                            aria-label={`Options for ${project.title}`}
+                            onClick={(event) => event.preventDefault()}
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        }
+                      />
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuItem variant="destructive" onClick={onClick}>
+                          <Trash2 className="size-4" />
+                          Delete project
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </DeleteProjectTrigger>
+              </div>
+            </Card>
           ))}
         </div>
       )}

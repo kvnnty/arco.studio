@@ -2,6 +2,7 @@ import type { ArcoProject, ExportFormat, StylePreset } from "@arco/project-schem
 
 import {
   apiCreateProject,
+  apiDeleteProject,
   apiGetProject,
   apiListProjects,
   apiUpdateProject,
@@ -115,4 +116,8 @@ export async function syncProjectRecord(
     markerCount: input.project.scenes?.length ?? input.project.markers.length,
     thumbnailUrl: input.thumbnailUrl,
   });
+}
+
+export async function deleteProject(token: string, projectId: string) {
+  return apiDeleteProject(token, projectId);
 }

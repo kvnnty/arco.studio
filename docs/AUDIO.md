@@ -4,6 +4,8 @@ Strategy, BGM licensing, voice (ElevenLabs), and mix standards.
 
 **See also:** [ROADMAP.md](./ROADMAP.md) Phase A (replace placeholders) · [TECHNICAL.md](./TECHNICAL.md)
 
+> **Sprint 1 (June 2026):** Placeholder/template BGM from `music-tracks.ts` is intentional. Licensed distinct tracks are deferred to a later sprint — see Phase A1 in [ROADMAP.md](./ROADMAP.md#phase-a--launch-blockers-12-weeks).
+
 ---
 
 ## Strategy

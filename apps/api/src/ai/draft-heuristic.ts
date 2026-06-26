@@ -36,8 +36,11 @@ function createMarkerId(): string {
 function pickMarkerTimes(durationMs: number, count: number): number[] {
   const margin = Math.min(2000, durationMs * 0.08);
   const usable = Math.max(durationMs - margin * 2, 1000);
-  const step = usable / (count + 1);
-  return Array.from({ length: count }, (_, i) =>
+  const minGap = 3000;
+  const maxByGap = Math.max(1, Math.floor(usable / minGap));
+  const effectiveCount = Math.min(count, maxByGap);
+  const step = usable / (effectiveCount + 1);
+  return Array.from({ length: effectiveCount }, (_, i) =>
     Math.round(margin + step * (i + 1)),
   );
 }
@@ -62,7 +65,7 @@ function pickClick(index: number) {
 }
 
 export function generateHeuristicDraftMarkers(durationMs: number): Marker[] {
-  const count = Math.min(4, Math.max(2, Math.floor(durationMs / 8000)));
+  const count = Math.min(5, Math.max(3, Math.floor(durationMs / 8000)));
   const times = pickMarkerTimes(durationMs, count);
 
   return times.map((startMs, index) => {

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Clock, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Clock, MoreHorizontal, Trash2 } from "lucide-react";
 
+import { DeleteProjectTrigger } from "@/components/dashboard/delete-project-dialog";
 import { ProjectDetailActions } from "@/components/dashboard/project-detail-actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ProjectPoster } from "@/components/dashboard/project-poster";
@@ -17,6 +18,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useProject } from "@/lib/api/hooks/projects";
 import type { ProjectStatus } from "@/lib/dashboard/types";
 
@@ -109,9 +116,32 @@ export function ProjectDetailClient({ id }: { id: string }) {
           className="flex-1"
         >
           <ProjectStatusBadge status={project.status} />
-          <Button variant="outline" size="icon-sm" disabled>
-            <MoreHorizontal className="size-4" />
-          </Button>
+          <DeleteProjectTrigger
+            projectId={project.id}
+            projectTitle={project.title}
+          >
+            {({ onClick }) => (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label="Project options"
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem variant="destructive" onClick={onClick}>
+                    <Trash2 className="size-4" />
+                    Delete project
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </DeleteProjectTrigger>
         </PageHeader>
       </div>
 
@@ -226,7 +256,7 @@ export function ProjectDetailClient({ id }: { id: string }) {
                     </p>
                   ) : step.failed ? (
                     <p className="mt-0.5 text-xs text-destructive">
-                      Export failed
+                      {project.latestRenderError ?? "Export failed"}
                     </p>
                   ) : (
                     <p className="mt-0.5 text-xs text-muted-foreground">
