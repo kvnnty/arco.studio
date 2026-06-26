@@ -25,7 +25,6 @@ import { useBillingStatus } from "@/lib/api/hooks/billing";
 import { useAuth } from "@/components/providers/auth-provider";
 import { buildProjectActivity } from "@/lib/dashboard/activity";
 import type { MusicTrackId } from "@/lib/editor/music-tracks";
-import { getMusicTrack } from "@/lib/editor/music-tracks";
 import { getDefaultVoiceId } from "@arco/project-schema/voices";
 
 type DashboardHomeClientProps = {

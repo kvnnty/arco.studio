@@ -127,7 +127,7 @@ export function AnalysisScreen({
           {detected.length > 0 ? (
             <div className="space-y-2 border-t border-border pt-4">
               <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Markers detected
+                Suggested markers
               </p>
               <ul className="space-y-1.5">
                 {detected.map((marker) => (

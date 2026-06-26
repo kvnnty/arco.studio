@@ -43,6 +43,7 @@ const clickEffects: { id: ClickEffect; label: string }[] = [
   { id: "spotlight", label: "Spotlight" },
   { id: "zoom", label: "Zoom" },
   { id: "glow", label: "Glow" },
+  { id: "callout", label: "Callout" },
 ];
 
 const transitions: { id: TransitionType; label: string }[] = [

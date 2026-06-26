@@ -18,6 +18,7 @@ export const clickEffectSchema = z.enum([
   "spotlight",
   "zoom",
   "glow",
+  "callout",
 ]);
 
 export const transitionTypeSchema = z.enum([
@@ -314,6 +315,11 @@ export function effectsFromClickEffect(
         { type: "glow", intensity: 0.9 },
         { type: "smooth-zoom", scale: 1 },
       ];
+    case "callout":
+      return [
+        { type: "feature-callout" },
+        { type: "smooth-zoom", scale: 1.08 },
+      ];
     default:
       return [{ type: "smooth-zoom", scale: 1 }];
   }
@@ -321,6 +327,7 @@ export function effectsFromClickEffect(
 
 export function clickEffectFromMarker(marker: Marker): ClickEffect {
   if (marker.clickEffect) return marker.clickEffect;
+  if (marker.effects.some((e) => e.type === "feature-callout")) return "callout";
   if (marker.effects.some((e) => e.type === "pulse")) return "pulse";
   if (marker.effects.some((e) => e.type === "glow")) return "glow";
   if (marker.effects.some((e) => e.type === "spotlight")) return "spotlight";
@@ -341,7 +348,8 @@ export function setMarkerClickEffect(
       e.type !== "smooth-zoom" &&
       e.type !== "pulse" &&
       e.type !== "glow" &&
-      e.type !== "spotlight",
+      e.type !== "spotlight" &&
+      e.type !== "feature-callout",
   );
   return {
     ...marker,

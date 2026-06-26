@@ -532,6 +532,16 @@ Tune per template; total frames must match `durationInFrames`.
 
 ## QA checklist
 
+### Sprint 1 golden path (manual)
+
+Run on local stack (Postgres + MinIO + FFmpeg + API + web):
+
+1. **Recording** — Sign in → dashboard create hero → upload MP4 → wait for AI draft → open editor → export 16:9 → download from project detail. Repeat export twice on same project (re-export should succeed).
+2. **Screenshots** — Dashboard Screenshots tab → upload 3+ images → generate storyboard → drag-reorder scenes in strip → export → confirm failed renders show `errorMessage` + **Retry export** on project detail.
+3. **Billing slots** — On Intro plan at 5/5 projects → delete one from list or detail → confirm slot frees → create new project.
+
+### Template / screenshot quality
+
 - [ ] All headlines readable at 1080p on phone
 - [ ] Screenshots sharp, correct aspect ratio
 - [ ] No VO / no “AI ad” cadence

@@ -19,10 +19,10 @@ export type AnalysisStep = {
 };
 
 export const ANALYSIS_STEPS: AnalysisStep[] = [
-  { id: "clicks", label: "Detecting mouse clicks", durationMs: 900 },
-  { id: "cursor", label: "Tracking cursor movement", durationMs: 800 },
-  { id: "pauses", label: "Finding pauses & transitions", durationMs: 800 },
-  { id: "navigation", label: "Mapping navigation changes", durationMs: 800 },
+  { id: "duration", label: "Reviewing recording length", durationMs: 700 },
+  { id: "pacing", label: "Applying template pacing", durationMs: 800 },
+  { id: "timings", label: "AI suggested timings", durationMs: 900 },
+  { id: "copy", label: "Drafting headlines & callouts", durationMs: 900 },
   { id: "draft", label: "Building motion draft", durationMs: 900 },
 ];
 
@@ -46,8 +46,11 @@ const DRAFT_CLICK_EFFECTS = ["ripple", "zoom", "ripple", "spotlight"] as const;
 function pickMarkerTimes(durationMs: number, count: number): number[] {
   const margin = Math.min(2000, durationMs * 0.08);
   const usable = Math.max(durationMs - margin * 2, 1000);
-  const step = usable / (count + 1);
-  return Array.from({ length: count }, (_, i) =>
+  const minGap = 3000;
+  const maxByGap = Math.max(1, Math.floor(usable / minGap));
+  const effectiveCount = Math.min(count, maxByGap);
+  const step = usable / (effectiveCount + 1);
+  return Array.from({ length: effectiveCount }, (_, i) =>
     Math.round(margin + step * (i + 1)),
   );
 }
@@ -72,10 +75,7 @@ function pickClick(index: number) {
 }
 
 export function generateDraftMarkers(durationMs: number): Marker[] {
-  const count = Math.min(
-    4,
-    Math.max(2, Math.floor(durationMs / 8000)),
-  );
+  const count = Math.min(5, Math.max(3, Math.floor(durationMs / 8000)));
   const times = pickMarkerTimes(durationMs, count);
 
   return times.map((startMs, index) => {

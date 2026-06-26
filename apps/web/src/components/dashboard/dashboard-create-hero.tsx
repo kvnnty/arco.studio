@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import {
   createAndUploadProject,
   deriveProjectTitle,
@@ -133,11 +134,12 @@ export function DashboardCreateHero({
 
       router.push(`/editor?projectId=${projectId}`);
     } catch (submitError) {
-      setError(
+      const message =
         submitError instanceof Error
           ? submitError.message
-          : "Could not create project.",
-      );
+          : "Could not create project.";
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
       setUploadProgress(null);
@@ -190,11 +192,12 @@ export function DashboardCreateHero({
 
       router.push(`/editor?projectId=${projectId}`);
     } catch (submitError) {
-      setError(
+      const message =
         submitError instanceof Error
           ? submitError.message
-          : "Could not create project.",
-      );
+          : "Could not create project.";
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
       setUploadProgress(null);

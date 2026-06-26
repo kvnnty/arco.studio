@@ -72,8 +72,8 @@ export function AssetsPageClient() {
               title="No assets yet"
               description="Upload a recording when creating a project. Exports appear here after you render."
               action={{
-                label: "New project",
-                href: "/dashboard/projects/new",
+                label: "Create project",
+                href: "/dashboard",
               }}
             />
           ) : (

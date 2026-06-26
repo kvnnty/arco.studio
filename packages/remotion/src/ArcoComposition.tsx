@@ -14,6 +14,7 @@ import { VoiceTrack } from "./components/VoiceTrack";
 import { RecordingLayer } from "./components/RecordingLayer";
 import { ScreenshotStoryboard } from "./components/ScreenshotStoryboard";
 import { TitleCard } from "./components/TitleCard";
+import { FeatureCallout } from "./components/FeatureCallout";
 
 export type ArcoCompositionProps = {
   project: ArcoProject;
@@ -61,6 +62,16 @@ export const ArcoComposition: React.FC<ArcoCompositionProps> = ({
             marker={marker}
             primary={primary}
             background={background}
+          />
+        ))}
+      {!screenshotMode &&
+        project.markers.map((marker) => (
+          <FeatureCallout
+            key={`callout-${marker.id}`}
+            frame={frame}
+            fps={project.meta.fps}
+            marker={marker}
+            primary={primary}
           />
         ))}
       {!screenshotMode &&

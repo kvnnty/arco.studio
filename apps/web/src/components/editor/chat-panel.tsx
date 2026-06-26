@@ -79,7 +79,6 @@ export function ChatPanel({
   isAnalyzing,
   chatReady,
   selectedMarker,
-  pipelineMarkers,
   onBrandAnalyzed,
   onAnalysisComplete,
   onPipelineChange,

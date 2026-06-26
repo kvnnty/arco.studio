@@ -245,6 +245,16 @@ export async function apiUpdateProject(
   });
 }
 
+export async function apiDeleteProject(
+  token: string,
+  projectId: string,
+): Promise<{ deleted: boolean }> {
+  return apiRequest<{ deleted: boolean }>(`/projects/${projectId}`, {
+    token,
+    method: "DELETE",
+  });
+}
+
 export async function uploadRecordingWithProgress(
   token: string,
   file: File,

@@ -9,6 +9,7 @@ import { FeatureGrid } from "@/components/marketing/feature-grid";
 import { Hero } from "@/components/marketing/hero";
 import { LogoCloud } from "@/components/marketing/logo-cloud";
 import { HeroPreview } from "@/components/marketing/motion/hero-preview";
+import { BeforeAfterDemo } from "@/components/marketing/before-after-demo";
 import { MotionReveal } from "@/components/marketing/motion/motion-reveal";
 import { PricingCards } from "@/components/marketing/pricing-cards";
 import { SectionHeader } from "@/components/marketing/section-header";
@@ -61,6 +62,8 @@ export default function HomePage() {
       />
 
       <HeroPreview />
+
+      <BeforeAfterDemo />
 
       <LogoCloud logos={logoCloud} />
 

@@ -3,6 +3,7 @@ import type { ArcoProject } from "@arco/project-schema";
 
 import {
   createProject,
+  deleteProject,
   fetchDashboardProject,
   fetchDashboardProjects,
   fetchEditorProject,
@@ -84,6 +85,25 @@ export function useSyncProjectMutation() {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
       });
+    },
+  });
+}
+
+export function useDeleteProjectMutation() {
+  const { token } = useApiClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (projectId: string) => {
+      if (!token) throw new Error("Not authenticated");
+      return deleteProject(token, projectId);
+    },
+    onSuccess: (_data, projectId) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+      void queryClient.removeQueries({
+        queryKey: queryKeys.projects.detail(projectId),
+      });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.billing.status });
     },
   });
 }

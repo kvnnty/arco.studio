@@ -3,7 +3,8 @@
 import type { ArcoProject, ScreenshotScene } from "@arco/project-schema";
 import { msToFrames } from "@arco/project-schema";
 import type { PlayerRef } from "@remotion/player";
-import { Trash2 } from "lucide-react";
+import { GripVertical, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -17,6 +18,7 @@ type ScreenshotSceneStripProps = {
   playerRef: React.RefObject<PlayerRef | null>;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  onReorder?: (orderedIds: string[]) => void;
 };
 
 function sceneStartMs(scenes: ScreenshotScene[], index: number): number {
@@ -34,7 +36,24 @@ export function ScreenshotSceneStrip({
   playerRef,
   onSelect,
   onDelete,
+  onReorder,
 }: ScreenshotSceneStripProps) {
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const handleDrop = (targetId: string) => {
+    if (!draggingId || draggingId === targetId || !onReorder) return;
+
+    const ids = scenes.map((scene) => scene.id);
+    const fromIndex = ids.indexOf(draggingId);
+    const toIndex = ids.indexOf(targetId);
+    if (fromIndex < 0 || toIndex < 0) return;
+
+    ids.splice(fromIndex, 1);
+    ids.splice(toIndex, 0, draggingId);
+    onReorder(ids);
+    setDraggingId(null);
+  };
+
   return (
     <ScrollArea className="w-full whitespace-nowrap">
       <div className="flex gap-2 pb-2">
@@ -48,8 +67,19 @@ export function ScreenshotSceneStrip({
               className={cn(
                 "group relative w-36 shrink-0 overflow-hidden rounded-lg border",
                 isSelected ? "border-primary ring-2 ring-primary/20" : "border-border",
+                draggingId === scene.id && "opacity-50",
               )}
+              draggable={Boolean(onReorder)}
+              onDragStart={() => setDraggingId(scene.id)}
+              onDragEnd={() => setDraggingId(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => handleDrop(scene.id)}
             >
+              {onReorder ? (
+                <span className="absolute left-1 top-1 z-10 rounded bg-background/80 p-0.5 opacity-0 group-hover:opacity-100">
+                  <GripVertical className="size-3 text-muted-foreground" />
+                </span>
+              ) : null}
               <button
                 type="button"
                 className="block w-full text-left"
@@ -115,13 +145,13 @@ export function ScreenshotSceneInspector({
   }
 
   const applyScene = (nextScene: ScreenshotScene) => {
-    const scenes = (project.scenes ?? []).map((s) =>
+    const nextScenes = (project.scenes ?? []).map((s) =>
       s.id === nextScene.id ? nextScene : s,
     );
-    const durationMs = scenes.reduce((sum, s) => sum + s.durationMs, 0);
+    const durationMs = nextScenes.reduce((sum, s) => sum + s.durationMs, 0);
     onProjectUpdate({
       ...project,
-      scenes,
+      scenes: nextScenes,
       recording: { ...project.recording, durationMs },
     });
     onChange(nextScene);

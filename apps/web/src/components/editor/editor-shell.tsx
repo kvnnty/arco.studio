@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useAuth } from "@/components/providers/auth-provider";
 import Link from "next/link";
 import { Settings2, SlidersHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { BrandKit } from "@/lib/api/hooks/brand";
@@ -162,7 +163,10 @@ export function EditorShell({
         },
         {
           onSuccess: () => setSaveStatus("saved"),
-          onError: () => setSaveStatus("error"),
+          onError: () => {
+            setSaveStatus("error");
+            toast.error("Could not save project. Check your connection and try again.");
+          },
         },
       );
     }, 500);
@@ -491,6 +495,27 @@ export function EditorShell({
     [project, updateProject],
   );
 
+  const reorderScenes = useCallback(
+    (orderedIds: string[]) => {
+      const sceneList = project.scenes ?? [];
+      const byId = new Map(sceneList.map((scene) => [scene.id, scene]));
+      const reordered = orderedIds
+        .map((id) => byId.get(id))
+        .filter((scene): scene is NonNullable<typeof scene> => Boolean(scene));
+      const remaining = sceneList.filter(
+        (scene) => !orderedIds.includes(scene.id),
+      );
+      const nextScenes = [...reordered, ...remaining];
+      const durationMs = nextScenes.reduce((sum, s) => sum + s.durationMs, 0);
+      updateProject({
+        ...project,
+        scenes: nextScenes,
+        recording: { ...project.recording, durationMs },
+      });
+    },
+    [project, updateProject],
+  );
+
   const handleRegenerateScene = useCallback(async () => {
     if (selectedMarkerIndex === undefined || selectedMarkerIndex < 0) return;
     const chatAction = await executeChatAction({
@@ -645,6 +670,7 @@ export function EditorShell({
                   });
                   setSelectedId(nextScenes[0]?.id ?? null);
                 }}
+                onReorder={reorderScenes}
               />
             ) : null}
 

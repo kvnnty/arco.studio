@@ -22,8 +22,8 @@ Current gaps — shipped in code but not production-grade.
 | Area | Feature | Current state | Target state |
 |------|---------|---------------|--------------|
 | **Workflow** | End-to-end < 20 min | Needs Postgres + MinIO + FFmpeg locally | Documented one-command or hosted staging env |
-| **AI** | Analyze recording | Heuristic timing | Acceptable v1 + roadmap to CV; clear UI label |
-| **AI** | Feature callout preset | Schema only | Inspector control + Remotion render |
+| **AI** | Analyze recording | Heuristic timing + honest UI labels | CV click detection (backlog) |
+| **AI** | Feature callout preset | Shipped — inspector + Remotion | — |
 | **Brand** | Brand kit | Per-project `ArcoProject.brand` | Document as v1; optional workspace kit later |
 | **Monetization** | Invoices & history | Stripe Customer Portal only | Portal linked prominently; optional in-app list |
 | **Dashboard** | Usage chart | Derived from usage events | Accurate labels; hide if sparse data |
@@ -56,7 +56,7 @@ Current gaps — shipped in code but not production-grade.
 
 **Exit:** User hears **different** moods in picker; legal doc complete; export mix matches preview.
 
-### A2. Delete project + slot freeing
+### A2. Delete project + slot freeing ✅ Sprint 1
 
 | Task | Effort |
 |------|--------|
@@ -66,15 +66,15 @@ Current gaps — shipped in code but not production-grade.
 
 **Exit:** Intro user at 5/5 slots can delete one project and create another.
 
-### A3. Export reliability
+### A3. Export reliability ✅ Sprint 1
 
 | Task | Effort |
 |------|--------|
 | Failed render → clear error in UI + retry | 4h |
-| `consumeExport()` only on completed (verify) | 2h |
+| Project-slot billing (re-exports unlimited per project) | 2h |
 | One documented golden path QA script | 2h |
 
-**Exit:** 3 consecutive recording + screenshot exports succeed on staging.
+**Exit:** 3 consecutive recording + screenshot exports succeed on staging. QA script: [TECHNICAL.md](./TECHNICAL.md#sprint-1-golden-path-manual).
 
 ---
 
@@ -82,7 +82,7 @@ Current gaps — shipped in code but not production-grade.
 
 **Goal:** Users feel the product is *designed*, not *assembled*.
 
-### B1. Landing & social proof
+### B1. Landing & social proof ✅ Sprint 1 (posters; MP4 swap optional)
 
 | Task | Effort |
 |------|--------|
@@ -92,7 +92,7 @@ Current gaps — shipped in code but not production-grade.
 
 **Exit:** New visitor understands value in < 10 seconds without signing up.
 
-### B2. AI honesty + fallback
+### B2. AI honesty + fallback ✅ Sprint 1
 
 | Task | Effort |
 |------|--------|
@@ -102,7 +102,7 @@ Current gaps — shipped in code but not production-grade.
 
 **Exit:** Recording upload never produces empty or single-scene broken draft.
 
-### B3. Editor polish
+### B3. Editor polish ✅ Sprint 1
 
 | Task | Effort |
 |------|--------|
@@ -304,7 +304,7 @@ See [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) for full list
 | [ ] | Target audience picker (founders, PMM, devtools, etc.) | Would improve AI draft tone |
 | [ ] | Tone picker — minimal, bold, technical | Partially inferred from URL scrape today |
 | [ ] | Target length — 15s / 30s / 60s / 90s | AI uses heuristics; no explicit user control |
-| [ ] | Delete project | Billing uses project slots; delete should free a slot |
+| [x] | Delete project | Shipped Sprint 1 — frees project slot |
 | [ ] | Duplicate project | Fast iteration for A/B exports |
 | [ ] | Recording library — re-use upload across projects | Assets page is mock-derived |
 | [ ] | Assets page (real library) | List recordings, exports, brand assets |
@@ -324,8 +324,8 @@ See [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) for full list
 
 | | Feature | Notes |
 |---|---------|-------|
-| [ ] | Feature callout (text + pointer) | Schema exists; not in inspector |
-| [ ] | Reorder scenes (drag) | Add/delete exists |
+| [x] | Feature callout (text + pointer) | Inspector + Remotion |
+| [x] | Reorder scenes (drag) | Recording + screenshot strips |
 | [ ] | Split scene | |
 | [ ] | Merge scenes | |
 | [ ] | Intro card (logo + headline from URL) | Post-MVP polish |
@@ -348,7 +348,7 @@ See [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) for full list
 | | Feature | Notes |
 |---|---------|-------|
 | [ ] | Free tier (1 export/mo or similar) | Intro $9 is entry paid tier today |
-| [ ] | Before/after demo on landing | Strongest conversion asset |
+| [~] | Before/after demo on landing | `BeforeAfterDemo` shipped; replace posters with real MP4 exports |
 | [ ] | Public example exports / gallery | Social proof |
 | [ ] | Product Hunt launch kit | Assets, copy, video |
 | [ ] | Invoices in-app (beyond Stripe portal) | Portal works; no first-party history UI |
@@ -533,14 +533,12 @@ Document mix decisions in [AUDIO.md](./AUDIO.md) when implemented in Remotion.
 
 What to build **after** partial items in [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) are addressed:
 
-1. **Licensed BGM assets** — highest leverage for perceived quality; legal blocker for launch
-2. **Delete project** — unlocks project-slot billing trust
-3. **Landing before/after demo** — conversion
-4. **Vision / click detection** — recording mode quality moat
-5. **Scene reorder (drag)** — editor completeness
-6. **Hybrid mode** — recording + screenshot B-roll
-7. **VO on recording mode** — optional stretch
-8. **Free tier** — funnel (if GTM requires)
+1. **Licensed BGM assets** — highest leverage for perceived quality; legal blocker for launch (deferred from Sprint 1)
+2. **Landing MP4 demos** — replace poster stand-ins with real Arco exports
+3. **Vision / click detection** — recording mode quality moat
+4. **Hybrid mode** — recording + screenshot B-roll
+5. **VO on recording mode** — optional stretch
+6. **Free tier** — funnel (if GTM requires)
 
 ---
 
@@ -551,8 +549,8 @@ All must be true:
 - [ ] Library BGM: 5+ **distinct**, **licensed** tracks with documented sources
 - [ ] Screenshot path: brief → storyboard → VO → export < 10 min for new user
 - [ ] Recording path: upload → sensible markers → export without manual fix of every scene
-- [ ] Landing shows real before/after from Arco (not stock)
-- [ ] Delete project works; slots and billing copy match behavior
+- [~] Landing shows real before/after from Arco (not stock) — component shipped; MP4 assets pending
+- [x] Delete project works; slots and billing copy match behavior
 - [ ] First export success rate > 90% in beta (infra + error handling)
 - [ ] Output side-by-side beats CapCut static slideshow on same screenshots (5s test)
 

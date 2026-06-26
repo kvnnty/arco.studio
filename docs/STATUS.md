@@ -18,7 +18,7 @@ Current snapshot, feature matrix, and engineering checklist.
 | Area | Status |
 |------|--------|
 | **Billing tiers** | Intro $9 · Pro $29 · **Studio $59** |
-| **Project slots** | 5 / 15 / unlimited — delete to free a slot *(API/UI: see [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active))* |
+| **Project slots** | 5 / 15 / unlimited — delete to free a slot (dashboard UI shipped) |
 | **Exports** | Unlimited re-exports per project |
 | **Studio export** | 4K + batch social format pack *(QA: [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active))* |
 | Screenshot storyboard + ElevenLabs VO + custom music (Pro+) | Done |
@@ -35,8 +35,7 @@ Current snapshot, feature matrix, and engineering checklist.
 |-----|-----|
 | BGM library sounds identical (placeholder files) | [AUDIO.md](./AUDIO.md) |
 | Recording AI uses heuristics, not CV | [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) |
-| Delete / duplicate project | [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) |
-| Landing before/after demo | [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) Phase B |
+| Duplicate project | [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) |
 | Render queue in-memory | [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) Phase D |
 
 ---
@@ -68,10 +67,8 @@ Add `STRIPE_PRICE_STUDIO_MONTHLY` in `apps/api/.env` for Studio checkout.
 
 ## Next work (recommended order)
 
-1. **Phase A** — Licensed BGM + delete project + export reliability ([ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active))
-2. **Phase B** — Landing demo + editor polish + format QA
-3. **Phase C** — Real assets page + auth on staging
-4. **Phase D** — Persistent render queue + vision/click detection
+1. **Phase A1** — Licensed BGM ([AUDIO.md](./AUDIO.md)) — deferred from Sprint 1
+2. **Phase B4 / C / D** — Format QA, real assets page, persistent render queue, vision/CV
 
 Full backlog: [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets)
 
@@ -126,7 +123,7 @@ The product loop every user should complete.
 | [x] | Choose style at create | Wired via upload helper |
 | [x] | Projects saved to cloud | API + Postgres |
 | [x] | Re-open project after refresh | `?projectId=` load |
-| [ ] | Delete project | — |
+| [x] | Delete project | Dashboard list + detail; frees slot |
 | [ ] | Duplicate project | — |
 
 ---
@@ -135,7 +132,7 @@ The product loop every user should complete.
 
 | | Feature | Status |
 |---|---------|--------|
-| [~] | Analyze recording for key moments | Heuristic timing; no CV yet |
+| [~] | Analyze recording for key moments | Heuristic timing; UI labels “AI suggested timings” |
 | [ ] | Detect clicks & cursor (real CV) | Week 5+ |
 | [ ] | Detect pauses & navigation changes | Week 5+ |
 | [x] | Draft from user brief + intent | LLM when `OPENAI_API_KEY` set |
@@ -182,7 +179,7 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 | [x] | Spotlight | |
 | [x] | Pulse | |
 | [x] | Glow | |
-| [~] | Feature callout (text + pointer) | Schema only |
+| [x] | Feature callout (text + pointer) | Inspector + Remotion `FeatureCallout` |
 | [x] | Click effect picker — none, ripple, pulse, spotlight, zoom, glow | |
 | [x] | Zoom strength slider | |
 | [x] | Scene transitions — fade, push, scale, blur, morph, slide | |
@@ -191,7 +188,7 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 | [x] | Add scene at playhead | |
 | [x] | Delete scene | |
 | [x] | Scene start time & duration | |
-| [ ] | Reorder scenes (drag) | |
+| [x] | Reorder scenes (drag) | Recording + screenshot strips |
 | [ ] | Split scene | |
 | [ ] | Merge scenes | |
 | [-] | Freeform keyframes | Post-MVP |
@@ -308,7 +305,7 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 |---|---------|--------|
 | [x] | Marketing landing page | |
 | [x] | Waitlist | |
-| [ ] | Before/after demo video on landing | |
+| [~] | Before/after demo video on landing | `BeforeAfterDemo` on home (poster stand-ins; swap MP4 when ready) |
 | [ ] | Public example exports | |
 | [x] | Referral / invite | |
 | [ ] | Product Hunt launch assets | |
@@ -383,11 +380,11 @@ All must be checked before MVP launch:
 
 See **[ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active)** for phased execution. Summary:
 
-1. **Phase A** — Licensed BGM ([AUDIO.md](./AUDIO.md)), delete project, export reliability
-2. **Phase B** — Landing demo, feature callout, scene reorder, format QA
+1. **Phase A1** — Licensed BGM ([AUDIO.md](./AUDIO.md)) — deferred from Sprint 1
+2. **Phase B4** — Format fidelity QA (9:16, 1:1, Studio 4K)
 3. **Phase C** — Real assets page, auth on staging, usage/notifications
 4. **Phase D** — Persistent render queue, vision/click detection
-5. **Backlog** — Hybrid mode, VO on recording, free tier ([ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets))
+5. **Backlog** — Hybrid mode, VO on recording, free tier, landing MP4 demos ([ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets))
 
 ---
 
@@ -560,12 +557,12 @@ See **[ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active)** for phased executi
 
 - [ ] Render progress UI — % or stage labels in dashboard + export dialog
 - [ ] Replace mock stats on dashboard (credits, activity) with real data or hide until ready
-- [ ] Empty states link to working create flow
-- [ ] Error toasts for API, upload, render failures
+- [x] Empty states link to working create flow
+- [x] Error toasts for API, upload, render failures
 
 ### Landing & demo
 
-- [ ] Before/after demo on landing page (real Arco output)
+- [~] Before/after demo on landing page (real Arco output) — `BeforeAfterDemo` with poster stand-ins
 - [ ] Update [PRODUCT.md](./PRODUCT.md) copy to match shipped features
 
 ### Monetization (optional for soft launch)
