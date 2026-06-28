@@ -17,11 +17,11 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         <div className="flex-1 p-6 flex items-end">
           <div>
             <blockquote className="text-5xl font-bold tracking-tight leading-tight text-balance">
-              Turn screen recordings into motion-designed promotional videos.
+              Launch videos without hiring a motion designer.
             </blockquote>
             <p className="mt-4">
-              Upload once. Arco adds zooms, ripples, and titles — export a
-              launch-ready demo in minutes.
+              Built for product owners. Record your app, describe the launch,
+              and export social ads, demos, and feature videos in minutes.
             </p>
           </div>
         </div>

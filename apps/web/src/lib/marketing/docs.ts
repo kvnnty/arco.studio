@@ -1,3 +1,5 @@
+import { VIDEO_TYPES } from "@/lib/marketing/video-types";
+
 export type DocPage = {
   slug: string[];
   title: string;
@@ -33,6 +35,7 @@ export const docsNavigation: DocNavGroup[] = [
     title: "Guides",
     items: [
       { title: "Brand kits", href: "/docs/guides/brand-kits" },
+      { title: "Writing your brief", href: "/docs/guides/writing-your-brief" },
       { title: "AI assistant", href: "/docs/guides/ai-assistant" },
       { title: "Export formats", href: "/docs/guides/export-formats" },
     ],
@@ -63,7 +66,7 @@ const docsPages: Record<string, DocPage> = {
     sections: [
       {
         type: "paragraph",
-        text: "Arco transforms screen recordings into motion-designed promotional videos. Upload a recording, let AI analyze your scenes, customize the result, and export a polished MP4 in minutes.",
+        text: "Arco transforms screen recordings into launch-ready product videos — social ads, launch reels, feature drops, and more. Built for product owners who don't want to hire a motion designer for every release.",
       },
       {
         type: "heading",
@@ -73,10 +76,10 @@ const docsPages: Record<string, DocPage> = {
       {
         type: "list",
         items: [
-          "Landing page hero videos",
-          "Product walkthrough demos",
-          "Social media clips in 1:1 and 9:16",
-          "Onboarding and feature announcement videos",
+          "15-second social ads for Instagram and paid campaigns",
+          "Product launch and feature announcement videos",
+          "Landing page walkthroughs and onboarding demos",
+          "9:16 and 1:1 exports — no freelancer required",
         ],
       },
       {
@@ -171,7 +174,7 @@ const docsPages: Record<string, DocPage> = {
     title: "Brand kits",
     description: "Extract and apply your brand identity automatically.",
     prev: { title: "Your first export", href: "/docs/first-export" },
-    next: { title: "AI assistant", href: "/docs/guides/ai-assistant" },
+    next: { title: "Writing your brief", href: "/docs/guides/writing-your-brief" },
     sections: [
       {
         type: "paragraph",
@@ -188,11 +191,43 @@ const docsPages: Record<string, DocPage> = {
       },
     ],
   },
+  "guides/writing-your-brief": {
+    slug: ["guides", "writing-your-brief"],
+    title: "Writing your brief",
+    description: "Describe the video format, duration, and creative direction.",
+    prev: { title: "Brand kits", href: "/docs/guides/brand-kits" },
+    next: { title: "AI assistant", href: "/docs/guides/ai-assistant" },
+    sections: [
+      {
+        type: "paragraph",
+        text: "Your brief tells Arco what kind of video you are making. The prompt determines the format — include a target duration and creative direction so the AI can pace scenes, copy, and motion correctly.",
+      },
+      {
+        type: "heading",
+        text: "Video types",
+        id: "video-types",
+      },
+      {
+        type: "table",
+        headers: ["Type", "Duration", "Example"],
+        rows: VIDEO_TYPES.map((type) => [
+          type.label,
+          type.duration,
+          type.examplePrompt,
+        ]),
+      },
+      {
+        type: "callout",
+        variant: "tip",
+        text: "On the dashboard, click a video type chip to insert an example prompt — then edit it to match your product.",
+      },
+    ],
+  },
   "guides/ai-assistant": {
     slug: ["guides", "ai-assistant"],
     title: "AI assistant",
     description: "Use natural language to edit your project.",
-    prev: { title: "Brand kits", href: "/docs/guides/brand-kits" },
+    prev: { title: "Writing your brief", href: "/docs/guides/writing-your-brief" },
     next: { title: "Export formats", href: "/docs/guides/export-formats" },
     sections: [
       {

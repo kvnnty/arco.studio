@@ -21,8 +21,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { BriefInput } from "@/components/dashboard/brief-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   createAndUploadProject,
@@ -231,12 +231,10 @@ export function DashboardCreateHero({
               onChange={setProductUrl}
               disabled={submitting}
             />
-            <Textarea
+            <BriefInput
               value={brief}
-              onChange={(event) => setBrief(event.target.value)}
-              placeholder="Product Hunt launch, onboarding demo, feature announcement…"
-              rows={3}
-              className="min-h-[88px] resize-none"
+              onChange={setBrief}
+              disabled={submitting}
             />
           </div>
 

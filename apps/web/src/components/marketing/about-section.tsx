@@ -11,18 +11,19 @@ export function AboutSection() {
             About Arco
           </p>
           <h2 className="marketing-heading text-[2rem] leading-tight sm:text-[2.5rem]">
-            Built for indie hackers and product owners
+            Built for product owners who don&apos;t want to hire again
           </h2>
           <p className="mt-4 text-pretty text-[16px] leading-relaxed text-marketing-muted">
-            Arco started with a simple idea: every SaaS needs polished product videos,
-            but most solo founders don&apos;t have motion design skills or budget.
+            Every launch needs video — social ads, product tours, feature drops.
+            Most product owners don&apos;t have motion design skills or budget for
+            a freelancer on every release.
           </p>
         </MotionReveal>
         <MotionReveal delay={0.1} className="mt-8 space-y-4 text-[16px] leading-relaxed text-marketing-muted">
           <p>
-            We automate the motion layer so you can record once — or upload
-            screenshots — and publish launch-ready demos in minutes. No After Effects.
-            No agency retainer.
+            Arco automates the motion layer so you record once — or upload
+            screenshots — and ship every format yourself. No After Effects.
+            No agency retainer. No waiting on a designer between launches.
           </p>
           <p>
             Questions or feedback:{" "}

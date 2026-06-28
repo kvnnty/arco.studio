@@ -6,7 +6,7 @@ model User {
   emailVerified         Boolean          @default(false)
   emailVerifiedAt       DateTime?
   onboardingCompleted   Boolean          @default(false)
-  onboardingStep        String           @default("plan")
+  onboardingStep        String           @default("profile")
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
   stripeCustomerId      String?          @unique

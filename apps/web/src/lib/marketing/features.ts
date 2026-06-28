@@ -15,8 +15,8 @@ export type Feature = {
 };
 
 export const heroFeatures = [
-  "AI-powered scene detection",
-  "Brand-aware styling",
+  "Social ads to product launches",
+  "No motion designer to hire",
   "Export in minutes",
 ];
 

@@ -237,7 +237,7 @@ export class OAuthService {
         name: profile.name,
         emailVerified: profile.emailVerified,
         emailVerifiedAt: profile.emailVerified ? new Date() : null,
-        onboardingStep: 'plan',
+        onboardingStep: 'profile',
         exportAllowance: Number(process.env.EXPORT_ALLOWANCE_PRO ?? 15),
       },
     });

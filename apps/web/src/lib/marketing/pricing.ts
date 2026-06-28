@@ -16,7 +16,7 @@ export const pricingPlans: PricingPlan[] = [
     id: "trial",
     name: "Intro",
     description:
-      "Try Arco at a lower price — built for indie hackers validating a launch.",
+      "Try Arco at a lower price — built for product owners validating a launch without hiring video help.",
     monthlyPrice: 9,
     annualPrice: 9,
     features: [
@@ -34,7 +34,7 @@ export const pricingPlans: PricingPlan[] = [
     id: "pro",
     name: "Pro",
     description:
-      "Ship polished demos every week as a solo founder or product owner.",
+      "Ship polished launch videos every week — without hiring a motion designer each time.",
     monthlyPrice: 29,
     annualPrice: 24,
     features: [

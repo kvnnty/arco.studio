@@ -2,14 +2,16 @@ import type { Metadata } from "next";
 
 import { CtaBand } from "@/components/marketing/cta-band";
 import { FeatureGrid } from "@/components/marketing/feature-grid";
+import { ProductOwnerSection } from "@/components/marketing/product-owner-section";
 import { SectionHeader } from "@/components/marketing/section-header";
+import { VideoTypesSection } from "@/components/marketing/video-types-section";
 import { coreFeatures, workflowSteps } from "@/lib/marketing/features";
 import { createPageMetadata } from "@/lib/marketing/metadata";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Features",
   description:
-    "AI-powered motion design, brand extraction, multi-format export, and more.",
+    "AI motion design for product owners. Ship social ads, launch videos, and feature announcements without hiring a motion designer.",
   path: "/features",
 });
 
@@ -20,8 +22,8 @@ export default function FeaturesPage() {
         <div className="marketing-container">
           <SectionHeader
             eyebrow="Features"
-            title="Motion design, automated"
-            description="Arco analyzes your screen recording and applies professional motion design — zooms, ripples, titles, and brand styling — without a timeline editor."
+            title="Motion design you run yourself"
+            description="Arco is built for product owners who need launch-ready video without hiring a motion designer for every release."
           />
           <div className="mt-16">
             <FeatureGrid features={coreFeatures} />
@@ -29,9 +31,13 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      <section className="border-y border-marketing-border bg-marketing-surface py-24 sm:py-32">
+      <VideoTypesSection showCta={false} />
+
+      <ProductOwnerSection className="border-y border-marketing-border bg-marketing-surface" />
+
+      <section className="border-b border-marketing-border py-24 sm:py-32">
         <div className="marketing-container">
-          <SectionHeader title="Built for solo builders" />
+          <SectionHeader title="Built for product owners" />
           <div className="mt-16 grid gap-12 lg:grid-cols-2">
             <div className="space-y-8">
               {workflowSteps.map((step) => (
@@ -74,8 +80,8 @@ export default function FeaturesPage() {
       </section>
 
       <CtaBand
-        title="See it in action"
-        description="Create your first project and export a demo in under 10 minutes."
+        title="Ship your next video without hiring"
+        description="Social ad, launch reel, or feature drop — create your first project and export in under 10 minutes."
         primaryCta={{ label: "Start free", href: "/signup" }}
         secondaryCta={{ label: "View pricing", href: "/pricing" }}
       />

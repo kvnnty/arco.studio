@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { Sparkles, Upload } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
+import { BriefInput } from "@/components/dashboard/brief-input";
 import { ProductUrlInput } from "@/components/dashboard/product-url-input";
 import { TemplateStrip } from "@/components/dashboard/template-strip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,7 +25,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { createAndUploadProject } from "@/lib/editor/create-from-template";
 import { cn } from "@/lib/utils";
 
@@ -118,18 +118,12 @@ export function CreateProjectForm() {
           </FieldContent>
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="brief">What is this video for?</FieldLabel>
-          <FieldContent>
-            <Textarea
-              id="brief"
-              value={intent}
-              onChange={(event) => setIntent(event.target.value)}
-              placeholder="Product Hunt launch, onboarding demo, feature announcement…"
-              rows={3}
-            />
-          </FieldContent>
-        </Field>
+        <BriefInput
+          value={intent}
+          onChange={setIntent}
+          disabled={submitting}
+          showLabel
+        />
 
         <Field>
           <FieldLabel>Template</FieldLabel>

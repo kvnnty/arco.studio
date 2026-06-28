@@ -14,6 +14,8 @@ import { MotionReveal } from "@/components/marketing/motion/motion-reveal";
 import { PricingCards } from "@/components/marketing/pricing-cards";
 import { SectionHeader } from "@/components/marketing/section-header";
 import { TestimonialGrid } from "@/components/marketing/testimonial-grid";
+import { ProductOwnerSection } from "@/components/marketing/product-owner-section";
+import { VideoTypesSection } from "@/components/marketing/video-types-section";
 import { WorkflowSteps } from "@/components/marketing/workflow-steps";
 import {
   coreFeatures,
@@ -55,15 +57,19 @@ export default function HomePage() {
     <>
       <JsonLd data={homeJsonLd} />
       <Hero
-        eyebrow="From $9/month"
-        title="Turn screen recordings into launch-ready demos"
-        description="Upload once. Arco adds zooms, ripples, and titles — then export a polished product video in minutes, not hours."
+        eyebrow="For product owners · From $9/month"
+        title="Launch videos without hiring a motion designer"
+        description="Record your product once. Tell Arco what you're shipping — a social ad, launch reel, or feature drop — and export polished motion in minutes. No freelancer. No After Effects."
         features={heroFeatures}
       />
 
       <HeroPreview />
 
       <BeforeAfterDemo />
+
+      <VideoTypesSection />
+
+      <ProductOwnerSection />
 
       <LogoCloud logos={logoCloud} />
 
@@ -91,8 +97,8 @@ export default function HomePage() {
         <div className="marketing-container">
           <SectionHeader
             eyebrow="Testimonials"
-            title="Loved by solo founders"
-            description="Indie hackers and product owners ship demos faster with Arco."
+            title="Product owners who stopped outsourcing"
+            description="Founders and PMs ship launch videos themselves — without hiring for every release."
           />
           <div className="mt-16">
             <TestimonialGrid testimonials={testimonials} />
@@ -129,8 +135,8 @@ export default function HomePage() {
       <AboutSection />
 
       <CtaBand
-        title="Ready to ship your first demo?"
-        description="Start with Intro at $9/month or go straight to Pro at $29/month."
+        title="Your next launch video is one recording away"
+        description="No motion designer to brief, hire, or wait on. Start with Intro at $9/month."
         secondaryCta={{ label: "Read the docs", href: "/docs" }}
       />
     </>
