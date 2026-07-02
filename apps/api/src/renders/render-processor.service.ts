@@ -4,7 +4,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { getExportDimensions, parseArcoProject, screenshotProjectDurationMs, isScreenshotProject } from '@arco/project-schema';
-import type { ArcoProject, ExportFormat, ExportQuality } from '@arco/project-schema';
+import type { ArcoProject, ExportQuality } from '@arco/project-schema';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
@@ -14,6 +14,7 @@ import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { S3Service } from '../storage/s3.service.js';
 import { BillingService } from '../billing/billing.service.js';
+import { normalizeExportQuality } from '../billing/plans.js';
 
 @Injectable()
 export class RenderProcessorService implements OnModuleInit {
@@ -94,7 +95,6 @@ export class RenderProcessorService implements OnModuleInit {
 
       const project = this.buildRenderProject(
         job.project,
-        job.format,
         job.quality ?? '1080p',
       );
       await writeFile(
@@ -149,17 +149,14 @@ export class RenderProcessorService implements OnModuleInit {
       recordingSrc: string | null;
       title: string;
     },
-    format: string,
     quality: string,
   ): ArcoProject {
     let project = parseArcoProject(JSON.parse(projectRecord.projectData));
 
-    const exportFormat = (format || project.exportFormat || '16:9') as ExportFormat;
-    const exportQuality = quality === '4k' ? '4k' : '1080p';
-    const dims = getExportDimensions(
-      exportFormat,
-      exportQuality as ExportQuality,
-    );
+    const exportQuality = normalizeExportQuality(quality) as ExportQuality;
+    const sourceWidth = project.meta.width || 1920;
+    const sourceHeight = project.meta.height || 1080;
+    const dims = getExportDimensions(exportQuality, sourceWidth, sourceHeight);
     const screenshotMode = isScreenshotProject(project);
 
     const recordingSrc = screenshotMode
@@ -197,7 +194,6 @@ export class RenderProcessorService implements OnModuleInit {
 
     project = {
       ...project,
-      exportFormat,
       meta: {
         ...project.meta,
         title: project.meta.title || projectRecord.title,

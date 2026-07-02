@@ -62,7 +62,7 @@ export default function FeaturesPage() {
                   "Automatic title cards and lower thirds",
                   "Brand kit from your website URL",
                   "AI chat assistant for quick edits",
-                  "1080p export in 16:9, 1:1, and 9:16",
+                  "Up to 1080p export (720p on Intro)",
                   "Music bed and logo overlay",
                 ].map((item) => (
                   <li

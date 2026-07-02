@@ -8,9 +8,11 @@ import { applyTemplateToProject, getTemplate } from "@arco/project-schema/templa
 
 import {
   apiGenerateStoryboard,
+  apiGetBillingStatus,
   uploadImageWithProgress,
 } from "@/lib/api/client";
 import { createProject, syncProjectRecord } from "@/lib/api/projects";
+import { assertWithinDurationLimit } from "@/lib/billing/duration-limits";
 import type { ProjectPlatform } from "@/lib/editor/create-project";
 import { deriveProjectTitle } from "@/lib/editor/create-from-template";
 import { generateVoiceForScreenshotProject } from "@/lib/editor/generate-voice-for-project";
@@ -153,6 +155,13 @@ export async function createScreenshotProject(
       durationMs: screenshotProjectDurationMs({ ...project, scenes: finalScenes }),
     },
   };
+
+  const billing = await apiGetBillingStatus(input.accessToken);
+  assertWithinDurationLimit(
+    project.recording.durationMs,
+    billing.maxProjectDurationMs,
+    billing.plan,
+  );
 
   await syncProjectRecord(input.accessToken, {
     projectId: id,

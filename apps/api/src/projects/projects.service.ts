@@ -2,7 +2,10 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
+  HttpException,
 } from '@nestjs/common';
+import { parseArcoProject, projectDurationMs } from '@arco/project-schema';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { BillingService } from '../billing/billing.service.js';
 import { CreateProjectDto } from './dto/create-project.dto.js';
@@ -98,6 +101,22 @@ export class ProjectsService {
 
   async update(id: string, userId: string, dto: UpdateProjectDto) {
     await this.findOne(id, userId);
+
+    if (dto.projectData !== undefined) {
+      try {
+        const project = parseArcoProject(dto.projectData);
+        await this.billing.assertProjectDuration(
+          userId,
+          projectDurationMs(project),
+        );
+      } catch (error) {
+        if (error instanceof HttpException) {
+          throw error;
+        }
+        throw new BadRequestException('Invalid project data');
+      }
+    }
+
     return this.prisma.project.update({
       where: { id },
       data: {

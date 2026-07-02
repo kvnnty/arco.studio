@@ -9,7 +9,9 @@ import { syncProjectRecord } from "@/lib/api/projects";
 import {
   uploadRecordingWithProgress,
   uploadThumbnail,
+  apiGetBillingStatus,
 } from "@/lib/api/client";
+import { assertWithinDurationLimit } from "@/lib/billing/duration-limits";
 import {
   captureVideoFrame,
   dataUrlToBlob,
@@ -79,9 +81,17 @@ export async function uploadProjectRecording(
 ): Promise<UploadProjectRecordingResult> {
   const metadata = await getVideoMetadata(input.file);
 
+  const billing = await apiGetBillingStatus(input.accessToken);
+  assertWithinDurationLimit(
+    metadata.durationMs,
+    billing.maxProjectDurationMs,
+    billing.plan,
+  );
+
   const uploadResult = await uploadRecordingWithProgress(
     input.accessToken,
     input.file,
+    metadata.durationMs,
     input.onUploadProgress,
   );
 

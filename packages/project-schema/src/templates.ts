@@ -15,7 +15,6 @@ import type {
 import {
   DEFAULT_FOCUS,
   effectsFromClickEffect,
-  getExportDimensions,
   spokenScriptFromScene,
 } from "./index.js";
 import { STYLE_PRESETS } from "./style-presets.js";
@@ -142,7 +141,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     previewVideoUrl: "/templates/mobile-app-poster.svg",
     previewPosterUrl: "/templates/mobile-app-poster.svg",
     stylePreset: "apple",
-    exportFormat: "9:16",
+    exportFormat: "16:9",
     audio: { musicId: "modern-saas", volume: 0.85 },
     copyTone: "Clean, consumer-friendly, benefit-led.",
     sceneBlueprint: blueprint([
@@ -444,7 +443,6 @@ export function applyTemplateToProject(
   template: ArcoTemplate,
 ): ArcoProject {
   const presetConfig = STYLE_PRESETS[template.stylePreset];
-  const dims = getExportDimensions(template.exportFormat);
 
   return {
     ...project,
@@ -453,11 +451,6 @@ export function applyTemplateToProject(
     brand: { ...presetConfig.brand },
     audio: { ...template.audio },
     template: { id: template.id, name: template.name },
-    meta: {
-      ...project.meta,
-      width: dims.width,
-      height: dims.height,
-    },
   };
 }
 

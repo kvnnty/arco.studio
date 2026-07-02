@@ -79,7 +79,7 @@ const docsPages: Record<string, DocPage> = {
           "15-second social ads for Instagram and paid campaigns",
           "Product launch and feature announcement videos",
           "Landing page walkthroughs and onboarding demos",
-          "9:16 and 1:1 exports — no freelancer required",
+          "720p, 1080p, and 4K exports — no freelancer required",
         ],
       },
       {
@@ -251,19 +251,32 @@ const docsPages: Record<string, DocPage> = {
   },
   "guides/export-formats": {
     slug: ["guides", "export-formats"],
-    title: "Export formats",
-    description: "Choose the right aspect ratio for each channel.",
+    title: "Export resolutions",
+    description: "Choose the right resolution tier for your plan.",
     prev: { title: "AI assistant", href: "/docs/guides/ai-assistant" },
     next: { title: "Authentication", href: "/docs/api" },
     sections: [
       {
         type: "table",
-        headers: ["Format", "Resolution", "Best for"],
+        headers: ["Resolution", "16:9 example", "Plan"],
         rows: [
-          ["16:9", "1920×1080", "Landing pages, YouTube"],
-          ["1:1", "1080×1080", "LinkedIn, Instagram feed"],
-          ["9:16", "1080×1920", "Stories, TikTok, Reels"],
+          ["720p", "1280×720", "Intro+"],
+          ["1080p", "1920×1080", "Pro+"],
+          ["4K", "3840×2160", "Studio"],
         ],
+      },
+      {
+        type: "table",
+        headers: ["Max duration", "Plan"],
+        rows: [
+          ["2 minutes", "Intro"],
+          ["5 minutes", "Pro"],
+          ["10 minutes", "Studio"],
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Exports preserve your project's native aspect ratio from the recording or screenshots. Higher tiers include all resolutions below them and longer max duration.",
       },
     ],
   },
@@ -320,7 +333,7 @@ const docsPages: Record<string, DocPage> = {
       {
         type: "code",
         language: "bash",
-        code: `POST /v1/projects/:id/renders\n{\n  "format": "16:9",\n  "quality": "1080p"\n}`,
+        code: `POST /v1/projects/:id/renders\n{\n  "quality": "1080p"\n}`,
       },
     ],
   },

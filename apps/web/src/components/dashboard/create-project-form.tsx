@@ -25,6 +25,8 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
+import { formatDurationLimitLabel } from "@/lib/billing/duration-limits";
 import { createAndUploadProject } from "@/lib/editor/create-from-template";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +44,12 @@ export function CreateProjectForm() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { data: billing } = useBillingStatus();
+
+  const durationHint =
+    billing?.maxProjectDurationMs && billing.maxProjectDurationMs > 0
+      ? `MP4, WebM, or MOV · up to 500MB · max ${formatDurationLimitLabel(billing.maxProjectDurationMs)} on your plan`
+      : "MP4, WebM, or MOV · up to 500MB";
 
   const handleSubmit = async () => {
     if (!file) {
@@ -170,7 +178,7 @@ export function CreateProjectForm() {
                         ? `Uploading… ${uploadProgress}%`
                         : "Drop your screen recording here"}
                   </CardTitle>
-                  <CardDescription>MP4, WebM, or MOV · up to 500MB</CardDescription>
+                  <CardDescription>{durationHint}</CardDescription>
                 </CardHeader>
                 {submitting && uploadProgress !== null ? (
                   <div className="mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">

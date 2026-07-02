@@ -1,7 +1,7 @@
 "use client";
 
 import type { ArcoProject, FocusRegion, Marker, StylePreset } from "@arco/project-schema";
-import { getExportDimensions, isScreenshotProject } from "@arco/project-schema";
+import { isScreenshotProject } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 import { getTemplate } from "@arco/project-schema/templates";
 import type { PlayerRef } from "@remotion/player";
@@ -19,6 +19,7 @@ import {
   useRegenerateMarkerMutation,
 } from "@/lib/api/hooks/ai";
 import { useSyncProjectMutation } from "@/lib/api/hooks/projects";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
 import { apiChatStream } from "@/lib/api/client";
 import { ChatPanel } from "@/components/editor/chat-panel";
 import { CustomizePanel } from "@/components/editor/customize-panel";
@@ -98,6 +99,7 @@ export function EditorShell({
   const refineProject = useRefineProjectMutation();
   const regenerateMarker = useRegenerateMarkerMutation();
   const chatMutation = useChatMutation();
+  const { data: billing } = useBillingStatus();
 
   const project = session.project;
   const screenshotMode = isScreenshotProject(project);
@@ -234,19 +236,6 @@ export function EditorShell({
     (preset: ArcoProject["stylePreset"]) => {
       if (!preset) return;
       updateProject(applyStylePreset(project, preset));
-    },
-    [project, updateProject],
-  );
-
-  const handleExportFormat = useCallback(
-    (format: ArcoProject["exportFormat"]) => {
-      if (!format) return;
-      const dims = getExportDimensions(format);
-      updateProject({
-        ...project,
-        exportFormat: format,
-        meta: { ...project.meta, width: dims.width, height: dims.height },
-      });
     },
     [project, updateProject],
   );
@@ -556,7 +545,9 @@ export function EditorShell({
               <Badge variant="outline" className="capitalize">
                 {session.platform}
               </Badge>
-              <Badge variant="secondary">{project.exportFormat ?? "16:9"}</Badge>
+              <Badge variant="secondary">
+                {project.meta.width}×{project.meta.height}
+              </Badge>
             </div>
           </div>
         </div>
@@ -737,6 +728,8 @@ export function EditorShell({
               project={project}
               onChange={() => undefined}
               onProjectUpdate={(next) => updateProject(next)}
+              maxProjectDurationMs={billing?.maxProjectDurationMs ?? 0}
+              plan={billing?.plan ?? null}
             />
           ) : (
             <SceneInspector
@@ -757,8 +750,6 @@ export function EditorShell({
         open={exportOpen}
         onOpenChange={setExportOpen}
         projectId={session.projectId}
-        format={project.exportFormat ?? "16:9"}
-        onFormatChange={handleExportFormat}
         projectTitle={project.meta.title}
       />
     </div>

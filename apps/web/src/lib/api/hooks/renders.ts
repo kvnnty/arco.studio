@@ -32,8 +32,8 @@ export function useCreateRenderMutation() {
   return useMutation({
     mutationFn: (input: {
       projectId: string;
-      format: string;
-      quality?: "1080p" | "4k";
+      quality?: "720p" | "1080p" | "4k";
+      format?: string;
     }) => {
       if (!token) throw new Error("Not authenticated");
       return apiCreateRender(token, input);

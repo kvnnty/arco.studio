@@ -1,5 +1,6 @@
 "use client";
 
+import type { ExportQuality } from "@arco/project-schema";
 import Link from "next/link";
 import { Download, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -14,11 +15,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
 import { useCreateRenderMutation, useRenderJob } from "@/lib/api/hooks/renders";
+
+const QUALITIES: ExportQuality[] = ["720p", "1080p", "4k"];
+
+function defaultQualityForPlan(allowed: ExportQuality[] | undefined): ExportQuality {
+  if (!allowed?.length) return "720p";
+  if (allowed.includes("1080p")) return "1080p";
+  return allowed[allowed.length - 1] ?? "720p";
+}
 
 type ProjectDetailActionsProps = {
   projectId: string;
-  exportFormat: string;
   initialStatus: ProjectStatus;
   latestExportUrl: string | null;
   latestRenderJobId: string | null;
@@ -27,7 +37,6 @@ type ProjectDetailActionsProps = {
 
 export function ProjectDetailActions({
   projectId,
-  exportFormat,
   initialStatus,
   latestExportUrl,
   latestRenderJobId,
@@ -42,12 +51,21 @@ export function ProjectDetailActions({
   const [error, setError] = useState(latestRenderError);
   const [exporting, setExporting] = useState(false);
   const [stageLabel, setStageLabel] = useState<string | null>(null);
+  const [quality, setQuality] = useState<ExportQuality>("1080p");
 
+  const { data: billing } = useBillingStatus();
   const createRender = useCreateRenderMutation();
   const { data: job } = useRenderJob(
     jobId,
     !!jobId && (status === "processing" || exporting),
   );
+
+  const allowedQualities = billing?.allowedExportQualities ?? [];
+
+  useEffect(() => {
+    if (!billing) return;
+    setQuality(defaultQualityForPlan(billing.allowedExportQualities));
+  }, [billing]);
 
   useEffect(() => {
     if (!job) return;
@@ -94,7 +112,7 @@ export function ProjectDetailActions({
     try {
       const created = await createRender.mutateAsync({
         projectId,
-        format: exportFormat,
+        quality,
       });
 
       setJobId(created.id);
@@ -145,7 +163,7 @@ export function ProjectDetailActions({
       <CardHeader>
         <CardTitle className="text-base">Actions</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3">
         {status === "failed" && error ? (
           <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
@@ -157,6 +175,30 @@ export function ProjectDetailActions({
             {stageLabel ?? "Exporting your video…"}
           </p>
         ) : null}
+
+        <ToggleGroup
+          value={[quality]}
+          onValueChange={(value) => {
+            const next = value[0] as ExportQuality | undefined;
+            if (!next || !allowedQualities.includes(next)) return;
+            setQuality(next);
+          }}
+          variant="outline"
+          spacing={0}
+          className="grid w-full grid-cols-3"
+          disabled={isProcessing}
+        >
+          {QUALITIES.map((item) => (
+            <ToggleGroupItem
+              key={item}
+              value={item}
+              disabled={!allowedQualities.includes(item)}
+              className="font-mono text-sm"
+            >
+              {item === "4k" ? "4K" : item}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
 
         {outputUrl ? (
           <Button className="w-full" onClick={handleDownload}>

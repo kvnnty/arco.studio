@@ -1,6 +1,12 @@
 "use client";
 
 import type { ArcoProject, ScreenshotScene } from "@arco/project-schema";
+import { toast } from "sonner";
+
+import {
+  durationLimitError,
+  isOverDurationLimit,
+} from "@/lib/billing/duration-limits";
 import { msToFrames } from "@arco/project-schema";
 import type { PlayerRef } from "@remotion/player";
 import { GripVertical, Trash2 } from "lucide-react";
@@ -128,6 +134,8 @@ type ScreenshotSceneInspectorProps = {
   onChange: (scene: ScreenshotScene) => void;
   onProjectUpdate: (project: ArcoProject) => void;
   project: ArcoProject;
+  maxProjectDurationMs?: number;
+  plan?: string | null;
 };
 
 export function ScreenshotSceneInspector({
@@ -135,6 +143,8 @@ export function ScreenshotSceneInspector({
   onChange,
   onProjectUpdate,
   project,
+  maxProjectDurationMs = 0,
+  plan = null,
 }: ScreenshotSceneInspectorProps) {
   if (!scene) {
     return (
@@ -149,6 +159,17 @@ export function ScreenshotSceneInspector({
       s.id === nextScene.id ? nextScene : s,
     );
     const durationMs = nextScenes.reduce((sum, s) => sum + s.durationMs, 0);
+
+    if (
+      maxProjectDurationMs > 0 &&
+      isOverDurationLimit(durationMs, maxProjectDurationMs)
+    ) {
+      toast.error(
+        durationLimitError(durationMs, maxProjectDurationMs, plan),
+      );
+      return;
+    }
+
     onProjectUpdate({
       ...project,
       scenes: nextScenes,

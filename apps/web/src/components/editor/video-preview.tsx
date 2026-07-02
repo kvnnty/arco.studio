@@ -38,12 +38,7 @@ export function VideoPreview({
     [project],
   );
 
-  const aspect =
-    project.exportFormat === "1:1"
-      ? "1 / 1"
-      : project.exportFormat === "9:16"
-        ? "9 / 16"
-        : "16 / 9";
+  const aspect = `${project.meta.width} / ${project.meta.height}`;
 
   return (
     <Card className="overflow-hidden py-0">

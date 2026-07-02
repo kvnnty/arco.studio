@@ -203,7 +203,6 @@ export function ProjectDetailClient({ id }: { id: string }) {
 
           <ProjectDetailActions
             projectId={project.id}
-            exportFormat={project.exportFormat}
             initialStatus={project.status}
             latestExportUrl={project.latestExportUrl}
             latestRenderJobId={project.latestRenderJobId}
