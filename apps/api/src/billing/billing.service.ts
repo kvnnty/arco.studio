@@ -11,13 +11,15 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { ReferralsService } from '../referrals/referrals.service.js';
 import {
   activeProjectLimit,
-  canBatchSocialExport,
+  allowedExportQualities,
   canUploadCustomMusic,
-  canUse4k,
-  canUseAspectFormat,
+  canUseExportQuality,
+  canUseProjectDuration,
   hasUnlimitedProjects,
+  maxProjectDurationMs,
   parsePlan,
   type ArcoPlan,
+  type ExportQuality,
 } from './plans.js';
 
 export type BillingStatus = {
@@ -31,9 +33,8 @@ export type BillingStatus = {
   hadLaunchOffer: boolean;
   canUseProduct: boolean;
   canUploadCustomMusic: boolean;
-  canExport4k: boolean;
-  canExportAllFormats: boolean;
-  canBatchSocialExport: boolean;
+  allowedExportQualities: ExportQuality[];
+  maxProjectDurationMs: number;
 };
 
 export type CheckoutPlan = ArcoPlan;
@@ -92,11 +93,10 @@ export class BillingService {
       hadLaunchOffer: user.hadLaunchOffer,
       canUseProduct: user.planStatus === 'active',
       canUploadCustomMusic: canUploadCustomMusic(plan, user.planStatus),
-      canExport4k: user.planStatus === 'active' && canUse4k(plan),
-      canExportAllFormats:
-        user.planStatus === 'active' && plan !== null && plan !== 'trial',
-      canBatchSocialExport:
-        user.planStatus === 'active' && canBatchSocialExport(plan),
+      allowedExportQualities:
+        user.planStatus === 'active' ? allowedExportQualities(plan) : [],
+      maxProjectDurationMs:
+        user.planStatus === 'active' ? maxProjectDurationMs(plan) : 0,
     };
   }
 
@@ -145,25 +145,65 @@ export class BillingService {
     }
   }
 
-  async assertCanRender(
+  async assertProjectDuration(
     userId: string,
-    format: string,
-    quality: string,
+    durationMs: number,
   ): Promise<void> {
     await this.assertActive(userId);
 
     const { plan } = await this.getUserPlanContext(userId);
 
-    if (!canUseAspectFormat(plan, format)) {
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
       throw new HttpException(
-        'Intro plan exports 16:9 only. Upgrade to Pro for social aspect ratios.',
+        'Invalid project duration.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (canUseProjectDuration(plan, durationMs)) {
+      return;
+    }
+
+    if (plan === 'trial') {
+      throw new HttpException(
+        'Intro plan supports videos up to 2 minutes. Upgrade to Pro for videos up to 5 minutes.',
         HttpStatus.PAYMENT_REQUIRED,
       );
     }
 
-    if (quality === '4k' && !canUse4k(plan)) {
+    if (plan === 'pro') {
       throw new HttpException(
-        '4K export requires Studio ($59/mo).',
+        'Pro plan supports videos up to 5 minutes. Upgrade to Studio for videos up to 10 minutes.',
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
+
+    throw new HttpException(
+      'This video exceeds your plan duration limit.',
+      HttpStatus.PAYMENT_REQUIRED,
+    );
+  }
+
+  async assertCanRender(userId: string, quality: string): Promise<void> {
+    await this.assertActive(userId);
+
+    const { plan } = await this.getUserPlanContext(userId);
+
+    if (!canUseExportQuality(plan, quality)) {
+      if (quality === '4k') {
+        throw new HttpException(
+          '4K export requires Studio ($59/mo).',
+          HttpStatus.PAYMENT_REQUIRED,
+        );
+      }
+      if (quality === '1080p') {
+        throw new HttpException(
+          '1080p export requires Pro ($29/mo) or higher.',
+          HttpStatus.PAYMENT_REQUIRED,
+        );
+      }
+      throw new HttpException(
+        'Subscribe to export videos.',
         HttpStatus.PAYMENT_REQUIRED,
       );
     }

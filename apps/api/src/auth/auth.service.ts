@@ -74,7 +74,7 @@ export class AuthService {
         data: {
           email,
           emailVerified: false,
-          onboardingStep: 'plan',
+          onboardingStep: 'profile',
           exportAllowance: Number(process.env.EXPORT_ALLOWANCE_PRO ?? 15),
         },
       });
@@ -172,7 +172,7 @@ export class AuthService {
         data: {
           email,
           emailVerified: false,
-          onboardingStep: 'plan',
+          onboardingStep: 'profile',
           exportAllowance: Number(process.env.EXPORT_ALLOWANCE_PRO ?? 15),
         },
       }));

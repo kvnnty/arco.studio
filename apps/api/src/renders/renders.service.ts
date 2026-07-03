@@ -2,9 +2,13 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
+  HttpException,
 } from '@nestjs/common';
+import { parseArcoProject, projectDurationMs } from '@arco/project-schema';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { BillingService } from '../billing/billing.service.js';
+import { normalizeExportQuality } from '../billing/plans.js';
 import { CreateRenderDto } from './dto/create-render.dto.js';
 import { RenderProcessorService } from './render-processor.service.js';
 
@@ -27,10 +31,23 @@ export class RendersService {
       throw new ForbiddenException('Access denied');
     }
 
-    const format = dto.format ?? project.exportFormat ?? '16:9';
-    const quality = dto.quality ?? '1080p';
+    const format = project.exportFormat ?? '16:9';
+    const quality = normalizeExportQuality(dto.quality ?? '1080p');
 
-    await this.billing.assertCanRender(userId, format, quality);
+    await this.billing.assertCanRender(userId, quality);
+
+    try {
+      const parsed = parseArcoProject(JSON.parse(project.projectData));
+      await this.billing.assertProjectDuration(
+        userId,
+        projectDurationMs(parsed),
+      );
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new BadRequestException('Invalid project data');
+    }
 
     const job = await this.prisma.renderJob.create({
       data: {

@@ -39,7 +39,7 @@ export const stylePresetSchema = z.enum([
 
 export const exportFormatSchema = z.enum(["16:9", "1:1", "9:16"]);
 
-export const exportQualitySchema = z.enum(["1080p", "4k"]);
+export const exportQualitySchema = z.enum(["720p", "1080p", "4k"]);
 
 export const projectModeSchema = z.enum(["recording", "screenshots"]);
 
@@ -242,6 +242,13 @@ export function screenshotProjectDurationMs(project: ArcoProject): number {
   return project.scenes.reduce((sum, scene) => sum + scene.durationMs, 0);
 }
 
+/** Total playable duration for recording or screenshot projects. */
+export function projectDurationMs(project: ArcoProject): number {
+  return isScreenshotProject(project)
+    ? screenshotProjectDurationMs(project)
+    : project.recording.durationMs;
+}
+
 export function projectHasVoiceover(project: ArcoProject): boolean {
   if (project.audio?.voiceEnabled === false) return false;
   return (
@@ -269,23 +276,36 @@ export function projectDurationInFrames(project: ArcoProject): number {
   return msToFrames(durationMs, project.meta.fps);
 }
 
+const EXPORT_LONG_EDGE: Record<ExportQuality, number> = {
+  "720p": 1280,
+  "1080p": 1920,
+  "4k": 3840,
+};
+
+function roundEven(value: number): number {
+  const rounded = Math.round(value);
+  return rounded % 2 === 0 ? rounded : rounded + 1;
+}
+
+/** Scale project canvas to export resolution while preserving native aspect ratio. */
 export function getExportDimensions(
-  format: ExportFormat,
-  quality: ExportQuality = "1080p",
+  quality: ExportQuality,
+  sourceWidth: number,
+  sourceHeight: number,
 ): {
   width: number;
   height: number;
 } {
-  const scale = quality === "4k" ? 2 : 1;
+  const width = Math.max(1, sourceWidth);
+  const height = Math.max(1, sourceHeight);
+  const longEdge = EXPORT_LONG_EDGE[quality] ?? EXPORT_LONG_EDGE["1080p"];
+  const sourceLong = Math.max(width, height);
+  const scale = longEdge / sourceLong;
 
-  switch (format) {
-    case "1:1":
-      return { width: 1080 * scale, height: 1080 * scale };
-    case "9:16":
-      return { width: 1080 * scale, height: 1920 * scale };
-    default:
-      return { width: 1920 * scale, height: 1080 * scale };
-  }
+  return {
+    width: roundEven(width * scale),
+    height: roundEven(height * scale),
+  };
 }
 
 export function effectsFromClickEffect(

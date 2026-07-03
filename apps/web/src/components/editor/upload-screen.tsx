@@ -14,6 +14,8 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@/components/ui/field";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
+import { formatDurationLimitLabel } from "@/lib/billing/duration-limits";
 import { cn } from "@/lib/utils";
 
 type UploadScreenProps = {
@@ -32,6 +34,12 @@ export function UploadScreen({
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { data: billing } = useBillingStatus();
+
+  const durationHint =
+    billing?.maxProjectDurationMs && billing.maxProjectDurationMs > 0
+      ? `MP4, WebM, or MOV · up to 500MB · max ${formatDurationLimitLabel(billing.maxProjectDurationMs)} on your plan`
+      : "MP4, WebM, or MOV · up to 500MB";
 
   const isBusy = loading || uploadStage !== null;
 
@@ -112,9 +120,7 @@ export function UploadScreen({
               <Upload className="size-8 text-muted-foreground" />
               <CardHeader className="px-0 pb-0 pt-4">
                 <CardTitle className="text-sm">{statusLabel}</CardTitle>
-                <CardDescription>
-                  MP4, WebM, or MOV · up to 500MB
-                </CardDescription>
+                <CardDescription>{durationHint}</CardDescription>
               </CardHeader>
               {uploadStage === "uploading" && uploadProgress !== null ? (
                 <div className="mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">

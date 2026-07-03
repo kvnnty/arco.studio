@@ -1,6 +1,7 @@
-import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { BillingService } from '../billing/billing.service.js';
 import { SubscriptionGuard } from '../billing/subscription.guard.js';
 import { AiService } from './ai.service.js';
 import { GenerateDraftDto } from './dto/generate-draft.dto.js';
@@ -9,14 +10,23 @@ import { RegenerateMarkerDto } from './dto/regenerate-marker.dto.js';
 import { RefineProjectDto } from './dto/refine-project.dto.js';
 import { ChatDto } from './dto/chat.dto.js';
 
+type AuthedRequest = Request & { user: { id: string; email: string } };
+
 @UseGuards(JwtAuthGuard)
 @Controller('ai')
 export class AiController {
-  constructor(private readonly aiService: AiService) {}
+  constructor(
+    private readonly aiService: AiService,
+    private readonly billing: BillingService,
+  ) {}
 
   @UseGuards(SubscriptionGuard)
   @Post('generate-draft')
-  generateDraft(@Body() dto: GenerateDraftDto) {
+  async generateDraft(
+    @Req() req: AuthedRequest,
+    @Body() dto: GenerateDraftDto,
+  ) {
+    await this.billing.assertProjectDuration(req.user.id, dto.durationMs);
     return this.aiService.generateDraft(dto);
   }
 
@@ -40,7 +50,12 @@ export class AiController {
 
   @UseGuards(SubscriptionGuard)
   @Post('generate-storyboard')
-  generateStoryboard(@Body() dto: GenerateStoryboardDto) {
+  async generateStoryboard(
+    @Req() req: AuthedRequest,
+    @Body() dto: GenerateStoryboardDto,
+  ) {
+    const targetDurationMs = dto.targetDurationMs ?? 45_000;
+    await this.billing.assertProjectDuration(req.user.id, targetDurationMs);
     return this.aiService.generateStoryboard(dto);
   }
 

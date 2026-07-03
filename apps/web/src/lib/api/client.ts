@@ -258,10 +258,12 @@ export async function apiDeleteProject(
 export async function uploadRecordingWithProgress(
   token: string,
   file: File,
+  durationMs: number,
   onProgress?: (percent: number) => void,
 ): Promise<{ key: string; url: string }> {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("durationMs", String(durationMs));
 
   return apiRequest<{ key: string; url: string }>("/uploads", {
     token,
@@ -401,7 +403,7 @@ export type GenerateDraftResponse = {
 
 export async function apiCreateRender(
   token: string,
-  input: { projectId: string; format: string; quality?: "1080p" | "4k" },
+  input: { projectId: string; quality?: "720p" | "1080p" | "4k"; format?: string },
 ): Promise<RenderJobRecord> {
   return apiRequest<RenderJobRecord>("/renders", {
     token,
@@ -589,9 +591,8 @@ export type BillingStatus = {
   hadLaunchOffer: boolean;
   canUseProduct: boolean;
   canUploadCustomMusic: boolean;
-  canExport4k: boolean;
-  canExportAllFormats: boolean;
-  canBatchSocialExport: boolean;
+  allowedExportQualities: Array<"720p" | "1080p" | "4k">;
+  maxProjectDurationMs: number;
 };
 
 export type BillingUsage = {

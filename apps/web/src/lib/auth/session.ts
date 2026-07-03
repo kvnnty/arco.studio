@@ -94,7 +94,7 @@ export async function getServerSession(): Promise<AuthSession | null> {
       name: null,
       emailVerified: true,
       onboardingCompleted: false,
-      onboardingStep: "plan",
+      onboardingStep: "profile",
     } satisfies AuthUser);
 
   return {

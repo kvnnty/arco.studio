@@ -15,8 +15,8 @@ export type Feature = {
 };
 
 export const heroFeatures = [
-  "AI-powered scene detection",
-  "Brand-aware styling",
+  "Social ads to product launches",
+  "No motion designer to hire",
   "Export in minutes",
 ];
 
@@ -47,9 +47,9 @@ export const coreFeatures: Feature[] = [
   },
   {
     icon: Layers,
-    title: "Multi-format export",
+    title: "Resolution export",
     description:
-      "Ship demos in 16:9 for landing pages, 1:1 for social, and 9:16 for stories — all from one project.",
+      "Export at 720p, 1080p, or 4K — your project keeps its native aspect ratio from the recording.",
   },
   {
     icon: Zap,

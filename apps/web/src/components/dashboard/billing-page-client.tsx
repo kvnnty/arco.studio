@@ -24,21 +24,20 @@ import type { CheckoutPlan } from "@/lib/api/client";
 const TRIAL_FEATURES = [
   "5 active projects",
   "Unlimited re-exports per project",
-  "1080p · 16:9 only",
+  "720p export · up to 2 min",
   "Upgrade anytime",
 ];
 
 const PRO_FEATURES = [
   "15 active projects",
-  "All social formats (1080p)",
+  "Up to 1080p export · 5 min videos",
   "Brand from URL + custom music",
   "AI assistant + voiceover",
 ];
 
 const STUDIO_FEATURES = [
   "Unlimited active projects",
-  "4K export",
-  "Batch social export pack",
+  "Up to 4K export · 10 min videos",
   "Everything in Pro",
 ];
 

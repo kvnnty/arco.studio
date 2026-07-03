@@ -9,12 +9,14 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Body,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import type { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { SubscriptionGuard } from '../billing/subscription.guard.js';
+import { BillingService } from '../billing/billing.service.js';
 import { ProPlanGuard } from '../billing/pro-plan.guard.js';
 import { UploadsService } from './uploads.service.js';
 
@@ -22,7 +24,10 @@ type AuthedRequest = Request & { user: { id: string; email: string } };
 
 @Controller('uploads')
 export class UploadsController {
-  constructor(private readonly uploadsService: UploadsService) {}
+  constructor(
+    private readonly uploadsService: UploadsService,
+    private readonly billing: BillingService,
+  ) {}
 
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Post()
@@ -34,8 +39,16 @@ export class UploadsController {
   )
   async upload(
     @UploadedFile() file: Express.Multer.File,
+    @Body('durationMs') durationMsRaw: string | undefined,
     @Req() req: AuthedRequest,
   ) {
+    const durationMs = Number(durationMsRaw);
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+      throw new BadRequestException('durationMs is required');
+    }
+
+    await this.billing.assertProjectDuration(req.user.id, durationMs);
+
     const validFile = this.uploadsService.validateVideoFile(file);
     return this.uploadsService.uploadRecording(req.user.id, validFile);
   }

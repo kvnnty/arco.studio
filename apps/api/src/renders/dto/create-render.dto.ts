@@ -4,11 +4,12 @@ export class CreateRenderDto {
   @IsString()
   projectId!: string;
 
+  /** @deprecated Ignored — export uses project native aspect ratio. */
   @IsString()
   @IsOptional()
   format?: string;
 
-  @IsIn(['1080p', '4k'])
+  @IsIn(['720p', '1080p', '4k'])
   @IsOptional()
-  quality?: '1080p' | '4k';
+  quality?: '720p' | '1080p' | '4k';
 }

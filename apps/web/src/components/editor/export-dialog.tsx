@@ -1,9 +1,9 @@
 "use client";
 
-import type { ExportFormat, ExportQuality } from "@arco/project-schema";
-import { Download, Layers } from "lucide-react";
+import type { ExportQuality } from "@arco/project-schema";
+import { Download } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -30,24 +30,20 @@ import {
 } from "@/lib/api/hooks/renders";
 import { queryKeys } from "@/lib/api/query-keys";
 
-const FORMATS: {
-  id: ExportFormat;
+const QUALITIES: {
+  id: ExportQuality;
   label: string;
-  description: string;
+  upgradeHint: string;
 }[] = [
-  { id: "16:9", label: "16:9", description: "YouTube, website" },
-  { id: "1:1", label: "1:1", description: "LinkedIn, PH" },
-  { id: "9:16", label: "9:16", description: "TikTok, Reels" },
+  { id: "720p", label: "720p", upgradeHint: "Included on all plans" },
+  { id: "1080p", label: "1080p", upgradeHint: "Pro+" },
+  { id: "4k", label: "4K", upgradeHint: "Studio" },
 ];
-
-const SOCIAL_FORMATS: ExportFormat[] = ["16:9", "1:1", "9:16"];
 
 type ExportDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  format: ExportFormat;
-  onFormatChange: (format: ExportFormat) => void;
   projectTitle: string;
 };
 
@@ -76,12 +72,22 @@ function phaseFromStatus(status: string): ExportPhase {
   return "queued";
 }
 
+function defaultQualityForPlan(
+  allowed: ExportQuality[] | undefined,
+): ExportQuality {
+  if (!allowed?.length) return "720p";
+  if (allowed.includes("1080p")) return "1080p";
+  return allowed[allowed.length - 1] ?? "720p";
+}
+
+function qualityLabel(quality: ExportQuality): string {
+  return quality === "4k" ? "4K" : quality;
+}
+
 export function ExportDialog({
   open,
   onOpenChange,
   projectId,
-  format,
-  onFormatChange,
   projectTitle,
 }: ExportDialogProps) {
   const [jobId, setJobId] = useState<string | null>(null);
@@ -89,12 +95,18 @@ export function ExportDialog({
   const [error, setError] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [quality, setQuality] = useState<ExportQuality>("1080p");
-  const [batchProgress, setBatchProgress] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const { data: billing } = useBillingStatus();
   const createRender = useCreateRenderMutation();
   const { data: job } = useRenderJob(jobId, !!jobId);
+
+  const allowedQualities = billing?.allowedExportQualities ?? [];
+
+  useEffect(() => {
+    if (!billing) return;
+    setQuality(defaultQualityForPlan(billing.allowedExportQualities));
+  }, [billing]);
 
   useEffect(() => {
     if (!job) return;
@@ -119,28 +131,30 @@ export function ExportDialog({
     setPhase(phaseFromStatus(job.status));
   }, [job, queryClient]);
 
-  const isFormatLocked = (id: ExportFormat) =>
-    !billing?.canExportAllFormats && id !== "16:9";
+  const isQualityLocked = (id: ExportQuality) => !allowedQualities.includes(id);
 
-  const startRender = async (
-    renderFormat: ExportFormat,
-    renderQuality: ExportQuality,
-  ) => {
+  const lockedUpgradeMessage = useMemo(() => {
+    if (quality === "4k") {
+      return "4K export requires Studio ($59/mo).";
+    }
+    if (quality === "1080p") {
+      return "1080p export requires Pro ($29/mo) or higher.";
+    }
+    return null;
+  }, [quality]);
+
+  const startRender = async (renderQuality: ExportQuality) => {
     if (!billing?.canUseProduct) {
       throw new Error("Subscribe to export videos.");
     }
-    if (isFormatLocked(renderFormat)) {
+    if (isQualityLocked(renderQuality)) {
       throw new Error(
-        "Intro plan exports 16:9 only. Upgrade to Pro for social formats.",
+        lockedUpgradeMessage ?? "Upgrade your plan to export at this resolution.",
       );
-    }
-    if (renderQuality === "4k" && !billing.canExport4k) {
-      throw new Error("4K export requires Studio ($59/mo).");
     }
 
     const created = await createRender.mutateAsync({
       projectId,
-      format: renderFormat,
       quality: renderQuality,
     });
     setJobId(created.id);
@@ -164,10 +178,9 @@ export function ExportDialog({
     setError(null);
     setOutputUrl(null);
     setJobId(null);
-    setBatchProgress(null);
 
     try {
-      await startRender(format, quality);
+      await startRender(quality);
     } catch (exportError) {
       const message =
         exportError instanceof Error
@@ -175,44 +188,6 @@ export function ExportDialog({
           : "Could not start export.";
       setPhase("failed");
       setError(message);
-      toast.error(message);
-    }
-  };
-
-  const handleBatchSocial = async () => {
-    setPhase("queued");
-    setError(null);
-    setOutputUrl(null);
-    setJobId(null);
-
-    try {
-      if (!billing?.canBatchSocialExport) {
-        throw new Error(
-          "Social export pack requires Studio ($59/mo).",
-        );
-      }
-
-      for (let i = 0; i < SOCIAL_FORMATS.length; i += 1) {
-        const nextFormat = SOCIAL_FORMATS[i]!;
-        setBatchProgress(
-          `Rendering ${nextFormat} (${i + 1}/${SOCIAL_FORMATS.length})…`,
-        );
-        await startRender(nextFormat, quality);
-        if (i < SOCIAL_FORMATS.length - 1) {
-          setJobId(null);
-          setPhase("queued");
-        }
-      }
-      setBatchProgress(null);
-      toast.success("Social export pack queued — check each format when ready.");
-    } catch (exportError) {
-      const message =
-        exportError instanceof Error
-          ? exportError.message
-          : "Could not start batch export.";
-      setPhase("failed");
-      setError(message);
-      setBatchProgress(null);
       toast.error(message);
     }
   };
@@ -232,8 +207,6 @@ export function ExportDialog({
   const isBusy =
     phase === "queued" || phase === "rendering" || phase === "uploading";
 
-  const qualityLabel = quality === "4k" ? "4K" : "1080p";
-
   return (
     <Dialog
       open={open}
@@ -243,7 +216,6 @@ export function ExportDialog({
           setPhase("idle");
           setError(null);
           setOutputUrl(null);
-          setBatchProgress(null);
         }
         onOpenChange(next);
       }}
@@ -252,28 +224,29 @@ export function ExportDialog({
         <DialogHeader>
           <DialogTitle>Export video</DialogTitle>
           <DialogDescription>
-            Render <strong>{projectTitle}</strong> as MP4. Re-exports are
-            unlimited — your plan limits active projects, not export retries.
+            Render <strong>{projectTitle}</strong> as MP4 at your project&apos;s
+            native aspect ratio. Re-exports are unlimited — your plan limits
+            active projects, not export retries.
           </DialogDescription>
         </DialogHeader>
 
         <Field>
-          <FieldLabel>Format</FieldLabel>
+          <FieldLabel>Resolution</FieldLabel>
           <FieldContent>
             <ToggleGroup
-              value={[format]}
+              value={[quality]}
               onValueChange={(value) => {
-                const next = value[0] as ExportFormat | undefined;
-                if (!next || isFormatLocked(next)) return;
-                onFormatChange(next);
+                const next = value[0] as ExportQuality | undefined;
+                if (!next || isQualityLocked(next)) return;
+                setQuality(next);
               }}
               variant="outline"
               spacing={0}
               className="grid w-full grid-cols-3"
               disabled={isBusy || phase === "completed"}
             >
-              {FORMATS.map((item) => {
-                const locked = isFormatLocked(item.id);
+              {QUALITIES.map((item) => {
+                const locked = isQualityLocked(item.id);
                 return (
                   <ToggleGroupItem
                     key={item.id}
@@ -283,43 +256,24 @@ export function ExportDialog({
                   >
                     <span className="font-mono text-sm">{item.label}</span>
                     <span className="text-[10px] font-normal text-muted-foreground">
-                      {locked ? "Pro+" : item.description}
+                      {locked ? item.upgradeHint : "HD export"}
                     </span>
                   </ToggleGroupItem>
                 );
               })}
             </ToggleGroup>
-            {!billing?.canExportAllFormats ? (
+            {allowedQualities.length > 0 &&
+            allowedQualities.length < QUALITIES.length ? (
               <FieldDescription>
-                <Link href="/dashboard/billing" className="text-primary hover:underline">
-                  Upgrade to Pro
+                <Link
+                  href="/dashboard/billing"
+                  className="text-primary hover:underline"
+                >
+                  Upgrade your plan
                 </Link>{" "}
-                for 1:1 and 9:16 social formats.
+                for higher export resolutions.
               </FieldDescription>
             ) : null}
-          </FieldContent>
-        </Field>
-
-        <Field>
-          <FieldLabel>Resolution</FieldLabel>
-          <FieldContent>
-            <ToggleGroup
-              value={[quality]}
-              onValueChange={(value) => {
-                const next = value[0] as ExportQuality | undefined;
-                if (!next) return;
-                if (next === "4k" && !billing?.canExport4k) return;
-                setQuality(next);
-              }}
-              variant="outline"
-              className="grid w-full grid-cols-2"
-              disabled={isBusy || phase === "completed"}
-            >
-              <ToggleGroupItem value="1080p">1080p</ToggleGroupItem>
-              <ToggleGroupItem value="4k" disabled={!billing?.canExport4k}>
-                4K {billing?.canExport4k ? "" : "(Studio)"}
-              </ToggleGroupItem>
-            </ToggleGroup>
           </FieldContent>
         </Field>
 
@@ -327,13 +281,13 @@ export function ExportDialog({
           phase === "rendering" ||
           phase === "uploading") && (
           <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-            {batchProgress ?? `${PHASE_LABELS[phase]} (${qualityLabel})`}
+            {`${PHASE_LABELS[phase]} (${qualityLabel(quality)})`}
           </p>
         )}
 
         {phase === "completed" && outputUrl ? (
           <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-            Export ready at {qualityLabel}. Download your MP4 below.
+            Export ready at {qualityLabel(quality)}. Download your MP4 below.
           </p>
         ) : null}
 
@@ -349,32 +303,18 @@ export function ExportDialog({
             Download MP4
           </Button>
         ) : (
-          <div className="flex flex-col gap-2">
-            <Button
-              className="w-full"
-              onClick={() => void handleExport()}
-              disabled={isBusy || phase === "completed" || createRender.isPending}
-            >
-              <Download data-icon="inline-start" />
-              {isBusy
-                ? PHASE_LABELS[phase]
-                : phase === "failed"
-                  ? "Retry export"
-                  : `Export ${qualityLabel} MP4`}
-            </Button>
-            {billing?.canBatchSocialExport ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                disabled={isBusy || createRender.isPending}
-                onClick={() => void handleBatchSocial()}
-              >
-                <Layers data-icon="inline-start" />
-                Export all social formats
-              </Button>
-            ) : null}
-          </div>
+          <Button
+            className="w-full"
+            onClick={() => void handleExport()}
+            disabled={isBusy || phase === "completed" || createRender.isPending}
+          >
+            <Download data-icon="inline-start" />
+            {isBusy
+              ? PHASE_LABELS[phase]
+              : phase === "failed"
+                ? "Retry export"
+                : `Export ${qualityLabel(quality)} MP4`}
+          </Button>
         )}
       </DialogContent>
     </Dialog>

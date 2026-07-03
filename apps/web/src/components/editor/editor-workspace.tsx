@@ -1,7 +1,6 @@
 "use client";
 
 import type { ArcoProject, FocusRegion, Marker } from "@arco/project-schema";
-import { getExportDimensions } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 import type { PlayerRef } from "@remotion/player";
 import Image from "next/image";
@@ -153,19 +152,6 @@ export function EditorWorkspace({
     [project, updateProject],
   );
 
-  const handleExportFormat = useCallback(
-    (format: ArcoProject["exportFormat"]) => {
-      if (!format) return;
-      const dims = getExportDimensions(format);
-      updateProject({
-        ...project,
-        exportFormat: format,
-        meta: { ...project.meta, width: dims.width, height: dims.height },
-      });
-    },
-    [project, updateProject],
-  );
-
   return (
     <div className="flex h-screen flex-col bg-background">
       <header className="flex h-14 shrink-0 items-center justify-between px-4 sm:px-6">
@@ -195,7 +181,9 @@ export function EditorWorkspace({
               <Badge variant="outline" className="capitalize">
                 {session.platform}
               </Badge>
-              <Badge variant="secondary">{project.exportFormat ?? "16:9"}</Badge>
+              <Badge variant="secondary">
+                {project.meta.width}×{project.meta.height}
+              </Badge>
             </div>
           </div>
         </div>
@@ -293,8 +281,6 @@ export function EditorWorkspace({
         open={exportOpen}
         onOpenChange={setExportOpen}
         projectId={session.projectId}
-        format={project.exportFormat ?? "16:9"}
-        onFormatChange={handleExportFormat}
         projectTitle={project.meta.title}
       />
     </div>

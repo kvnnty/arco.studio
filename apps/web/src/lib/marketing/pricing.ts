@@ -16,13 +16,14 @@ export const pricingPlans: PricingPlan[] = [
     id: "trial",
     name: "Intro",
     description:
-      "Try Arco at a lower price — built for indie hackers validating a launch.",
+      "Try Arco at a lower price — built for product owners validating a launch without hiring video help.",
     monthlyPrice: 9,
     annualPrice: 9,
     features: [
       "5 active projects",
       "Unlimited re-exports per project",
-      "1080p · 16:9 only",
+      "720p export",
+      "Up to 2 min per video",
       "Full editor access",
       "Community support",
     ],
@@ -34,13 +35,14 @@ export const pricingPlans: PricingPlan[] = [
     id: "pro",
     name: "Pro",
     description:
-      "Ship polished demos every week as a solo founder or product owner.",
+      "Ship polished launch videos every week — without hiring a motion designer each time.",
     monthlyPrice: 29,
     annualPrice: 24,
     features: [
       "15 active projects",
       "Unlimited re-exports per project",
-      "1080p in 16:9, 1:1, and 9:16",
+      "Up to 1080p export",
+      "Up to 5 min per video",
       "Brand from URL + custom music",
       "AI assistant + voiceover",
       "Priority support",
@@ -53,14 +55,14 @@ export const pricingPlans: PricingPlan[] = [
     id: "studio",
     name: "Studio",
     description:
-      "For founders shipping across every channel — 4K, social packs, no project cap.",
+      "For founders shipping at the highest quality — 4K export, no project cap.",
     monthlyPrice: 59,
     annualPrice: 49,
     features: [
       "Unlimited active projects",
-      "4K export + social format pack",
+      "Up to 4K export",
+      "Up to 10 min per video",
       "Everything in Pro",
-      "Batch export all aspect ratios",
       "Priority render queue",
     ],
     cta: "Start Studio — $59/mo",
@@ -82,7 +84,7 @@ export const pricingFaqs = [
   {
     question: "What's the difference between Intro, Pro, and Studio?",
     answer:
-      "Intro ($9) gives 5 active projects and 16:9 exports. Pro ($29) gives 15 projects, all social aspect ratios at 1080p, and full brand/audio features. Studio ($59) adds unlimited projects, 4K, and one-click social export packs.",
+      "Intro ($9) gives 5 active projects, 720p export, and videos up to 2 minutes. Pro ($29) gives 15 projects, up to 1080p export, videos up to 5 minutes, and full brand/audio features. Studio ($59) adds unlimited projects, up to 4K export, and videos up to 10 minutes.",
   },
   {
     question: "Do you offer team or seat-based plans?",
@@ -117,11 +119,10 @@ export const featureComparison = {
     {
       name: "Export",
       features: [
-        { name: "1080p", trial: true, pro: true, studio: true },
+        { name: "720p", trial: true, pro: true, studio: true },
+        { name: "1080p", trial: false, pro: true, studio: true },
         { name: "4K", trial: false, pro: false, studio: true },
-        { name: "16:9", trial: true, pro: true, studio: true },
-        { name: "1:1 + 9:16 social", trial: false, pro: true, studio: true },
-        { name: "Batch social export pack", trial: false, pro: false, studio: true },
+        { name: "Max video length", trial: "2 min", pro: "5 min", studio: "10 min" },
       ],
     },
     {
