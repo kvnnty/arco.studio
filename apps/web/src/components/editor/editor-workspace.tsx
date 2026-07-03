@@ -1,6 +1,6 @@
 "use client";
 
-import type { ArcoProject, FocusRegion, Marker, StylePreset } from "@arco/project-schema";
+import type { ArcoProject, FocusRegion, Marker } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 import type { PlayerRef } from "@remotion/player";
 import Image from "next/image";
