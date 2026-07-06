@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -19,7 +20,9 @@ import {
   useBillingStatus,
   useCheckoutMutation,
 } from "@/lib/api/hooks/billing";
-import type { CheckoutPlan } from "@/lib/api/client";
+import type { BillingInterval, CheckoutPlan } from "@/lib/api/client";
+import { pricingPlans } from "@/lib/marketing/pricing";
+import { cn } from "@/lib/utils";
 
 const TRIAL_FEATURES = [
   "5 active projects",
@@ -41,14 +44,23 @@ const STUDIO_FEATURES = [
   "Everything in Pro",
 ];
 
+const PLAN_PRICES: Record<CheckoutPlan, { monthly: number; annual: number }> = {
+  trial: { monthly: 9, annual: 9 },
+  pro: { monthly: 29, annual: 24 },
+  studio: { monthly: 59, annual: 49 },
+};
+
 export function BillingPageClient() {
   const searchParams = useSearchParams();
   const welcome = searchParams.get("welcome") === "1";
   const checkout = searchParams.get("checkout");
+  const [annual, setAnnual] = useState(false);
 
   const { data: status, isLoading } = useBillingStatus();
   const checkoutMutation = useCheckoutMutation();
   const portalMutation = useBillingPortalMutation();
+
+  const billingInterval: BillingInterval = annual ? "annual" : "monthly";
 
   if (isLoading || !status) {
     return (
@@ -65,16 +77,19 @@ export function BillingPageClient() {
   const isActive = status.planStatus === "active";
 
   const handleCheckout = (plan: CheckoutPlan) => {
-    checkoutMutation.mutate(plan, {
-      onSuccess: ({ url }) => {
-        window.location.href = url;
+    checkoutMutation.mutate(
+      { plan, interval: billingInterval },
+      {
+        onSuccess: ({ url }) => {
+          window.location.href = url;
+        },
+        onError: (error) => {
+          toast.error(
+            error instanceof Error ? error.message : "Could not start checkout.",
+          );
+        },
       },
-      onError: (error) => {
-        toast.error(
-          error instanceof Error ? error.message : "Could not start checkout.",
-        );
-      },
-    });
+    );
   };
 
   const handlePortal = () => {
@@ -119,6 +134,11 @@ export function BillingPageClient() {
     );
   };
 
+  const displayPrice = (plan: CheckoutPlan) => {
+    const prices = PLAN_PRICES[plan];
+    return annual ? prices.annual : prices.monthly;
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <PageHeader
@@ -154,6 +174,46 @@ export function BillingPageClient() {
         </Card>
       ) : null}
 
+      {!isActive ? (
+        <div className="flex items-center justify-center gap-3">
+          <span
+            className={cn(
+              "text-sm font-medium",
+              !annual ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            Monthly
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={annual}
+            aria-label="Toggle annual billing"
+            className={cn(
+              "relative h-7 w-12 rounded-full border transition-colors",
+              annual ? "border-primary bg-primary" : "border-border bg-muted",
+            )}
+            onClick={() => setAnnual((value) => !value)}
+          >
+            <span
+              className={cn(
+                "absolute top-0.5 left-0.5 size-6 rounded-full bg-background transition-transform",
+                annual ? "translate-x-5" : "translate-x-0",
+              )}
+            />
+          </button>
+          <span
+            className={cn(
+              "text-sm font-medium",
+              annual ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            Annual
+            <span className="ml-1.5 text-xs text-primary">Save 17%</span>
+          </span>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="rounded-2xl">
           <CardHeader>
@@ -166,9 +226,14 @@ export function BillingPageClient() {
           <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
-                $9
+                ${displayPrice("trial")}
                 <span className="text-base font-normal text-muted-foreground">/mo</span>
               </p>
+              {annual ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Intro is billed monthly only
+                </p>
+              ) : null}
               <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
                 {TRIAL_FEATURES.map((feature) => (
                   <li key={feature}>✓ {feature}</li>
@@ -187,16 +252,24 @@ export function BillingPageClient() {
           <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
-                $29
+                ${displayPrice("pro")}
                 <span className="text-base font-normal text-muted-foreground">/mo</span>
               </p>
+              {annual ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Billed annually · {pricingPlans[1]?.cta}
+                </p>
+              ) : null}
               <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
                 {PRO_FEATURES.map((feature) => (
                   <li key={feature}>✓ {feature}</li>
                 ))}
               </ul>
             </div>
-            {renderPlanActions("pro", "Pro — $29/mo")}
+            {renderPlanActions(
+              "pro",
+              annual ? "Pro — $24/mo billed annually" : "Pro — $29/mo",
+            )}
           </CardContent>
         </Card>
 
@@ -208,16 +281,24 @@ export function BillingPageClient() {
           <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
-                $59
+                ${displayPrice("studio")}
                 <span className="text-base font-normal text-muted-foreground">/mo</span>
               </p>
+              {annual ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Billed annually · {pricingPlans[2]?.cta}
+                </p>
+              ) : null}
               <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
                 {STUDIO_FEATURES.map((feature) => (
                   <li key={feature}>✓ {feature}</li>
                 ))}
               </ul>
             </div>
-            {renderPlanActions("studio", "Studio — $59/mo")}
+            {renderPlanActions(
+              "studio",
+              annual ? "Studio — $49/mo billed annually" : "Studio — $59/mo",
+            )}
           </CardContent>
         </Card>
       </div>
@@ -258,8 +339,19 @@ export function BillingPageClient() {
                 Delete a project to free a slot. Re-exports do not count toward this
                 limit.
               </p>
+              <p className="mt-4 text-xs text-muted-foreground">
+                View invoices, update your payment method, or change plans from the
+                Polar customer portal.
+              </p>
             </CardContent>
-          ) : null}
+          ) : (
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                View invoices, update your payment method, or change plans from the
+                Polar customer portal.
+              </p>
+            </CardContent>
+          )}
         </Card>
       ) : null}
     </div>

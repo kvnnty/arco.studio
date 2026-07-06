@@ -61,7 +61,7 @@ pnpm --filter @arco/web dev
 
 **Requires:** Postgres, MinIO (S3), FFmpeg for full export path.
 
-Add `STRIPE_PRICE_STUDIO_MONTHLY` in `apps/api/.env` for Studio checkout.
+Add Polar product IDs in `apps/api/.env` for all plan checkouts (see `.env.example`).
 
 ---
 
@@ -257,7 +257,7 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 | [~] | Usage chart page | Weekly exports from usage events |
 | [~] | Assets library page | Project recordings + exports |
 | [~] | Notifications | Derived from export/render status |
-| [x] | Billing & plans | Stripe Launch Offer + portal |
+| [x] | Billing & plans | Polar checkout + customer portal |
 | [-] | Team / members | Out of scope — solo founders only |
 | [x] | Settings — profile | |
 | [x] | Help page | |
@@ -291,10 +291,10 @@ Presets are designed once; AI/user picks **where**, presets define **how**.
 | [x] | Studio plan ($59/mo) | Unlimited slots; 4K + social pack |
 | [ ] | Free tier | Funnel option — see [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) |
 | [-] | Legacy Maker ($15) / Pro ($39â€“49) | Superseded by Intro/Pro/Studio tiers |
-| [x] | Stripe checkout | Checkout Session + Customer Portal |
+| [x] | Polar checkout | Checkout Session + Customer Portal |
 | [x] | Project-slot limits | Active projects per plan |
 | [x] | Unlimited re-exports | Per project |
-| [~] | Invoices & billing history | Stripe Customer Portal only |
+| [~] | Invoices & billing history | Polar Customer Portal only |
 | [x] | Export-on-success billing | `consumeExport()` on completed render |
 
 ---
@@ -567,7 +567,7 @@ See **[ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active)** for phased executi
 
 ### Monetization (optional for soft launch)
 
-- [ ] Stripe founding tier ($29â€“49) — [BUSINESS.md](./BUSINESS.md)
+- [ ] Founding tier ($29–49) — [BUSINESS.md](./BUSINESS.md)
 - [ ] Wire billing page to real subscription or hide behind flag
 - [ ] Credits / export limits if needed
 

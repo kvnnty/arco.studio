@@ -614,15 +614,17 @@ export async function apiGetBillingUsage(token: string): Promise<BillingUsage> {
 }
 
 export type CheckoutPlan = "trial" | "pro" | "studio";
+export type BillingInterval = "monthly" | "annual";
 
 export async function apiCreateBillingCheckout(
   token: string,
   plan: CheckoutPlan,
+  interval: BillingInterval = "monthly",
 ): Promise<{ url: string }> {
   return apiRequest<{ url: string }>("/billing/checkout-session", {
     token,
     method: "POST",
-    body: { plan },
+    body: { plan, interval },
   });
 }
 

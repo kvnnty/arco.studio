@@ -36,7 +36,7 @@ export const legalDocuments: Record<string, LegalDocument> = {
         content: [
           "Account information: name, email address, and password when you create an account.",
           "Usage data: projects, exports, feature usage, and interaction logs within the application.",
-          "Payment information: processed by Stripe; we do not store full credit card numbers.",
+          "Payment information: processed by Polar; we do not store full credit card numbers.",
           "Content you upload: screen recordings and brand assets you provide for video generation.",
           "Technical data: IP address, browser type, device information, and pages visited when you use our site or when analytics or monitoring tools are enabled with your consent.",
         ],
@@ -80,7 +80,7 @@ export const legalDocuments: Record<string, LegalDocument> = {
         number: "6",
         title: "Third-Party Services",
         content: [
-          "Stripe — payment processing.",
+          "Polar — payment processing and subscription billing.",
           "Cloud infrastructure providers — hosting and storage.",
           "Google Analytics — website and product usage analytics (only with your consent).",
           "Sentry — error and performance monitoring. Server-side monitoring runs to maintain reliability; client-side monitoring runs only with your consent.",

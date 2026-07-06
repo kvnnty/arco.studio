@@ -5,6 +5,7 @@ import {
   apiCreateBillingPortal,
   apiGetBillingStatus,
   apiGetBillingUsage,
+  type BillingInterval,
   type CheckoutPlan,
 } from "@/lib/api/client";
 import { useApiClient } from "@/lib/api/hooks/use-api-client";
@@ -34,9 +35,15 @@ export function useCheckoutMutation() {
   const { token } = useApiClient();
 
   return useMutation({
-    mutationFn: (plan: CheckoutPlan) => {
+    mutationFn: ({
+      plan,
+      interval = "monthly",
+    }: {
+      plan: CheckoutPlan;
+      interval?: BillingInterval;
+    }) => {
       if (!token) throw new Error("Not authenticated");
-      return apiCreateBillingCheckout(token, plan);
+      return apiCreateBillingCheckout(token, plan, interval);
     },
   });
 }

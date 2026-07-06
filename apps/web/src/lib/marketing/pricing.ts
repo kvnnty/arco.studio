@@ -98,7 +98,7 @@ export const pricingFaqs = [
   },
   {
     question: "What payment methods do you accept?",
-    answer: "We accept all major credit cards through Stripe.",
+    answer: "We accept all major credit cards through Polar.",
   },
 ];
 

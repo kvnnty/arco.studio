@@ -39,7 +39,7 @@ export const changelog: ChangelogEntry[] = [
     version: "0.2.0",
     date: "May 10, 2026",
     features: [
-      "Stripe billing with launch offer pricing",
+      "Polar billing with launch offer pricing",
       "Magic link authentication",
       "Project management dashboard",
     ],

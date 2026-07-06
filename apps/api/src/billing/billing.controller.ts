@@ -4,7 +4,6 @@ import {
   Post,
   Req,
   Body,
-  Headers,
   HttpCode,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +14,31 @@ import { BillingService } from './billing.service.js';
 import { CreateCheckoutDto } from './dto/create-checkout.dto.js';
 
 type AuthedRequest = Request & { user: { id: string; email: string } };
+
+function normalizeHeaders(
+  headers: Request['headers'],
+): Record<string, string> {
+  const normalized: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    if (typeof value === 'string') {
+      normalized[key] = value;
+    } else if (Array.isArray(value) && value[0]) {
+      normalized[key] = value[0];
+    }
+  }
+  return normalized;
+}
+
+function resolveCustomerIp(req: Request): string | undefined {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.length > 0) {
+    return forwarded.split(',')[0]?.trim();
+  }
+  if (Array.isArray(forwarded) && forwarded[0]) {
+    return forwarded[0].split(',')[0]?.trim();
+  }
+  return req.ip;
+}
 
 @Controller('billing')
 export class BillingController {
@@ -39,6 +63,8 @@ export class BillingController {
       req.user.id,
       req.user.email,
       body.plan,
+      body.interval ?? 'monthly',
+      resolveCustomerIp(req),
     );
   }
 
@@ -49,22 +75,17 @@ export class BillingController {
   }
 
   @Post('webhook')
-  @HttpCode(200)
-  handleWebhook(
-    @Req() req: RawBodyRequest<Request>,
-    @Headers('stripe-signature') signature: string | undefined,
-  ) {
-    if (!signature) {
-      return { received: false };
-    }
-
+  @HttpCode(202)
+  handleWebhook(@Req() req: RawBodyRequest<Request>) {
     const rawBody = req.rawBody;
     if (!rawBody) {
       return { received: false };
     }
 
-    return this.billing.handleWebhook(rawBody, signature).then(() => ({
-      received: true,
-    }));
+    return this.billing
+      .handleWebhook(rawBody, normalizeHeaders(req.headers))
+      .then(() => ({
+        received: true,
+      }));
   }
 }

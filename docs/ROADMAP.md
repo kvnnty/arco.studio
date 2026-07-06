@@ -25,7 +25,7 @@ Current gaps — shipped in code but not production-grade.
 | **AI** | Analyze recording | Heuristic timing + honest UI labels | CV click detection (backlog) |
 | **AI** | Feature callout preset | Shipped — inspector + Remotion | — |
 | **Brand** | Brand kit | Per-project `ArcoProject.brand` | Document as v1; optional workspace kit later |
-| **Monetization** | Invoices & history | Stripe Customer Portal only | Portal linked prominently; optional in-app list |
+| **Monetization** | Invoices & history | Polar Customer Portal only | Portal linked prominently; optional in-app list |
 | **Dashboard** | Usage chart | Derived from usage events | Accurate labels; hide if sparse data |
 | **Dashboard** | Assets library | Mock-derived from projects | Real list of recordings + exports |
 | **Dashboard** | Notifications | Derived from render status | Reliable poll + read state |
@@ -146,7 +146,7 @@ Current gaps — shipped in code but not production-grade.
 | Hide chart when < 2 data points | 1h |
 | Notifications: mark read; link to project/export | 4h |
 
-**Exit:** Stats match Stripe + internal export count.
+**Exit:** Stats match Polar + internal export count.
 
 ### C3. Auth production pass
 
@@ -200,7 +200,7 @@ Current gaps — shipped in code but not production-grade.
 |------|--------|
 | Update [STATUS.md](./STATUS.md#engineering-checklist) Phases 1â€“4 checkboxes to match shipped code | 2h |
 | Update [ROADMAP.md](./ROADMAP.md#part-3--screenshot--voice--music-initiative) baseline table | 1h |
-| Sync [STATUS.md](./STATUS.md#feature-checklist) monetization rows with Stripe tiers | 1h |
+| Sync [STATUS.md](./STATUS.md#feature-checklist) monetization rows with Polar tiers | 1h |
 | [TECHNICAL.md](./TECHNICAL.md#deploy) — staging URL + env checklist | 4h |
 
 **Exit:** New contributor can trust docs without reading git history.
@@ -351,7 +351,7 @@ See [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) for full list
 | [~] | Before/after demo on landing | `BeforeAfterDemo` shipped; replace posters with real MP4 exports |
 | [ ] | Public example exports / gallery | Social proof |
 | [ ] | Product Hunt launch kit | Assets, copy, video |
-| [ ] | Invoices in-app (beyond Stripe portal) | Portal works; no first-party history UI |
+| [ ] | Invoices in-app (beyond Polar portal) | Portal works; no first-party history UI |
 
 ### Infrastructure & ops
 

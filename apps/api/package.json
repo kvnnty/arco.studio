@@ -34,6 +34,7 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@polar-sh/sdk": "^0.48.1",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
@@ -47,8 +48,7 @@
     "prisma": "^7.8.0",
     "reflect-metadata": "^0.2.2",
     "resend": "^6.14.0",
-    "rxjs": "^7.8.1",
-    "stripe": "^22.2.2"
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
