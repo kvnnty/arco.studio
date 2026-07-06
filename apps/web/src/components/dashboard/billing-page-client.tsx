@@ -174,6 +174,27 @@ export function BillingPageClient() {
         </Card>
       ) : null}
 
+      {isActive ? (
+        <Card className="rounded-2xl border-primary/20">
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-base">Your subscription</CardTitle>
+              <CardDescription>
+                Upgrade, downgrade, cancel, or view invoices in the Polar customer
+                portal.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              disabled={portalMutation.isPending}
+              onClick={handlePortal}
+            >
+              Manage subscription
+            </Button>
+          </CardHeader>
+        </Card>
+      ) : null}
+
       {!isActive ? (
         <div className="flex items-center justify-center gap-3">
           <span

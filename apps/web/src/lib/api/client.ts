@@ -588,7 +588,6 @@ export type BillingStatus = {
   activeProjectsRemaining: number;
   hasUnlimitedProjects: boolean;
   periodEnd: string | null;
-  hadLaunchOffer: boolean;
   canUseProduct: boolean;
   canUploadCustomMusic: boolean;
   allowedExportQualities: Array<"720p" | "1080p" | "4k">;

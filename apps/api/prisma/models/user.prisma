@@ -17,7 +17,6 @@ model User {
   exportsUsedThisPeriod Int              @default(0)
   extraProjectSlots     Int              @default(0)
   periodEnd             DateTime?
-  hadLaunchOffer        Boolean          @default(false)
   referralCode          String?          @unique
   referredByUserId      String?
   referredBy            User?            @relation("UserReferrals", fields: [referredByUserId], references: [id], onDelete: SetNull)

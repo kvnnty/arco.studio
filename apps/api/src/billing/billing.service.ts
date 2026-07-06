@@ -5,6 +5,7 @@ import {
   ServiceUnavailableException,
   HttpException,
   HttpStatus,
+  OnModuleInit,
 } from '@nestjs/common';
 import { Polar } from '@polar-sh/sdk';
 import { validateEvent, WebhookVerificationError } from '@polar-sh/sdk/webhooks';
@@ -27,10 +28,16 @@ import {
 } from './plans.js';
 import {
   planRank,
+  polarAccessToken,
+  polarBillingConfigured,
+  polarCheckoutUrls,
+  polarServer,
+  polarWebhookSecret,
   resolvePlanFromProductId,
   resolvePolarProductId,
+  validatePolarBillingConfig,
   type BillingInterval,
-} from './polar-products.js';
+} from './polar.config.js';
 
 export type BillingStatus = {
   planStatus: string;
@@ -40,7 +47,6 @@ export type BillingStatus = {
   activeProjectsRemaining: number;
   hasUnlimitedProjects: boolean;
   periodEnd: string | null;
-  hadLaunchOffer: boolean;
   canUseProduct: boolean;
   canUploadCustomMusic: boolean;
   allowedExportQualities: ExportQuality[];
@@ -50,7 +56,7 @@ export type BillingStatus = {
 export type CheckoutPlan = ArcoPlan;
 
 @Injectable()
-export class BillingService {
+export class BillingService implements OnModuleInit {
   private readonly logger = new Logger(BillingService.name);
   private polar: Polar | null = null;
 
@@ -58,20 +64,30 @@ export class BillingService {
     private readonly prisma: PrismaService,
     private readonly referrals: ReferralsService,
   ) {
-    const accessToken = process.env.POLAR_ACCESS_TOKEN;
-    if (accessToken) {
+    const token = polarAccessToken();
+    if (token) {
       this.polar = new Polar({
-        accessToken,
-        server:
-          process.env.POLAR_SERVER === 'sandbox' ? 'sandbox' : 'production',
+        accessToken: token,
+        server: polarServer(),
       });
     }
+  }
+
+  onModuleInit(): void {
+    const missing = validatePolarBillingConfig();
+    if (missing.length > 0) {
+      this.logger.warn(
+        `Polar billing is not fully configured. Missing: ${missing.join(', ')}`,
+      );
+      return;
+    }
+    this.logger.log(`Polar billing ready (${polarServer()}).`);
   }
 
   private requirePolar(): Polar {
     if (!this.polar) {
       throw new ServiceUnavailableException(
-        'Billing is not configured. Set POLAR_ACCESS_TOKEN.',
+        'Billing is not configured. Set POLAR_ACCESS_TOKEN and product IDs.',
       );
     }
     return this.polar;
@@ -91,6 +107,16 @@ export class BillingService {
   }
 
   async getStatus(userId: string): Promise<BillingStatus> {
+    if (polarBillingConfigured()) {
+      await this.refreshCustomerStateFromPolar(userId).catch((error) => {
+        this.logger.debug(
+          `Polar state refresh skipped for ${userId}: ${
+            error instanceof Error ? error.message : error
+          }`,
+        );
+      });
+    }
+
     const { user, plan, limit, activeProjectCount } =
       await this.getUserPlanContext(userId);
 
@@ -104,7 +130,6 @@ export class BillingService {
       activeProjectsRemaining,
       hasUnlimitedProjects: hasUnlimitedProjects(plan),
       periodEnd: user.periodEnd?.toISOString() ?? null,
-      hadLaunchOffer: user.hadLaunchOffer,
       canUseProduct: user.planStatus === 'active',
       canUploadCustomMusic: canUploadCustomMusic(plan, user.planStatus),
       allowedExportQualities:
@@ -298,7 +323,9 @@ export class BillingService {
     });
 
     if (user.planStatus === 'active') {
-      throw new BadRequestException('You already have an active subscription.');
+      throw new BadRequestException(
+        'You already have an active subscription. Use Manage subscription to change plans.',
+      );
     }
 
     if (plan === 'trial' && interval === 'annual') {
@@ -314,14 +341,7 @@ export class BillingService {
       );
     }
 
-    const successUrl =
-      process.env.POLAR_SUCCESS_URL ??
-      'http://localhost:3000/dashboard/billing?checkout=success';
-    const returnUrl =
-      process.env.POLAR_RETURN_URL ??
-      'http://localhost:3000/dashboard/billing?checkout=canceled';
-
-    const launchDiscountId = process.env.POLAR_LAUNCH_DISCOUNT_ID;
+    const { successUrl, returnUrl } = polarCheckoutUrls();
 
     const session = await polar.checkouts.create({
       products: [productId],
@@ -331,9 +351,7 @@ export class BillingService {
       metadata: { userId, plan, interval },
       successUrl,
       returnUrl,
-      ...(launchDiscountId && plan === 'trial'
-        ? { discountId: launchDiscountId, allowDiscountCodes: false }
-        : { allowDiscountCodes: true }),
+      allowDiscountCodes: true,
     });
 
     if (!session.url) {
@@ -356,34 +374,43 @@ export class BillingService {
       where: { id: userId },
     });
 
-    const returnUrl =
-      process.env.POLAR_PORTAL_RETURN_URL ??
-      'http://localhost:3000/dashboard/billing';
+    const { portalReturnUrl } = polarCheckoutUrls();
 
-    const session = await polar.customerSessions.create({
-      externalCustomerId: userId,
-      returnUrl,
-    });
-
-    if (!session.customerPortalUrl) {
-      throw new BadRequestException('Could not create customer portal session.');
-    }
-
-    if (session.customerId !== user.polarCustomerId) {
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { polarCustomerId: session.customerId },
+    try {
+      const session = await polar.customerSessions.create({
+        externalCustomerId: userId,
+        returnUrl: portalReturnUrl,
       });
-    }
 
-    return { url: session.customerPortalUrl };
+      if (!session.customerPortalUrl) {
+        throw new BadRequestException('Could not create customer portal session.');
+      }
+
+      if (session.customerId !== user.polarCustomerId) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { polarCustomerId: session.customerId },
+        });
+      }
+
+      return { url: session.customerPortalUrl };
+    } catch (error) {
+      this.logger.warn(
+        `Polar portal session failed for ${userId}: ${
+          error instanceof Error ? error.message : error
+        }`,
+      );
+      throw new BadRequestException(
+        'No billing account found yet. Subscribe to a plan first.',
+      );
+    }
   }
 
   async handleWebhook(
     rawBody: Buffer,
     headers: Record<string, string>,
   ): Promise<void> {
-    const webhookSecret = process.env.POLAR_WEBHOOK_SECRET;
+    const webhookSecret = polarWebhookSecret();
     if (!webhookSecret) {
       throw new ServiceUnavailableException(
         'POLAR_WEBHOOK_SECRET is not configured.',
@@ -403,33 +430,34 @@ export class BillingService {
 
     switch (event.type) {
       case 'customer.state_changed':
-        await this.onCustomerStateChanged(event.data);
+        await this.applyCustomerState(event.data);
         break;
-      case 'subscription.active':
-      case 'subscription.updated':
-      case 'subscription.canceled':
-      case 'subscription.revoked':
       case 'subscription.past_due':
-      case 'subscription.uncanceled':
-        await this.onSubscriptionEvent(event.data);
+        await this.applySubscriptionAccess(event.data, 'past_due');
         break;
-      case 'checkout.updated':
-        if (event.data.status === 'succeeded') {
-          await this.onCheckoutSucceeded(event.data);
-        }
-        break;
-      case 'order.paid':
-        await this.onOrderPaid(event.data);
+      case 'subscription.revoked':
+        await this.applySubscriptionAccess(event.data, 'inactive');
         break;
       default:
         break;
     }
   }
 
-  private getCustomerStateSubscriptions(
-    state: CustomerState,
-  ): CustomerStateSubscription[] {
-    return state.activeSubscriptions;
+  private async refreshCustomerStateFromPolar(userId: string): Promise<void> {
+    const polar = this.requirePolar();
+
+    try {
+      const state = await polar.customers.getStateExternal({
+        externalId: userId,
+      });
+      await this.applyCustomerState(state);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes('404') || message.toLowerCase().includes('not found')) {
+        return;
+      }
+      throw error;
+    }
   }
 
   private pickBestSubscription(
@@ -454,51 +482,27 @@ export class BillingService {
     });
   }
 
-  private resolvePlanFromMetadata(
-    metadataPlan: unknown,
-  ): ArcoPlan | null {
+  private resolvePlanFromMetadata(metadataPlan: unknown): ArcoPlan | null {
     if (metadataPlan === 'trial') return 'trial';
     if (metadataPlan === 'studio') return 'studio';
     if (metadataPlan === 'pro') return 'pro';
     return null;
   }
 
-  private mapSubscriptionStatus(status: string): string {
-    if (status === 'active' || status === 'trialing') {
-      return 'active';
-    }
-    if (status === 'past_due' || status === 'unpaid') {
-      return 'past_due';
-    }
-    if (status === 'canceled') {
-      return 'canceled';
-    }
-    return 'inactive';
-  }
-
   private resolvePlanFromSubscription(
     subscription: CustomerStateSubscription | Subscription,
   ): ArcoPlan | null {
-    const fromProduct = resolvePlanFromProductId(subscription.productId);
-    if (fromProduct) {
-      return fromProduct;
-    }
-    return this.resolvePlanFromMetadata(subscription.metadata?.plan);
+    return (
+      resolvePlanFromProductId(subscription.productId) ??
+      this.resolvePlanFromMetadata(subscription.metadata?.plan)
+    );
   }
 
-  private async findUserIdForSubscription(
-    subscription: Subscription,
-  ): Promise<string | null> {
-    const externalId = subscription.customer?.externalId;
-    if (externalId) {
-      return externalId;
+  private mapActiveSubscriptionStatus(status: string): string {
+    if (status === 'active' || status === 'trialing') {
+      return 'active';
     }
-
-    const customerId = subscription.customerId;
-    const user = await this.prisma.user.findFirst({
-      where: { polarCustomerId: customerId },
-    });
-    return user?.id ?? null;
+    return 'inactive';
   }
 
   private async findUserIdForCustomerState(
@@ -514,12 +518,25 @@ export class BillingService {
     return user?.id ?? null;
   }
 
-  private async onCustomerStateChanged(state: CustomerState): Promise<void> {
+  private async findUserIdForSubscription(
+    subscription: Subscription,
+  ): Promise<string | null> {
+    const externalId = subscription.customer?.externalId;
+    if (externalId) {
+      return externalId;
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: { polarCustomerId: subscription.customerId },
+    });
+    return user?.id ?? null;
+  }
+
+  private async applyCustomerState(state: CustomerState): Promise<void> {
     const userId = await this.findUserIdForCustomerState(state);
     if (!userId) return;
 
-    const subscriptions = this.getCustomerStateSubscriptions(state);
-    const subscription = this.pickBestSubscription(subscriptions);
+    const subscription = this.pickBestSubscription(state.activeSubscriptions);
 
     if (!subscription) {
       await this.prisma.user.update({
@@ -535,7 +552,7 @@ export class BillingService {
       return;
     }
 
-    const planStatus = this.mapSubscriptionStatus(subscription.status);
+    const planStatus = this.mapActiveSubscriptionStatus(subscription.status);
     const plan = this.resolvePlanFromSubscription(subscription);
 
     const previous = await this.prisma.user.findUnique({
@@ -559,17 +576,14 @@ export class BillingService {
     }
   }
 
-  private async onSubscriptionEvent(subscription: Subscription): Promise<void> {
+  private async applySubscriptionAccess(
+    subscription: Subscription,
+    planStatus: 'past_due' | 'inactive',
+  ): Promise<void> {
     const userId = await this.findUserIdForSubscription(subscription);
     if (!userId) return;
 
-    const planStatus = this.mapSubscriptionStatus(subscription.status);
     const plan = this.resolvePlanFromSubscription(subscription);
-
-    const previous = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { planStatus: true },
-    });
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -577,79 +591,10 @@ export class BillingService {
         polarCustomerId: subscription.customerId,
         polarSubscriptionId: subscription.id,
         planStatus,
-        plan:
-          planStatus === 'active' || planStatus === 'past_due' ? plan : null,
-        periodEnd: subscription.currentPeriodEnd,
+        plan: planStatus === 'past_due' ? plan : null,
+        periodEnd:
+          planStatus === 'past_due' ? subscription.currentPeriodEnd : null,
       },
-    });
-
-    if (previous?.planStatus !== 'active' && planStatus === 'active') {
-      await this.referrals.rewardReferrer(userId);
-    }
-  }
-
-  private async onCheckoutSucceeded(checkout: {
-    externalCustomerId?: string | null;
-    customerId?: string | null;
-    metadata?: Record<string, unknown>;
-  }): Promise<void> {
-    const userId =
-      checkout.externalCustomerId ??
-      (typeof checkout.metadata?.userId === 'string'
-        ? checkout.metadata.userId
-        : null);
-    if (!userId) return;
-
-    const metadataPlan = checkout.metadata?.plan;
-    const plan =
-      metadataPlan === 'trial'
-        ? 'trial'
-        : metadataPlan === 'studio'
-          ? 'studio'
-          : metadataPlan === 'pro'
-            ? 'pro'
-            : null;
-
-    const previous = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { planStatus: true, hadLaunchOffer: true },
-    });
-
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(checkout.customerId
-          ? { polarCustomerId: checkout.customerId }
-          : {}),
-        planStatus: 'active',
-        ...(plan ? { plan } : {}),
-        ...(plan === 'trial' && process.env.POLAR_LAUNCH_DISCOUNT_ID
-          ? { hadLaunchOffer: true }
-          : {}),
-      },
-    });
-
-    if (previous?.planStatus !== 'active') {
-      await this.referrals.rewardReferrer(userId);
-    }
-  }
-
-  private async onOrderPaid(order: {
-    customerId?: string;
-    billingReason?: string | null;
-  }): Promise<void> {
-    if (order.billingReason !== 'subscription_cycle') {
-      return;
-    }
-
-    const user = await this.prisma.user.findFirst({
-      where: { polarCustomerId: order.customerId },
-    });
-    if (!user) return;
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { planStatus: 'active' },
     });
   }
 }
