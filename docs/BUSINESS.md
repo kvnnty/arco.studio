@@ -88,7 +88,7 @@ Waitlist live · killer demo MP4 · 10 manual "gift" videos for dream ICPs
 
 **Goal:** 5 × $29 founding = $145 MRR validation
 
-Ship demo → landing + Stripe → 20 personalized DMs with **their** product video → onboard 5 paid manually
+Ship demo → landing + Polar → 20 personalized DMs with **their** product video → onboard 5 paid manually
 
 ### Phase 2 — PMF (months 1–6)
 
@@ -102,7 +102,7 @@ Ship demo → landing + Stripe → 20 personalized DMs with **their** product vi
 ### Launch checklist (self-serve)
 
 - [ ] Demo video on hero (<30s)
-- [ ] Stripe checkout
+- [x] Polar checkout
 - [ ] Privacy + Terms
 - [ ] 3 beta testimonials
 - [ ] FAQ: AE? VO? Figma?

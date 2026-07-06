@@ -9,15 +9,14 @@ model User {
   onboardingStep        String           @default("profile")
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
-  stripeCustomerId      String?          @unique
-  stripeSubscriptionId  String?          @unique
+  polarCustomerId      String?          @unique
+  polarSubscriptionId  String?          @unique
   planStatus            String           @default("inactive")
   plan                  String?
   exportAllowance       Int              @default(15)
   exportsUsedThisPeriod Int              @default(0)
   extraProjectSlots     Int              @default(0)
   periodEnd             DateTime?
-  hadLaunchOffer        Boolean          @default(false)
   referralCode          String?          @unique
   referredByUserId      String?
   referredBy            User?            @relation("UserReferrals", fields: [referredByUserId], references: [id], onDelete: SetNull)

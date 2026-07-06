@@ -80,7 +80,7 @@ flowchart LR
     A[Email verified] --> B[Optional name]
     B --> C[Plan selection]
     C --> D{User choice}
-    D -->|Upgrade| E[Stripe checkout]
+    D -->|Upgrade| E[Polar checkout]
     D -->|Skip| F[Dashboard]
     E --> F
 ```
@@ -295,7 +295,7 @@ apps/web/src/lib/auth/
 1. **Signup:** email only (magic link) or email + password — no name, company, or plan required
 2. **Verify:** mandatory email click before session is issued
 3. **Onboarding step 1:** optional name (skippable)
-4. **Onboarding step 2:** plan selection — upgrade via Stripe or continue free to dashboard
+4. **Onboarding step 2:** plan selection — upgrade via Polar or continue free to dashboard
 5. **Profile completion:** available anytime in Settings
 
 ---
@@ -321,7 +321,7 @@ apps/web/src/lib/auth/
 | **Render worker** | Runs inside API process (`RenderProcessorService`) |
 | **Postgres** | Prisma — `DATABASE_URL` |
 | **S3** | Recordings, thumbnails, rendered MP4s |
-| **Stripe** | Subscriptions + webhooks |
+| **Polar** | Subscriptions + webhooks (Merchant of Record) |
 
 ## Environment
 
@@ -336,21 +336,78 @@ Run after schema changes:
 pnpm --filter @arco/api exec prisma db push
 ```
 
-## Stripe setup
+## Polar setup
 
-1. Create **Product**: Arco Pro
-2. Create **Price**: $29/month recurring → set `STRIPE_PRICE_PRO_MONTHLY`
-3. Create **Coupon**: $20 off once (Launch Offer → $9 first invoice) → set `STRIPE_COUPON_LAUNCH`
-4. Enable **Customer Portal** in Stripe Dashboard
-5. Add webhook endpoint: `https://your-api.com/api/billing/webhook`
-   - Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`
-6. Set `STRIPE_WEBHOOK_SECRET` from webhook signing secret
+Arco uses [Polar](https://polar.sh) as Merchant of Record. Customers pay Polar; you receive payouts via Stripe Connect Express (Rwanda supported).
 
-Local webhook testing:
+### 1. Organization & payout
+
+1. Create a Polar organization at [polar.sh](https://polar.sh)
+2. **Finance → Account** — connect payout account (Equity Bank Rwanda works)
+3. Complete account review before going live
+
+### 2. Products (Polar Dashboard → Products)
+
+Create **five subscription products** and copy each Product ID:
+
+| Arco plan | Billing | Price | Env var |
+|-----------|---------|-------|---------|
+| Intro | Monthly | $9/mo | `POLAR_PRODUCT_TRIAL_MONTHLY` |
+| Pro | Monthly | $29/mo | `POLAR_PRODUCT_PRO_MONTHLY` |
+| Pro | Annual | $288/yr | `POLAR_PRODUCT_PRO_ANNUAL` |
+| Studio | Monthly | $59/mo | `POLAR_PRODUCT_STUDIO_MONTHLY` |
+| Studio | Annual | $588/yr | `POLAR_PRODUCT_STUDIO_ANNUAL` |
+
+Enable **Customer Portal** for: cancel, plan changes, invoices, payment method updates.
+
+### 3. API access
+
+Create an **organization access token** with scopes:
+
+- `checkouts:write`
+- `customer_sessions:write`
+- `customers:read`
+
+Set as `POLAR_ACCESS_TOKEN`.
+
+### 4. Webhooks
+
+Endpoint: `https://your-api.com/api/billing/webhook`
+
+Subscribe to:
+
+- `customer.state_changed` (primary — syncs plan access)
+- `subscription.past_due`
+- `subscription.revoked`
+
+Set `POLAR_WEBHOOK_SECRET` from the endpoint signing secret.
+
+Local testing: use [Polar webhook docs](https://polar.sh/docs/integrate/webhooks/locally) or ngrok → `localhost:8000/api/billing/webhook`.
+
+### 5. Environment
 
 ```bash
-stripe listen --forward-to localhost:8000/api/billing/webhook
+POLAR_ACCESS_TOKEN=polar_oat_...
+POLAR_WEBHOOK_SECRET=whsec_...
+POLAR_SERVER=production          # or sandbox
+POLAR_PRODUCT_TRIAL_MONTHLY=...
+POLAR_PRODUCT_PRO_MONTHLY=...
+POLAR_PRODUCT_PRO_ANNUAL=...
+POLAR_PRODUCT_STUDIO_MONTHLY=...
+POLAR_PRODUCT_STUDIO_ANNUAL=...
+POLAR_SUCCESS_URL=https://app.arco.video/dashboard/billing?checkout=success
+POLAR_RETURN_URL=https://app.arco.video/dashboard/billing?checkout=canceled
+POLAR_PORTAL_RETURN_URL=https://app.arco.video/dashboard/billing
 ```
+
+On API startup, missing vars are logged. Billing endpoints return 503 until fully configured.
+
+### 6. How access sync works
+
+- Checkout uses `externalCustomerId` = Arco `user.id`
+- Polar sends `customer.state_changed` webhooks → Arco updates `planStatus` / `plan`
+- `GET /billing/status` also refreshes from Polar Customer State API (covers webhook delay after checkout redirect)
+- Upgrades, downgrades, cancellations → **Customer Portal** (Manage subscription button)
 
 ## Build & run
 
@@ -374,7 +431,7 @@ Remotion render requires **FFmpeg** on the API host PATH.
 ## Paid-only model
 
 - New users register with `planStatus: inactive`
-- Dashboard/editor blocked until Stripe checkout completes
+- Dashboard/editor blocked until Polar checkout completes
 - Launch Offer: $9 first month via coupon, then $29/mo
 - Exports gated at `POST /renders` (15/month default via `EXPORT_ALLOWANCE_PRO`)
 
@@ -382,9 +439,9 @@ Remotion render requires **FFmpeg** on the API host PATH.
 
 | Variable | Example |
 |----------|---------|
-| `STRIPE_SUCCESS_URL` | `https://app.arco.video/dashboard/billing?checkout=success` |
-| `STRIPE_CANCEL_URL` | `https://app.arco.video/dashboard/billing?checkout=canceled` |
-| `STRIPE_PORTAL_RETURN_URL` | `https://app.arco.video/dashboard/billing` |
+| `POLAR_SUCCESS_URL` | `https://app.arco.video/dashboard/billing?checkout=success` |
+| `POLAR_RETURN_URL` | `https://app.arco.video/dashboard/billing?checkout=canceled` |
+| `POLAR_PORTAL_RETURN_URL` | `https://app.arco.video/dashboard/billing` |
 | `CORS_ORIGIN` | `https://app.arco.video` |
 | `API_PUBLIC_URL` | `https://api.arco.video` |
 

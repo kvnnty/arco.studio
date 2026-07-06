@@ -78,7 +78,7 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
       { step: "completed" },
       {
         onSuccess: () => {
-          checkout.mutate(plan, {
+          checkout.mutate({ plan }, {
             onSuccess: ({ url }) => {
               window.location.href = url;
             },

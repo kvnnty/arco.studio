@@ -5,8 +5,13 @@ import {
   ServiceUnavailableException,
   HttpException,
   HttpStatus,
+  OnModuleInit,
 } from '@nestjs/common';
-import Stripe from 'stripe';
+import { Polar } from '@polar-sh/sdk';
+import { validateEvent, WebhookVerificationError } from '@polar-sh/sdk/webhooks';
+import type { CustomerState } from '@polar-sh/sdk/models/components/customerstate.js';
+import type { CustomerStateSubscription } from '@polar-sh/sdk/models/components/customerstatesubscription.js';
+import type { Subscription } from '@polar-sh/sdk/models/components/subscription.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ReferralsService } from '../referrals/referrals.service.js';
 import {
@@ -21,6 +26,18 @@ import {
   type ArcoPlan,
   type ExportQuality,
 } from './plans.js';
+import {
+  planRank,
+  polarAccessToken,
+  polarBillingConfigured,
+  polarCheckoutUrls,
+  polarServer,
+  polarWebhookSecret,
+  resolvePlanFromProductId,
+  resolvePolarProductId,
+  validatePolarBillingConfig,
+  type BillingInterval,
+} from './polar.config.js';
 
 export type BillingStatus = {
   planStatus: string;
@@ -30,7 +47,6 @@ export type BillingStatus = {
   activeProjectsRemaining: number;
   hasUnlimitedProjects: boolean;
   periodEnd: string | null;
-  hadLaunchOffer: boolean;
   canUseProduct: boolean;
   canUploadCustomMusic: boolean;
   allowedExportQualities: ExportQuality[];
@@ -40,27 +56,41 @@ export type BillingStatus = {
 export type CheckoutPlan = ArcoPlan;
 
 @Injectable()
-export class BillingService {
+export class BillingService implements OnModuleInit {
   private readonly logger = new Logger(BillingService.name);
-  private stripe: Stripe | null = null;
+  private polar: Polar | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly referrals: ReferralsService,
   ) {
-    const secret = process.env.STRIPE_SECRET_KEY;
-    if (secret) {
-      this.stripe = new Stripe(secret);
+    const token = polarAccessToken();
+    if (token) {
+      this.polar = new Polar({
+        accessToken: token,
+        server: polarServer(),
+      });
     }
   }
 
-  private requireStripe(): Stripe {
-    if (!this.stripe) {
+  onModuleInit(): void {
+    const missing = validatePolarBillingConfig();
+    if (missing.length > 0) {
+      this.logger.warn(
+        `Polar billing is not fully configured. Missing: ${missing.join(', ')}`,
+      );
+      return;
+    }
+    this.logger.log(`Polar billing ready (${polarServer()}).`);
+  }
+
+  private requirePolar(): Polar {
+    if (!this.polar) {
       throw new ServiceUnavailableException(
-        'Billing is not configured. Set STRIPE_SECRET_KEY.',
+        'Billing is not configured. Set POLAR_ACCESS_TOKEN and product IDs.',
       );
     }
-    return this.stripe;
+    return this.polar;
   }
 
   private async getUserPlanContext(userId: string) {
@@ -77,6 +107,16 @@ export class BillingService {
   }
 
   async getStatus(userId: string): Promise<BillingStatus> {
+    if (polarBillingConfigured()) {
+      await this.refreshCustomerStateFromPolar(userId).catch((error) => {
+        this.logger.debug(
+          `Polar state refresh skipped for ${userId}: ${
+            error instanceof Error ? error.message : error
+          }`,
+        );
+      });
+    }
+
     const { user, plan, limit, activeProjectCount } =
       await this.getUserPlanContext(userId);
 
@@ -90,7 +130,6 @@ export class BillingService {
       activeProjectsRemaining,
       hasUnlimitedProjects: hasUnlimitedProjects(plan),
       periodEnd: user.periodEnd?.toISOString() ?? null,
-      hadLaunchOffer: user.hadLaunchOffer,
       canUseProduct: user.planStatus === 'active',
       canUploadCustomMusic: canUploadCustomMusic(plan, user.planStatus),
       allowedExportQualities:
@@ -275,260 +314,287 @@ export class BillingService {
     userId: string,
     email: string,
     plan: CheckoutPlan,
+    interval: BillingInterval = 'monthly',
+    customerIpAddress?: string,
   ): Promise<{ url: string }> {
-    const stripe = this.requireStripe();
+    const polar = this.requirePolar();
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
     });
 
     if (user.planStatus === 'active') {
-      throw new BadRequestException('You already have an active subscription.');
-    }
-
-    const priceId =
-      plan === 'trial'
-        ? process.env.STRIPE_PRICE_TRIAL_MONTHLY
-        : plan === 'studio'
-          ? process.env.STRIPE_PRICE_STUDIO_MONTHLY
-          : process.env.STRIPE_PRICE_PRO_MONTHLY;
-
-    if (!priceId) {
-      throw new ServiceUnavailableException(
-        plan === 'trial'
-          ? 'STRIPE_PRICE_TRIAL_MONTHLY is not configured.'
-          : plan === 'studio'
-            ? 'STRIPE_PRICE_STUDIO_MONTHLY is not configured.'
-            : 'STRIPE_PRICE_PRO_MONTHLY is not configured.',
+      throw new BadRequestException(
+        'You already have an active subscription. Use Manage subscription to change plans.',
       );
     }
 
-    let customerId = user.stripeCustomerId;
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email,
-        metadata: { userId },
-      });
-      customerId = customer.id;
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { stripeCustomerId: customerId },
-      });
+    if (plan === 'trial' && interval === 'annual') {
+      throw new BadRequestException('Intro plan is billed monthly only.');
     }
 
-    const successUrl =
-      process.env.STRIPE_SUCCESS_URL ??
-      'http://localhost:3000/dashboard/billing?checkout=success';
-    const cancelUrl =
-      process.env.STRIPE_CANCEL_URL ??
-      'http://localhost:3000/dashboard/billing?checkout=canceled';
+    let productId: string;
+    try {
+      productId = resolvePolarProductId(plan, interval);
+    } catch (error) {
+      throw new ServiceUnavailableException(
+        error instanceof Error ? error.message : 'Polar product is not configured.',
+      );
+    }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      metadata: { userId, plan },
-      subscription_data: {
-        metadata: { userId, plan },
-      },
+    const { successUrl, returnUrl } = polarCheckoutUrls();
+
+    const session = await polar.checkouts.create({
+      products: [productId],
+      externalCustomerId: userId,
+      customerEmail: email,
+      customerIpAddress: customerIpAddress ?? undefined,
+      metadata: { userId, plan, interval },
+      successUrl,
+      returnUrl,
+      allowDiscountCodes: true,
     });
 
     if (!session.url) {
       throw new BadRequestException('Could not create checkout session.');
     }
 
+    if (session.customerId && session.customerId !== user.polarCustomerId) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { polarCustomerId: session.customerId },
+      });
+    }
+
     return { url: session.url };
   }
 
   async createPortalSession(userId: string): Promise<{ url: string }> {
-    const stripe = this.requireStripe();
+    const polar = this.requirePolar();
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
     });
 
-    if (!user.stripeCustomerId) {
-      throw new BadRequestException('No billing account found.');
-    }
+    const { portalReturnUrl } = polarCheckoutUrls();
 
-    const returnUrl =
-      process.env.STRIPE_PORTAL_RETURN_URL ??
-      'http://localhost:3000/dashboard/billing';
-
-    const session = await stripe.billingPortal.sessions.create({
-      customer: user.stripeCustomerId,
-      return_url: returnUrl,
-    });
-
-    return { url: session.url };
-  }
-
-  async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
-    const stripe = this.requireStripe();
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!webhookSecret) {
-      throw new ServiceUnavailableException('STRIPE_WEBHOOK_SECRET is not configured.');
-    }
-
-    let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+      const session = await polar.customerSessions.create({
+        externalCustomerId: userId,
+        returnUrl: portalReturnUrl,
+      });
+
+      if (!session.customerPortalUrl) {
+        throw new BadRequestException('Could not create customer portal session.');
+      }
+
+      if (session.customerId !== user.polarCustomerId) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { polarCustomerId: session.customerId },
+        });
+      }
+
+      return { url: session.customerPortalUrl };
     } catch (error) {
       this.logger.warn(
-        `Webhook signature verification failed: ${
+        `Polar portal session failed for ${userId}: ${
           error instanceof Error ? error.message : error
         }`,
       );
-      throw new BadRequestException('Invalid webhook signature');
+      throw new BadRequestException(
+        'No billing account found yet. Subscribe to a plan first.',
+      );
+    }
+  }
+
+  async handleWebhook(
+    rawBody: Buffer,
+    headers: Record<string, string>,
+  ): Promise<void> {
+    const webhookSecret = polarWebhookSecret();
+    if (!webhookSecret) {
+      throw new ServiceUnavailableException(
+        'POLAR_WEBHOOK_SECRET is not configured.',
+      );
+    }
+
+    let event: ReturnType<typeof validateEvent>;
+    try {
+      event = validateEvent(rawBody, headers, webhookSecret);
+    } catch (error) {
+      if (error instanceof WebhookVerificationError) {
+        this.logger.warn('Polar webhook signature verification failed.');
+        throw new BadRequestException('Invalid webhook signature');
+      }
+      throw error;
     }
 
     switch (event.type) {
-      case 'checkout.session.completed':
-        await this.onCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+      case 'customer.state_changed':
+        await this.applyCustomerState(event.data);
         break;
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted':
-        await this.onSubscriptionUpdated(event.data.object as Stripe.Subscription);
+      case 'subscription.past_due':
+        await this.applySubscriptionAccess(event.data, 'past_due');
         break;
-      case 'invoice.paid':
-        await this.onInvoicePaid(event.data.object as Stripe.Invoice);
-        break;
-      case 'invoice.payment_failed':
-        await this.onPaymentFailed(event.data.object as Stripe.Invoice);
+      case 'subscription.revoked':
+        await this.applySubscriptionAccess(event.data, 'inactive');
         break;
       default:
         break;
     }
   }
 
-  private resolvePlanFromMetadata(
-    metadataPlan: string | undefined,
-    planStatus: string,
-  ): ArcoPlan | null {
-    if (planStatus !== 'active') return null;
+  private async refreshCustomerStateFromPolar(userId: string): Promise<void> {
+    const polar = this.requirePolar();
+
+    try {
+      const state = await polar.customers.getStateExternal({
+        externalId: userId,
+      });
+      await this.applyCustomerState(state);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes('404') || message.toLowerCase().includes('not found')) {
+        return;
+      }
+      throw error;
+    }
+  }
+
+  private pickBestSubscription(
+    subscriptions: CustomerStateSubscription[],
+  ): CustomerStateSubscription | null {
+    if (subscriptions.length === 0) {
+      return null;
+    }
+
+    return subscriptions.reduce((best, current) => {
+      const bestPlan =
+        resolvePlanFromProductId(best.productId) ??
+        this.resolvePlanFromMetadata(best.metadata?.plan);
+      const currentPlan =
+        resolvePlanFromProductId(current.productId) ??
+        this.resolvePlanFromMetadata(current.metadata?.plan);
+
+      if (!bestPlan) return current;
+      if (!currentPlan) return best;
+
+      return planRank(currentPlan) >= planRank(bestPlan) ? current : best;
+    });
+  }
+
+  private resolvePlanFromMetadata(metadataPlan: unknown): ArcoPlan | null {
     if (metadataPlan === 'trial') return 'trial';
     if (metadataPlan === 'studio') return 'studio';
-    return 'pro';
+    if (metadataPlan === 'pro') return 'pro';
+    return null;
   }
 
-  private async onCheckoutCompleted(session: Stripe.Checkout.Session) {
-    const userId = session.metadata?.userId;
+  private resolvePlanFromSubscription(
+    subscription: CustomerStateSubscription | Subscription,
+  ): ArcoPlan | null {
+    return (
+      resolvePlanFromProductId(subscription.productId) ??
+      this.resolvePlanFromMetadata(subscription.metadata?.plan)
+    );
+  }
+
+  private mapActiveSubscriptionStatus(status: string): string {
+    if (status === 'active' || status === 'trialing') {
+      return 'active';
+    }
+    return 'inactive';
+  }
+
+  private async findUserIdForCustomerState(
+    state: CustomerState,
+  ): Promise<string | null> {
+    if (state.externalId) {
+      return state.externalId;
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: { polarCustomerId: state.id },
+    });
+    return user?.id ?? null;
+  }
+
+  private async findUserIdForSubscription(
+    subscription: Subscription,
+  ): Promise<string | null> {
+    const externalId = subscription.customer?.externalId;
+    if (externalId) {
+      return externalId;
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: { polarCustomerId: subscription.customerId },
+    });
+    return user?.id ?? null;
+  }
+
+  private async applyCustomerState(state: CustomerState): Promise<void> {
+    const userId = await this.findUserIdForCustomerState(state);
     if (!userId) return;
 
-    const metadataPlan = session.metadata?.plan;
-    const plan: ArcoPlan =
-      metadataPlan === 'trial'
-        ? 'trial'
-        : metadataPlan === 'studio'
-          ? 'studio'
-          : 'pro';
+    const subscription = this.pickBestSubscription(state.activeSubscriptions);
 
-    const subscriptionId =
-      typeof session.subscription === 'string'
-        ? session.subscription
-        : session.subscription?.id;
-
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        planStatus: 'active',
-        plan,
-        stripeSubscriptionId: subscriptionId ?? undefined,
-      },
-    });
-
-    await this.referrals.rewardReferrer(userId);
-  }
-
-  private async onSubscriptionUpdated(subscription: Stripe.Subscription) {
-    const userId = subscription.metadata?.userId;
-    if (!userId) {
-      const customerId =
-        typeof subscription.customer === 'string'
-          ? subscription.customer
-          : subscription.customer.id;
-      const user = await this.prisma.user.findFirst({
-        where: { stripeCustomerId: customerId },
+    if (!subscription) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          polarCustomerId: state.id,
+          planStatus: 'inactive',
+          plan: null,
+          polarSubscriptionId: null,
+          periodEnd: null,
+        },
       });
-      if (!user) return;
-      await this.syncSubscription(user.id, subscription);
       return;
     }
 
-    await this.syncSubscription(userId, subscription);
-  }
+    const planStatus = this.mapActiveSubscriptionStatus(subscription.status);
+    const plan = this.resolvePlanFromSubscription(subscription);
 
-  private async syncSubscription(userId: string, subscription: Stripe.Subscription) {
-    const status = subscription.status;
-    let planStatus = 'inactive';
-
-    if (status === 'active' || status === 'trialing') {
-      planStatus = 'active';
-    } else if (status === 'past_due' || status === 'unpaid') {
-      planStatus = 'past_due';
-    } else if (status === 'canceled') {
-      planStatus = 'canceled';
-    }
-
-    const plan = this.resolvePlanFromMetadata(
-      subscription.metadata?.plan,
-      planStatus,
-    );
-
-    const periodEndUnix =
-      subscription.items.data[0]?.current_period_end ??
-      (subscription as Stripe.Subscription & { current_period_end?: number })
-        .current_period_end;
-    const periodEnd = periodEndUnix
-      ? new Date(periodEndUnix * 1000)
-      : undefined;
+    const previous = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { planStatus: true },
+    });
 
     await this.prisma.user.update({
       where: { id: userId },
       data: {
+        polarCustomerId: state.id,
+        polarSubscriptionId: subscription.id,
         planStatus,
-        plan,
-        stripeSubscriptionId: subscription.id,
-        periodEnd,
+        plan: planStatus === 'active' ? plan : null,
+        periodEnd: subscription.currentPeriodEnd,
       },
     });
-  }
 
-  private async onInvoicePaid(invoice: Stripe.Invoice) {
-    const customerId =
-      typeof invoice.customer === 'string'
-        ? invoice.customer
-        : invoice.customer?.id;
-    if (!customerId) return;
-
-    const user = await this.prisma.user.findFirst({
-      where: { stripeCustomerId: customerId },
-    });
-    if (!user) return;
-
-    if (invoice.billing_reason === 'subscription_cycle') {
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { planStatus: 'active' },
-      });
+    if (previous?.planStatus !== 'active' && planStatus === 'active') {
+      await this.referrals.rewardReferrer(userId);
     }
   }
 
-  private async onPaymentFailed(invoice: Stripe.Invoice) {
-    const customerId =
-      typeof invoice.customer === 'string'
-        ? invoice.customer
-        : invoice.customer?.id;
-    if (!customerId) return;
+  private async applySubscriptionAccess(
+    subscription: Subscription,
+    planStatus: 'past_due' | 'inactive',
+  ): Promise<void> {
+    const userId = await this.findUserIdForSubscription(subscription);
+    if (!userId) return;
 
-    const user = await this.prisma.user.findFirst({
-      where: { stripeCustomerId: customerId },
-    });
-    if (!user) return;
+    const plan = this.resolvePlanFromSubscription(subscription);
 
     await this.prisma.user.update({
-      where: { id: user.id },
-      data: { planStatus: 'past_due' },
+      where: { id: userId },
+      data: {
+        polarCustomerId: subscription.customerId,
+        polarSubscriptionId: subscription.id,
+        planStatus,
+        plan: planStatus === 'past_due' ? plan : null,
+        periodEnd:
+          planStatus === 'past_due' ? subscription.currentPeriodEnd : null,
+      },
     });
   }
 }
