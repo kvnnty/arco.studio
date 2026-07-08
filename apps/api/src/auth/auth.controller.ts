@@ -12,12 +12,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { AuthService } from './auth.service.js';
-import { JwtAuthGuard } from './jwt-auth.guard.js';
-import type { AuthContext } from './auth.constants.js';
-import { LoginDto } from './dto/login.dto.js';
-import { RegisterDto } from './dto/register.dto.js';
-import { MagicLinkDto } from './dto/magic-link.dto.js';
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import type { AuthContext } from './auth.constants';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { MagicLinkDto } from './dto/magic-link.dto';
 import {
   CompleteOnboardingDto,
   ForgotPasswordDto,
@@ -26,14 +26,15 @@ import {
   ResetPasswordDto,
   SetPasswordDto,
   VerifyMagicLinkDto,
-} from './dto/auth-session.dto.js';
-import { OAuthService } from './services/oauth.service.js';
+} from './dto/auth-session.dto';
+import { OAuthService } from './services/oauth.service';
 
 function authContext(req: Request): AuthContext {
   return {
     ipAddress:
-      (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ??
-      req.ip,
+      (req.headers['x-forwarded-for'] as string | undefined)
+        ?.split(',')[0]
+        ?.trim() ?? req.ip,
     userAgent: req.headers['user-agent'],
   };
 }
@@ -113,13 +114,21 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('logout-all')
-  logoutAll(@Req() req: Request & { user: { id: string; sessionId?: string } }) {
-    return this.authService.logoutAll(req.user.id, req.user.sessionId, authContext(req));
+  logoutAll(
+    @Req() req: Request & { user: { id: string; sessionId?: string } },
+  ) {
+    return this.authService.logoutAll(
+      req.user.id,
+      req.user.sessionId,
+      authContext(req),
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('sessions')
-  listSessions(@Req() req: Request & { user: { id: string; sessionId?: string } }) {
+  listSessions(
+    @Req() req: Request & { user: { id: string; sessionId?: string } },
+  ) {
     return this.authService.listSessions(req.user.id, req.user.sessionId);
   }
 
@@ -129,7 +138,11 @@ export class AuthController {
     @Param('id') sessionId: string,
     @Req() req: Request & { user: { id: string } },
   ) {
-    return this.authService.revokeSession(req.user.id, sessionId, authContext(req));
+    return this.authService.revokeSession(
+      req.user.id,
+      sessionId,
+      authContext(req),
+    );
   }
 
   @UseGuards(JwtAuthGuard)

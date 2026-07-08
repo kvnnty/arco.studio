@@ -1,21 +1,18 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service.js';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import {
   AUTH_AUDIT_EVENTS,
   REFRESH_TOKEN_TTL_MS,
   type AuthContext,
   type AuthTokensResponse,
-} from '../auth.constants.js';
+} from '../auth.constants';
 import {
   deviceLabelFromUserAgent,
   generateOpaqueToken,
   hashToken,
-} from '../utils/crypto.util.js';
-import { AuditService } from './audit.service.js';
-import { TokenService } from './token.service.js';
+} from '../utils/crypto.util';
+import { AuditService } from './audit.service';
+import { TokenService } from './token.service';
 
 @Injectable()
 export class SessionService {

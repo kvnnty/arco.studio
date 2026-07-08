@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { OAuthProvider } from './oauth-provider.interface.js';
+import type { OAuthProvider } from './oauth-provider.interface';
 
 type GoogleTokenResponse = {
   access_token: string;
@@ -24,7 +24,7 @@ export class GoogleOAuthProvider implements OAuthProvider {
   isConfigured(): boolean {
     return Boolean(
       this.config.get('GOOGLE_CLIENT_ID') &&
-        this.config.get('GOOGLE_CLIENT_SECRET'),
+      this.config.get('GOOGLE_CLIENT_SECRET'),
     );
   }
 

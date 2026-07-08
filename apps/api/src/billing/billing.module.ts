@@ -1,8 +1,8 @@
 import { Global, Module } from '@nestjs/common';
-import { BillingController } from './billing.controller.js';
-import { BillingService } from './billing.service.js';
-import { SubscriptionGuard } from './subscription.guard.js';
-import { ProPlanGuard } from './pro-plan.guard.js';
+import { BillingController } from './billing.controller';
+import { BillingService } from './billing.service';
+import { SubscriptionGuard } from './subscription.guard';
+import { ProPlanGuard } from './pro-plan.guard';
 
 @Global()
 @Module({

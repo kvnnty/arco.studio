@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ACCESS_TOKEN_TTL } from '../auth.constants.js';
+import { ACCESS_TOKEN_TTL } from '../auth.constants';
 
 export type AccessTokenPayload = {
   sub: string;

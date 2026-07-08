@@ -16,9 +16,14 @@ type AccessPayload = JWTPayload & {
 };
 
 function getJwtSecret() {
-  return new TextEncoder().encode(
-    process.env.JWT_SECRET ?? process.env.AUTH_SECRET ?? "arco-dev-secret",
-  );
+  const secret = process.env.JWT_SECRET?.trim();
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("JWT_SECRET is not configured");
+    }
+    return new TextEncoder().encode("arco-dev-secret");
+  }
+  return new TextEncoder().encode(secret);
 }
 
 async function verifyAccessToken(token: string): Promise<AccessPayload | null> {

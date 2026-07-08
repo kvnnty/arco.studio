@@ -9,11 +9,11 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { SubscriptionGuard } from '../billing/subscription.guard.js';
-import { ProjectsService } from './projects.service.js';
-import { CreateProjectDto } from './dto/create-project.dto.js';
-import { UpdateProjectDto } from './dto/update-project.dto.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SubscriptionGuard } from '../billing/subscription.guard';
+import { ProjectsService } from './projects.service';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('projects')
@@ -35,10 +35,7 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  findOne(
-    @Request() req: { user: { id: string } },
-    @Param('id') id: string,
-  ) {
+  findOne(@Request() req: { user: { id: string } }, @Param('id') id: string) {
     return this.projectsService.findOne(id, req.user.id);
   }
 
@@ -52,10 +49,7 @@ export class ProjectsController {
   }
 
   @Delete(':id')
-  remove(
-    @Request() req: { user: { id: string } },
-    @Param('id') id: string,
-  ) {
+  remove(@Request() req: { user: { id: string } }, @Param('id') id: string) {
     return this.projectsService.remove(id, req.user.id);
   }
 }

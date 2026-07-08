@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { RendersController } from './renders.controller.js';
-import { RenderProcessorService } from './render-processor.service.js';
-import { RendersService } from './renders.service.js';
+import { RendersController } from './renders.controller';
+import { RenderProcessorService } from './render-processor.service';
+import { RendersService } from './renders.service';
 
 @Module({
   controllers: [RendersController],

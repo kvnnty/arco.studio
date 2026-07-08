@@ -1,7 +1,7 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { ReferralsService } from './referrals.service.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ReferralsService } from './referrals.service';
 
 type AuthedRequest = Request & { user: { id: string } };
 

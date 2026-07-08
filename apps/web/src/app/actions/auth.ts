@@ -16,7 +16,6 @@ import { formatZodError, safeParseFormData } from "@/lib/validations/form-data";
 export type AuthFormState = {
   error?: string;
   sent?: boolean;
-  devVerifyUrl?: string;
   message?: string;
 };
 
@@ -53,11 +52,10 @@ export async function magicLinkAction(
   }
 
   try {
-    const result = await postAuth<{ sent: boolean; devVerifyUrl?: string }>(
-      "/auth/magic-link",
-      { email: parsed.data.email },
-    );
-    return { sent: true, devVerifyUrl: result.devVerifyUrl };
+    await postAuth<{ sent: boolean }>("/auth/magic-link", {
+      email: parsed.data.email,
+    });
+    return { sent: true };
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Could not send magic link.",
@@ -95,14 +93,13 @@ export async function passwordRegisterAction(
   }
 
   try {
-    const result = await postAuth<{ sent: boolean; message: string; devVerifyUrl?: string }>(
+    const result = await postAuth<{ sent: boolean; message: string }>(
       "/auth/register",
       parsed.data,
     );
     return {
       sent: true,
       message: result.message,
-      devVerifyUrl: result.devVerifyUrl,
     };
   } catch (error) {
     return {

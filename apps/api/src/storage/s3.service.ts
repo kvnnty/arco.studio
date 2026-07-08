@@ -40,12 +40,29 @@ export class S3Service implements OnModuleInit {
   }
 
   async onModuleInit() {
+    const ensureBucket = async () => {
+      try {
+        await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
+        this.logger.log(`S3 bucket ready: ${this.bucket}`);
+      } catch {
+        this.logger.warn(`Creating S3 bucket: ${this.bucket}`);
+        await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
+        this.logger.log(`S3 bucket created: ${this.bucket}`);
+      }
+    };
+
     try {
-      await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
-      this.logger.log(`S3 bucket ready: ${this.bucket}`);
-    } catch {
-      this.logger.warn(`Creating S3 bucket: ${this.bucket}`);
-      await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
+      await Promise.race([
+        ensureBucket(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('S3 connection timed out')), 5000),
+        ),
+      ]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `S3 unavailable (${message}). Uploads/renders need MinIO — run: pnpm --filter @arco/api db:up`,
+      );
     }
   }
 

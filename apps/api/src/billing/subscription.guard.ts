@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-} from '@nestjs/common';
-import { BillingService } from './billing.service.js';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { BillingService } from './billing.service';
 
 type AuthedRequest = {
   user?: { id: string; email: string };

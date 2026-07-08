@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
-import { S3Service } from '../storage/s3.service.js';
+import { S3Service } from '../storage/s3.service';
 
 @Injectable()
 export class UploadsService {
@@ -47,7 +47,11 @@ export class UploadsService {
   ): Promise<{ key: string; url: string; filename: string }> {
     const ext = extname(file.originalname) || '.mp3';
     const key = `music/${userId}/${randomUUID()}${ext}`;
-    const uploaded = await this.s3.uploadObject(key, file.buffer, file.mimetype);
+    const uploaded = await this.s3.uploadObject(
+      key,
+      file.buffer,
+      file.mimetype,
+    );
 
     return {
       ...uploaded,
@@ -63,7 +67,9 @@ export class UploadsService {
     }
   }
 
-  validateVideoFile(file: Express.Multer.File | undefined): Express.Multer.File {
+  validateVideoFile(
+    file: Express.Multer.File | undefined,
+  ): Express.Multer.File {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
@@ -73,7 +79,9 @@ export class UploadsService {
     return file;
   }
 
-  validateImageFile(file: Express.Multer.File | undefined): Express.Multer.File {
+  validateImageFile(
+    file: Express.Multer.File | undefined,
+  ): Express.Multer.File {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
@@ -83,7 +91,9 @@ export class UploadsService {
     return file;
   }
 
-  validateMusicFile(file: Express.Multer.File | undefined): Express.Multer.File {
+  validateMusicFile(
+    file: Express.Multer.File | undefined,
+  ): Express.Multer.File {
     if (!file) {
       throw new BadRequestException('No file provided');
     }

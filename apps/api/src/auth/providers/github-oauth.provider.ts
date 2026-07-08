@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { OAuthProvider } from './oauth-provider.interface.js';
+import type { OAuthProvider } from './oauth-provider.interface';
 
 type GitHubTokenResponse = {
   access_token: string;
@@ -31,7 +31,7 @@ export class GitHubOAuthProvider implements OAuthProvider {
   isConfigured(): boolean {
     return Boolean(
       this.config.get('GITHUB_CLIENT_ID') &&
-        this.config.get('GITHUB_CLIENT_SECRET'),
+      this.config.get('GITHUB_CLIENT_SECRET'),
     );
   }
 

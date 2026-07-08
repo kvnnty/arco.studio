@@ -8,12 +8,15 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { Polar } from '@polar-sh/sdk';
-import { validateEvent, WebhookVerificationError } from '@polar-sh/sdk/webhooks';
-import type { CustomerState } from '@polar-sh/sdk/models/components/customerstate.js';
-import type { CustomerStateSubscription } from '@polar-sh/sdk/models/components/customerstatesubscription.js';
-import type { Subscription } from '@polar-sh/sdk/models/components/subscription.js';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { ReferralsService } from '../referrals/referrals.service.js';
+import {
+  validateEvent,
+  WebhookVerificationError,
+} from '@polar-sh/sdk/webhooks';
+import type { CustomerState } from '@polar-sh/sdk/models/components/customerstate';
+import type { CustomerStateSubscription } from '@polar-sh/sdk/models/components/customerstatesubscription';
+import type { Subscription } from '@polar-sh/sdk/models/components/subscription';
+import { PrismaService } from '../prisma/prisma.service';
+import { ReferralsService } from '../referrals/referrals.service';
 import {
   activeProjectLimit,
   allowedExportQualities,
@@ -25,7 +28,7 @@ import {
   parsePlan,
   type ArcoPlan,
   type ExportQuality,
-} from './plans.js';
+} from './plans';
 import {
   planRank,
   polarAccessToken,
@@ -37,7 +40,7 @@ import {
   resolvePolarProductId,
   validatePolarBillingConfig,
   type BillingInterval,
-} from './polar.config.js';
+} from './polar.config';
 
 export type BillingStatus = {
   planStatus: string;
@@ -281,7 +284,11 @@ export class BillingService implements OnModuleInit {
     });
   }
 
-  async recordAiUsage(userId: string, type: string, metadata?: object): Promise<void> {
+  async recordAiUsage(
+    userId: string,
+    type: string,
+    metadata?: object,
+  ): Promise<void> {
     await this.prisma.usageEvent.create({
       data: {
         userId,
@@ -337,7 +344,9 @@ export class BillingService implements OnModuleInit {
       productId = resolvePolarProductId(plan, interval);
     } catch (error) {
       throw new ServiceUnavailableException(
-        error instanceof Error ? error.message : 'Polar product is not configured.',
+        error instanceof Error
+          ? error.message
+          : 'Polar product is not configured.',
       );
     }
 
@@ -383,7 +392,9 @@ export class BillingService implements OnModuleInit {
       });
 
       if (!session.customerPortalUrl) {
-        throw new BadRequestException('Could not create customer portal session.');
+        throw new BadRequestException(
+          'Could not create customer portal session.',
+        );
       }
 
       if (session.customerId !== user.polarCustomerId) {
@@ -453,7 +464,10 @@ export class BillingService implements OnModuleInit {
       await this.applyCustomerState(state);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (message.includes('404') || message.toLowerCase().includes('not found')) {
+      if (
+        message.includes('404') ||
+        message.toLowerCase().includes('not found')
+      ) {
         return;
       }
       throw error;

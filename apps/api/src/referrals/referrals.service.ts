@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service';
 
 const REFERRAL_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -108,7 +108,10 @@ export class ReferralsService {
     throw new Error('Could not generate a unique referral code.');
   }
 
-  async attachReferral(referredUserId: string, referralCode?: string | null): Promise<void> {
+  async attachReferral(
+    referredUserId: string,
+    referralCode?: string | null,
+  ): Promise<void> {
     const normalized = referralCode?.trim().toUpperCase();
     if (!normalized) return;
 

@@ -1,9 +1,12 @@
-import { createPendingProject, createScreenshotPendingProject } from '@arco/project-schema';
+import {
+  createPendingProject,
+  createScreenshotPendingProject,
+} from '@arco/project-schema';
 import {
   applyTemplateToProject,
   getTemplate,
 } from '@arco/project-schema/templates';
-import type { CreateProjectDto } from './dto/create-project.dto.js';
+import type { CreateProjectDto } from './dto/create-project.dto';
 
 export function buildInitialProjectData(dto: CreateProjectDto) {
   const isScreenshotMode = dto.projectMode === 'screenshots';

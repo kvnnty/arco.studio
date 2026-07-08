@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service';
 
 const userSelect = {
   id: true,
@@ -34,7 +34,9 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...(input.name !== undefined ? { name: input.name.trim() || null } : {}),
+        ...(input.name !== undefined
+          ? { name: input.name.trim() || null }
+          : {}),
       },
       select: userSelect,
     });

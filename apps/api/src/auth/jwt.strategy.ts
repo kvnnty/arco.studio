@@ -2,8 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { Request } from 'express';
-import { SessionService } from './services/session.service.js';
-import type { AccessTokenPayload } from './services/token.service.js';
+import { SessionService } from './services/session.service';
+import type { AccessTokenPayload } from './services/token.service';
 
 function extractJwt(req: Request): string | null {
   const bearer = ExtractJwt.fromAuthHeaderAsBearerToken()(req);

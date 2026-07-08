@@ -10,8 +10,8 @@ import {
   getVoiceById,
   resolveVoiceId,
 } from '@arco/project-schema/voices';
-import { S3Service } from '../storage/s3.service.js';
-import type { GenerateVoiceDto, PreviewVoiceDto } from './dto/voice.dto.js';
+import { S3Service } from '../storage/s3.service';
+import type { GenerateVoiceDto, PreviewVoiceDto } from './dto/voice.dto';
 
 @Injectable()
 export class VoiceService {
@@ -39,10 +39,7 @@ export class VoiceService {
     return apiKey;
   }
 
-  async synthesize(
-    voiceId: string,
-    text: string,
-  ): Promise<Buffer> {
+  async synthesize(voiceId: string, text: string): Promise<Buffer> {
     const apiKey = this.requireApiKey();
     const voice = getVoiceById(voiceId) ?? getVoiceById(getDefaultVoiceId());
     if (!voice) {

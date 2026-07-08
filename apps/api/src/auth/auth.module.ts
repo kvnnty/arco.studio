@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { AuthController } from './auth.controller.js';
-import { AuthService } from './auth.service.js';
-import { JwtStrategy } from './jwt.strategy.js';
-import { AuditService } from './services/audit.service.js';
-import { EmailQueueService } from './services/email-queue.service.js';
-import { MagicLinkService } from './services/magic-link.service.js';
-import { RateLimitService } from './services/rate-limit.service.js';
-import { SessionService } from './services/session.service.js';
-import { TokenService } from './services/token.service.js';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './jwt.strategy';
+import { AuditService } from './services/audit.service';
+import { EmailQueueService } from './services/email-queue.service';
+import { MagicLinkService } from './services/magic-link.service';
+import { RateLimitService } from './services/rate-limit.service';
+import { SessionService } from './services/session.service';
+import { TokenService } from './services/token.service';
 
-import { OAuthService } from './services/oauth.service.js';
-import { GoogleOAuthProvider } from './providers/google-oauth.provider.js';
-import { GitHubOAuthProvider } from './providers/github-oauth.provider.js';
+import { OAuthService } from './services/oauth.service';
+import { GoogleOAuthProvider } from './providers/google-oauth.provider';
+import { GitHubOAuthProvider } from './providers/github-oauth.provider';
 
 @Module({
   imports: [

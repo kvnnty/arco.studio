@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   AUTH_AUDIT_EVENTS,
   BCRYPT_ROUNDS,
@@ -14,25 +14,22 @@ import {
   RATE_LIMITS,
   type AuthContext,
   type AuthTokensResponse,
-} from './auth.constants.js';
+} from './auth.constants';
 import {
   fingerprintLogin,
   hashToken,
   normalizeEmail,
-} from './utils/crypto.util.js';
-import { AuditService } from './services/audit.service.js';
-import { EmailQueueService } from './services/email-queue.service.js';
-import { MagicLinkService } from './services/magic-link.service.js';
-import { RateLimitService } from './services/rate-limit.service.js';
-import { SessionService } from './services/session.service.js';
-import { ReferralsService } from '../referrals/referrals.service.js';
-import type { LoginDto } from './dto/login.dto.js';
-import type { MagicLinkDto } from './dto/magic-link.dto.js';
-import type { RegisterDto } from './dto/register.dto.js';
-import type {
-  ResetPasswordDto,
-  SetPasswordDto,
-} from './dto/auth-session.dto.js';
+} from './utils/crypto.util';
+import { AuditService } from './services/audit.service';
+import { EmailQueueService } from './services/email-queue.service';
+import { MagicLinkService } from './services/magic-link.service';
+import { RateLimitService } from './services/rate-limit.service';
+import { SessionService } from './services/session.service';
+import { ReferralsService } from '../referrals/referrals.service';
+import type { LoginDto } from './dto/login.dto';
+import type { MagicLinkDto } from './dto/magic-link.dto';
+import type { RegisterDto } from './dto/register.dto';
+import type { ResetPasswordDto, SetPasswordDto } from './dto/auth-session.dto';
 
 @Injectable()
 export class AuthService {
@@ -50,7 +47,10 @@ export class AuthService {
     const email = normalizeEmail(dto.email);
 
     if (
-      !this.rateLimit.consume(`magic:email:${email}`, RATE_LIMITS.magicLinkPerEmail) ||
+      !this.rateLimit.consume(
+        `magic:email:${email}`,
+        RATE_LIMITS.magicLinkPerEmail,
+      ) ||
       !this.rateLimit.consume(
         `magic:ip:${ctx.ipAddress ?? 'unknown'}`,
         RATE_LIMITS.magicLinkPerIp,
@@ -110,11 +110,13 @@ export class AuthService {
     return {
       sent: true,
       purpose,
-      ...(process.env.NODE_ENV !== 'production' ? { devVerifyUrl: url } : {}),
     };
   }
 
-  async verifyMagicLink(token: string, ctx: AuthContext): Promise<AuthTokensResponse> {
+  async verifyMagicLink(
+    token: string,
+    ctx: AuthContext,
+  ): Promise<AuthTokensResponse> {
     const consumed = await this.magicLinks.consumeToken(token);
     if (!consumed) {
       this.audit.enqueue(AUTH_AUDIT_EVENTS.MAGIC_LINK_FAILED, { ctx });
@@ -209,7 +211,6 @@ export class AuthService {
     return {
       sent: true,
       message: 'Check your email to verify your account before signing in.',
-      ...(process.env.NODE_ENV !== 'production' ? { devVerifyUrl: url } : {}),
     };
   }
 
@@ -269,7 +270,10 @@ export class AuthService {
     return tokens;
   }
 
-  async refresh(refreshToken: string, ctx: AuthContext): Promise<AuthTokensResponse> {
+  async refresh(
+    refreshToken: string,
+    ctx: AuthContext,
+  ): Promise<AuthTokensResponse> {
     if (
       !this.rateLimit.consume(
         `refresh:${hashToken(refreshToken)}`,
@@ -296,7 +300,11 @@ export class AuthService {
     }
   }
 
-  async logoutAll(userId: string, currentSessionId: string | undefined, ctx: AuthContext) {
+  async logoutAll(
+    userId: string,
+    currentSessionId: string | undefined,
+    ctx: AuthContext,
+  ) {
     await this.sessions.revokeAllSessions(userId, currentSessionId);
     this.audit.enqueue(AUTH_AUDIT_EVENTS.LOGOUT_ALL, { userId, ctx });
   }
@@ -380,11 +388,16 @@ export class AuthService {
     return { success: true };
   }
 
-  async completeOnboarding(userId: string, input: { name?: string; step?: string }) {
+  async completeOnboarding(
+    userId: string,
+    input: { name?: string; step?: string },
+  ) {
     return this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...(input.name !== undefined ? { name: input.name.trim() || null } : {}),
+        ...(input.name !== undefined
+          ? { name: input.name.trim() || null }
+          : {}),
         ...(input.step === 'completed'
           ? { onboardingCompleted: true, onboardingStep: 'completed' }
           : input.step
@@ -443,6 +456,5 @@ export class AuthService {
         metadata: { fingerprint },
       });
     }
-
   }
 }
