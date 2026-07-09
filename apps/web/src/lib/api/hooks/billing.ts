@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   apiCreateBillingCheckout,
   apiCreateBillingPortal,
+  apiCreateTopUpCheckout,
   apiGetBillingStatus,
   apiGetBillingUsage,
   type BillingInterval,
@@ -55,6 +56,17 @@ export function useBillingPortalMutation() {
     mutationFn: () => {
       if (!token) throw new Error("Not authenticated");
       return apiCreateBillingPortal(token);
+    },
+  });
+}
+
+export function useTopUpCheckoutMutation() {
+  const { token } = useApiClient();
+
+  return useMutation({
+    mutationFn: () => {
+      if (!token) throw new Error("Not authenticated");
+      return apiCreateTopUpCheckout(token);
     },
   });
 }

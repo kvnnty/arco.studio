@@ -20,8 +20,8 @@ export const pricingPlans: PricingPlan[] = [
     monthlyPrice: 9,
     annualPrice: 9,
     features: [
-      "5 active projects",
-      "Unlimited re-exports per project",
+      "200 credits per month",
+      "Unlimited projects",
       "720p export",
       "Up to 2 min per video",
       "Full editor access",
@@ -29,7 +29,7 @@ export const pricingPlans: PricingPlan[] = [
     ],
     cta: "Get started",
     href: "/signup?plan=trial",
-    priceNote: "Delete a project to free a slot for a new one",
+    priceNote: "Top up anytime — 200 credits per pack",
   },
   {
     id: "pro",
@@ -39,8 +39,8 @@ export const pricingPlans: PricingPlan[] = [
     monthlyPrice: 29,
     annualPrice: 24,
     features: [
-      "15 active projects",
-      "Unlimited re-exports per project",
+      "1,250 credits per month",
+      "Unlimited projects",
       "Up to 1080p export",
       "Up to 5 min per video",
       "Brand from URL + custom music",
@@ -55,11 +55,12 @@ export const pricingPlans: PricingPlan[] = [
     id: "studio",
     name: "Studio",
     description:
-      "For founders shipping at the highest quality — 4K export, no project cap.",
+      "For founders shipping at the highest quality — 4K export and high monthly volume.",
     monthlyPrice: 59,
     annualPrice: 49,
     features: [
-      "Unlimited active projects",
+      "5,000 credits per month",
+      "Unlimited projects",
       "Up to 4K export",
       "Up to 10 min per video",
       "Everything in Pro",
@@ -72,9 +73,9 @@ export const pricingPlans: PricingPlan[] = [
 
 export const pricingFaqs = [
   {
-    question: "What counts toward my limit?",
+    question: "How do credits work?",
     answer:
-      "Active projects in your workspace. Delete a project to free a slot and create a new one. Re-exporting the same project unlimited times does not use extra slots.",
+      "Your plan includes monthly credits. Each AI action, voice generation, and export spends credits. Top up anytime if you need more before your next billing period.",
   },
   {
     question: "Can I cancel anytime?",
@@ -84,7 +85,7 @@ export const pricingFaqs = [
   {
     question: "What's the difference between Intro, Pro, and Studio?",
     answer:
-      "Intro ($9) gives 5 active projects, 720p export, and videos up to 2 minutes. Pro ($29) gives 15 projects, up to 1080p export, videos up to 5 minutes, and full brand/audio features. Studio ($59) adds unlimited projects, up to 4K export, and videos up to 10 minutes.",
+      "Intro ($9) includes 200 monthly credits, 720p export, and videos up to 2 minutes. Pro ($29) includes 1,250 credits, up to 1080p export, videos up to 5 minutes, and full brand/audio features. Studio ($59) includes 5,000 credits, up to 4K export, and videos up to 10 minutes.",
   },
   {
     question: "Do you offer team or seat-based plans?",
@@ -105,15 +106,11 @@ export const pricingFaqs = [
 export const featureComparison = {
   categories: [
     {
-      name: "Workspace",
+      name: "Credits",
       features: [
-        { name: "Active projects", trial: "5", pro: "15", studio: "Unlimited" },
-        {
-          name: "Re-exports per project",
-          trial: "Unlimited",
-          pro: "Unlimited",
-          studio: "Unlimited",
-        },
+        { name: "Monthly credits", trial: "200", pro: "1,250", studio: "5,000" },
+        { name: "Credit top-ups", trial: true, pro: true, studio: true },
+        { name: "Unlimited projects", trial: true, pro: true, studio: true },
       ],
     },
     {

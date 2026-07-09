@@ -1,49 +1,37 @@
-import type { BillingStatus, BillingUsage } from "@/lib/api/client";
+import type { BillingStatus } from "@/lib/api/client";
 
-const MONTHLY_SCENE_CREDITS: Record<string, number> = {
-  trial: 10,
-  pro: 50,
-  studio: 9999,
-};
-
-export function getMonthlySceneAllowance(plan: string | null): number {
-  if (!plan) return 5;
-  return MONTHLY_SCENE_CREDITS[plan] ?? 10;
+export function getAvailableCredits(billing?: BillingStatus | null): number {
+  return billing?.credits.available ?? 0;
 }
 
-export function countCreditsUsedThisMonth(usage?: BillingUsage): number {
-  if (!usage) return 0;
-  return (
-    (usage.counts.ai_scene ?? 0) +
-    (usage.counts.ai_draft ?? 0) +
-    (usage.counts.export ?? 0)
-  );
+export function getReservedCredits(billing?: BillingStatus | null): number {
+  return billing?.credits.reserved ?? 0;
 }
 
-export function getAvailableSceneCredits(
-  billing?: BillingStatus,
-  usage?: BillingUsage,
-): number {
-  if (!billing?.canUseProduct) return 0;
-  if (billing.plan === "studio") return Infinity;
-
-  const allowance = getMonthlySceneAllowance(billing.plan);
-  const used = countCreditsUsedThisMonth(usage);
-  return Math.max(0, allowance - used);
-}
-
-export function sceneCreditsNeeded(sceneCount: number): number {
-  return sceneCount;
-}
-
-export function hasEnoughSceneCredits(
-  sceneCount: number,
-  billing?: BillingStatus,
-  usage?: BillingUsage,
+export function hasEnoughCredits(
+  billing: BillingStatus | null | undefined,
+  amount: number,
 ): boolean {
-  const available = getAvailableSceneCredits(billing, usage);
-  if (!Number.isFinite(available)) return true;
-  return sceneCount <= available;
+  return getAvailableCredits(billing) >= amount;
+}
+
+export const CREDIT_COST_HINTS = {
+  ai_draft: 25,
+  ai_storyboard: 30,
+  ai_chat: 5,
+  ai_refine: 10,
+  ai_regenerate: 8,
+  voice_generate: 20,
+  voice_preview: 2,
+  export_720p: 50,
+  export_1080p: 75,
+  export_4k: 100,
+} as const;
+
+export function creditCostHint(
+  action: keyof typeof CREDIT_COST_HINTS,
+): number {
+  return CREDIT_COST_HINTS[action];
 }
 
 export function inferBrandStyle(tone?: string): {

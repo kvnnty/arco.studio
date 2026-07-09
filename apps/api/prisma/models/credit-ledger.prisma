@@ -1,0 +1,22 @@
+model CreditLedgerEntry {
+  id                 String    @id @default(cuid())
+  userId             String
+  kind               String
+  status             String    @default("active")
+  amount             Int
+  balanceType        String?
+  actionType         String?
+  referenceType      String?
+  referenceId        String?
+  idempotencyKey     String?   @unique
+  parentReservationId String?
+  metadata           String    @default("{}")
+  settledAt          DateTime?
+  refundedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, status])
+  @@index([referenceType, referenceId])
+}

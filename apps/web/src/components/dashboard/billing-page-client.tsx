@@ -19,27 +19,28 @@ import {
   useBillingPortalMutation,
   useBillingStatus,
   useCheckoutMutation,
+  useTopUpCheckoutMutation,
 } from "@/lib/api/hooks/billing";
 import type { BillingInterval, CheckoutPlan } from "@/lib/api/client";
 import { pricingPlans } from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
 const TRIAL_FEATURES = [
-  "5 active projects",
-  "Unlimited re-exports per project",
+  "200 credits per month",
+  "Unlimited projects",
   "720p export · up to 2 min",
   "Upgrade anytime",
 ];
 
 const PRO_FEATURES = [
-  "15 active projects",
+  "1,250 credits per month",
   "Up to 1080p export · 5 min videos",
   "Brand from URL + custom music",
   "AI assistant + voiceover",
 ];
 
 const STUDIO_FEATURES = [
-  "Unlimited active projects",
+  "5,000 credits per month",
   "Up to 4K export · 10 min videos",
   "Everything in Pro",
 ];
@@ -59,6 +60,7 @@ export function BillingPageClient() {
   const { data: status, isLoading } = useBillingStatus();
   const checkoutMutation = useCheckoutMutation();
   const portalMutation = useBillingPortalMutation();
+  const topUpMutation = useTopUpCheckoutMutation();
 
   const billingInterval: BillingInterval = annual ? "annual" : "monthly";
 
@@ -327,52 +329,50 @@ export function BillingPageClient() {
       {isActive ? (
         <Card className="rounded-2xl">
           <CardHeader>
-            <CardTitle className="text-base">Workspace usage</CardTitle>
+            <CardTitle className="text-base">Credit balance</CardTitle>
             <CardDescription>
-              {status.hasUnlimitedProjects
-                ? `${status.activeProjectCount} active projects · unlimited plan`
-                : `${status.activeProjectCount} of ${status.activeProjectLimit} active projects · ${status.activeProjectsRemaining} slots remaining`}
-              {status.periodEnd
-                ? ` · Renews ${new Date(status.periodEnd).toLocaleDateString()}`
+              {status.credits.available} available · {status.credits.included} included ·{" "}
+              {status.credits.purchased} purchased · {status.credits.reserved} reserved
+              {status.credits.periodEnd
+                ? ` · Period ends ${new Date(status.credits.periodEnd).toLocaleDateString()}`
                 : null}
             </CardDescription>
           </CardHeader>
-          {!status.hasUnlimitedProjects ? (
-            <CardContent>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{
-                    width: `${Math.min(
-                      100,
-                      status.activeProjectLimit > 0
-                        ? Math.round(
-                            (status.activeProjectCount /
-                              status.activeProjectLimit) *
-                              100,
-                          )
-                        : 0,
-                    )}%`,
-                  }}
-                />
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Delete a project to free a slot. Re-exports do not count toward this
-                limit.
-              </p>
-              <p className="mt-4 text-xs text-muted-foreground">
-                View invoices, update your payment method, or change plans from the
-                Polar customer portal.
-              </p>
-            </CardContent>
-          ) : (
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                View invoices, update your payment method, or change plans from the
-                Polar customer portal.
-              </p>
-            </CardContent>
-          )}
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                disabled={topUpMutation.isPending}
+                onClick={() => {
+                  topUpMutation.mutate(undefined, {
+                    onSuccess: ({ url }) => {
+                      window.location.href = url;
+                    },
+                    onError: (error) => {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : "Could not start top-up.",
+                      );
+                    },
+                  });
+                }}
+              >
+                Top up {status.credits.topUpAmount} credits
+              </Button>
+              <Button
+                variant="outline"
+                disabled={portalMutation.isPending}
+                onClick={handlePortal}
+              >
+                Manage subscription
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              AI actions, voice generation, and exports spend credits. Failed actions
+              refund reserved credits automatically.
+            </p>
+          </CardContent>
         </Card>
       ) : null}
     </div>

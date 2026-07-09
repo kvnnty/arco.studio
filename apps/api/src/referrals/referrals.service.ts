@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreditsService } from '../billing/credits.service';
 
 const REFERRAL_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -29,10 +30,13 @@ export type ReferralSummary = {
 export class ReferralsService {
   private readonly logger = new Logger(ReferralsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly credits: CreditsService,
+  ) {}
 
   get creditsPerReferral(): number {
-    return Number(process.env.REFERRAL_CREDITS_PER_SIGNUP ?? 5);
+    return Number(process.env.REFERRAL_CREDITS_PER_SIGNUP ?? 200);
   }
 
   private get webAppUrl(): string {
@@ -178,10 +182,6 @@ export class ReferralsService {
           rewardedAt: new Date(),
         },
       }),
-      this.prisma.user.update({
-        where: { id: referral.referrerUserId },
-        data: { extraProjectSlots: { increment: credits } },
-      }),
       this.prisma.usageEvent.create({
         data: {
           userId: referral.referrerUserId,
@@ -194,8 +194,14 @@ export class ReferralsService {
       }),
     ]);
 
+    await this.credits.grantReferralCredits(
+      referral.referrerUserId,
+      referral.id,
+      credits,
+    );
+
     this.logger.log(
-      `Awarded ${credits} bonus project slots to referrer ${referral.referrerUserId} for referral ${referral.id}`,
+      `Awarded ${credits} bonus credits to referrer ${referral.referrerUserId} for referral ${referral.id}`,
     );
   }
 

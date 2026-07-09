@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { BrandKit } from "@/lib/api/hooks/brand";
 import { useAnalyzeBrandMutation } from "@/lib/api/hooks/brand";
-import { useBillingStatus, useBillingUsage } from "@/lib/api/hooks/billing";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
 import { ChatMessageBubble } from "@/components/editor/chat-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,10 +23,10 @@ import {
   type ChatMessage,
 } from "@/lib/editor/chat-types";
 import {
-  getAvailableSceneCredits,
-  hasEnoughSceneCredits,
+  creditCostHint,
+  getAvailableCredits,
+  hasEnoughCredits,
   inferBrandStyle,
-  sceneCreditsNeeded,
 } from "@/lib/editor/generation-credits";
 import {
   advancePipeline,
@@ -93,7 +93,6 @@ export function ChatPanel({
   const { session } = useAuth();
   const analyzeBrand = useAnalyzeBrandMutation();
   const { data: billing } = useBillingStatus();
-  const { data: usage } = useBillingUsage();
 
   const hostname = productUrl ? getUrlHostname(productUrl) : undefined;
 
@@ -269,11 +268,10 @@ export function ChatPanel({
         content: "Drafting scenes…",
       });
 
-      const creditsNeeded = sceneCreditsNeeded(result.markers.length);
-      const creditsAvailable = getAvailableSceneCredits(billing, usage);
-      const enoughCredits =
-        !billing ||
-        hasEnoughSceneCredits(result.markers.length, billing, usage);
+      const creditsNeeded =
+        creditCostHint("voice_generate") * Math.max(1, result.markers.length);
+      const creditsAvailable = getAvailableCredits(billing);
+      const enoughCredits = !billing || hasEnoughCredits(billing, creditsNeeded);
 
       appendMessage({
         id: createChatId(),
@@ -346,7 +344,6 @@ export function ChatPanel({
     session?.accessToken,
     templateId,
     updateMessage,
-    usage,
   ]);
 
   const handleSend = async (text: string) => {

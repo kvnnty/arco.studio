@@ -49,13 +49,26 @@ export class RendersService {
       throw new BadRequestException('Invalid project data');
     }
 
+    const tempJobId = `pending-${Date.now()}`;
+    const reservation = await this.billing.reserveForExport(
+      userId,
+      tempJobId,
+      quality,
+    );
+
     const job = await this.prisma.renderJob.create({
       data: {
         projectId: dto.projectId,
         format,
         quality,
         status: 'queued',
+        creditReservationId: reservation.id,
       },
+    });
+
+    await this.billing.updateReservationReference(reservation.id, job.id, {
+      quality,
+      renderJobId: job.id,
     });
 
     this.renderProcessor.queueJob(job.id);

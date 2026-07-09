@@ -42,7 +42,7 @@ const faqs = [
   },
   {
     q: "How do credits work?",
-    a: "Each video generation consumes credits based on length and complexity. Your plan includes a monthly allowance.",
+    a: "Your plan includes monthly credits. AI actions, voice generation, and exports spend credits. Top up anytime if you need more before your next billing period.",
   },
   {
     q: "Can I edit after generation?",
