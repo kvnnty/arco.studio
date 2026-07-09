@@ -15,6 +15,7 @@ import {
   getTemplate,
   mergeTemplateMotionOntoMarkers,
 } from '@arco/project-schema/templates';
+import { buildChatMessages, EDITOR_CHAT_TOOLS } from './chat-tools';
 import { GenerateDraftDto } from './dto/generate-draft.dto';
 import { GenerateStoryboardDto } from './dto/generate-storyboard.dto';
 import { RegenerateMarkerDto } from './dto/regenerate-marker.dto';
@@ -25,17 +26,12 @@ import {
   normalizeStylePreset,
   scenesToMarkers,
 } from './draft-heuristic';
-
-type LlmDraftResponse = {
-  markers?: Array<{
-    startMs: number;
-    durationMs?: number;
-    label?: string;
-    callout?: { text: string; subtext?: string };
-    clickEffect?: string;
-  }>;
-  stylePreset?: string;
-};
+import { OpenAiService } from './openai.service';
+import { parseChatActionFromTool } from './schemas/chat-action.schema';
+import { draftResponseSchema } from './schemas/draft-response.schema';
+import { markerRegenSchema } from './schemas/marker-regen.schema';
+import { refineResponseSchema } from './schemas/refine-response.schema';
+import { storyboardResponseSchema } from './schemas/storyboard-response.schema';
 
 function normalizeClickEffect(value: unknown): ClickEffect {
   const allowed: ClickEffect[] = [
@@ -56,16 +52,16 @@ function normalizeClickEffect(value: unknown): ClickEffect {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
 
+  constructor(private readonly openAi: OpenAiService) {}
+
   async generateDraft(dto: GenerateDraftDto): Promise<{
     markers: Marker[];
     stylePreset: StylePreset;
     source: 'llm' | 'heuristic';
   }> {
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (apiKey) {
+    if (this.openAi.isConfigured()) {
       try {
-        const llmResult = await this.generateWithLlm(dto, apiKey);
+        const llmResult = await this.generateWithLlm(dto);
         return { ...llmResult, source: 'llm' };
       } catch (error) {
         this.logger.warn(
@@ -104,7 +100,6 @@ export class AiService {
 
   private async generateWithLlm(
     dto: GenerateDraftDto,
-    apiKey: string,
   ): Promise<{ markers: Marker[]; stylePreset: StylePreset }> {
     const sceneCount = dto.templateContext?.sceneCount
       ? dto.templateContext.sceneCount
@@ -132,49 +127,25 @@ export class AiService {
       dto.platform ? `Platform: ${dto.platform}` : null,
       `Recording durationMs: ${dto.durationMs}`,
       ...templateLines,
-      'Return JSON: { "stylePreset": "startup"|"linear"|"stripe"|"apple", "markers": [{ "startMs", "durationMs", "label", "callout": { "text", "subtext?" }, "clickEffect": "ripple"|"zoom"|"spotlight"|"pulse"|"glow"|"none" }] }',
+      'Return markers with startMs, durationMs, label, callout, and clickEffect fields.',
     ]
       .filter(Boolean)
       .join('\n');
 
     const systemContent = dto.templateContext
-      ? `You write on-screen text for SaaS launch videos following the "${dto.templateContext.name}" template. ${dto.templateContext.copyTone} Match the template scene structure and copy rhythm. No hype clichés. Output JSON only.`
-      : 'You write on-screen text for SaaS launch videos. Tone: confident, minimal, devtool audience. No hype clichés. Output JSON only.';
+      ? `You write on-screen text for SaaS launch videos following the "${dto.templateContext.name}" template. ${dto.templateContext.copyTone} Match the template scene structure and copy rhythm. No hype clichés.`
+      : 'You write on-screen text for SaaS launch videos. Tone: confident, minimal, devtool audience. No hype clichés.';
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
-        temperature: 0.4,
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content: systemContent,
-          },
-          { role: 'user', content: userPrompt },
-        ],
-      }),
-    });
+    const parsed = await this.openAi.completeStructured(
+      draftResponseSchema,
+      'draft',
+      [
+        { role: 'system', content: systemContent },
+        { role: 'user', content: userPrompt },
+      ],
+      { temperature: 0.4 },
+    );
 
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`OpenAI error ${response.status}: ${body}`);
-    }
-
-    const payload = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = payload.choices?.[0]?.message?.content;
-    if (!content) {
-      throw new Error('OpenAI returned empty content');
-    }
-
-    const parsed = JSON.parse(content) as LlmDraftResponse;
     let markers = scenesToMarkers(
       (parsed.markers ?? []).map((marker) => ({
         ...marker,
@@ -205,11 +176,9 @@ export class AiService {
     label?: string;
     source: 'llm' | 'heuristic';
   }> {
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (apiKey) {
+    if (this.openAi.isConfigured()) {
       try {
-        const result = await this.regenerateMarkerWithLlm(dto, apiKey);
+        const result = await this.regenerateMarkerWithLlm(dto);
         return { ...result, source: 'llm' };
       } catch (error) {
         this.logger.warn(
@@ -250,7 +219,6 @@ export class AiService {
 
   private async regenerateMarkerWithLlm(
     dto: RegenerateMarkerDto,
-    apiKey: string,
   ): Promise<{ callout: { text: string; subtext?: string }; label?: string }> {
     const currentText =
       dto.marker.callout?.text ?? dto.marker.label ?? 'Scene headline';
@@ -262,53 +230,23 @@ export class AiService {
       `Scene ${dto.markerIndex + 1} of ${dto.markerCount} at ${dto.marker.startMs}ms`,
       `Current headline: "${currentText}"`,
       'Rewrite the on-screen headline and optional subtext for this scene.',
-      'Return JSON: { "callout": { "text": "max 8 words", "subtext": "max 12 words optional" }, "label": "short scene label" }',
     ]
       .filter(Boolean)
       .join('\n');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
-        temperature: 0.5,
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You write on-screen text for SaaS launch videos. Tone: confident, minimal. No hype clichés. Output JSON only.',
-          },
-          { role: 'user', content: userPrompt },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`OpenAI error ${response.status}: ${body}`);
-    }
-
-    const payload = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = payload.choices?.[0]?.message?.content;
-    if (!content) {
-      throw new Error('OpenAI returned empty content');
-    }
-
-    const parsed = JSON.parse(content) as {
-      callout?: { text: string; subtext?: string };
-      label?: string;
-    };
-
-    if (!parsed.callout?.text) {
-      throw new Error('Invalid marker regen response');
-    }
+    const parsed = await this.openAi.completeStructured(
+      markerRegenSchema,
+      'marker_regen',
+      [
+        {
+          role: 'system',
+          content:
+            'You write on-screen text for SaaS launch videos. Tone: confident, minimal. No hype clichés.',
+        },
+        { role: 'user', content: userPrompt },
+      ],
+      { temperature: 0.5 },
+    );
 
     return {
       callout: {
@@ -326,11 +264,9 @@ export class AiService {
     }>;
     source: 'llm' | 'heuristic';
   }> {
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (apiKey) {
+    if (this.openAi.isConfigured()) {
       try {
-        const result = await this.refineProjectWithLlm(dto, apiKey);
+        const result = await this.refineProjectWithLlm(dto);
         return { ...result, source: 'llm' };
       } catch (error) {
         this.logger.warn(
@@ -389,7 +325,6 @@ export class AiService {
 
   private async refineProjectWithLlm(
     dto: RefineProjectDto,
-    apiKey: string,
   ): Promise<{
     markers: Array<{
       callout: { text: string; subtext?: string };
@@ -410,51 +345,24 @@ export class AiService {
       `Instruction: ${dto.instruction}`,
       'Current scenes:',
       scenes,
-      'Return JSON: { "markers": [{ "callout": { "text", "subtext?" }, "label" }] } — same count and order.',
+      'Return the same number of markers in the same order with updated callout and label fields.',
     ]
       .filter(Boolean)
       .join('\n');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
-        temperature: 0.5,
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You refine on-screen copy for SaaS launch videos. Keep headlines concise. Output JSON only.',
-          },
-          { role: 'user', content: userPrompt },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`OpenAI error ${response.status}: ${body}`);
-    }
-
-    const payload = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = payload.choices?.[0]?.message?.content;
-    if (!content) {
-      throw new Error('OpenAI returned empty content');
-    }
-
-    const parsed = JSON.parse(content) as {
-      markers?: Array<{
-        callout?: { text: string; subtext?: string };
-        label?: string;
-      }>;
-    };
+    const parsed = await this.openAi.completeStructured(
+      refineResponseSchema,
+      'refine',
+      [
+        {
+          role: 'system',
+          content:
+            'You refine on-screen copy for SaaS launch videos. Keep headlines concise.',
+        },
+        { role: 'user', content: userPrompt },
+      ],
+      { temperature: 0.5 },
+    );
 
     const markers = (parsed.markers ?? []).map((marker, index) => {
       const fallback = dto.markers[index];
@@ -481,11 +389,9 @@ export class AiService {
     message: string;
     source: 'llm' | 'heuristic';
   }> {
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (apiKey) {
+    if (this.openAi.isConfigured()) {
       try {
-        const result = await this.chatWithLlm(dto, apiKey);
+        const result = await this.chatWithLlm(dto);
         return { ...result, source: 'llm' };
       } catch (error) {
         this.logger.warn(
@@ -554,65 +460,17 @@ export class AiService {
 
   private async chatWithLlm(
     dto: ChatDto,
-    apiKey: string,
   ): Promise<{ action: Record<string, unknown>; message: string }> {
-    const history = (dto.history ?? [])
-      .slice(-8)
-      .map((item) => ({ role: item.role, content: item.content }));
-
-    const systemPrompt = [
-      'You are Arco, an assistant for editing SaaS launch videos from screen recordings.',
-      'Respond with JSON only:',
-      '{ "action": { "type": "reply"|"refine_all_copy"|"regenerate_marker"|"update_style_preset"|"add_marker_at_ms"|"delete_marker", ...payload }, "message": "short user-facing reply" }',
-      'Allowed actions:',
-      '- refine_all_copy: { instruction }',
-      '- regenerate_marker: { markerIndex }',
-      '- update_style_preset: { stylePreset: startup|linear|stripe|apple }',
-      '- add_marker_at_ms: { startMs }',
-      '- delete_marker: { markerIndex }',
-      '- reply: no extra fields',
-      `Project: ${JSON.stringify(dto.project)}`,
-    ].join('\n');
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
-        temperature: 0.4,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...history,
-          { role: 'user', content: dto.message },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`OpenAI error ${response.status}: ${body}`);
-    }
-
-    const payload = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = payload.choices?.[0]?.message?.content;
-    if (!content) {
-      throw new Error('OpenAI returned empty content');
-    }
-
-    const parsed = JSON.parse(content) as {
-      action?: Record<string, unknown>;
-      message?: string;
-    };
+    const messages = buildChatMessages(dto);
+    const result = await this.openAi.completeWithTools(
+      messages,
+      EDITOR_CHAT_TOOLS,
+      { temperature: 0.4 },
+    );
 
     return {
-      action: parsed.action ?? { type: 'reply' },
-      message: parsed.message ?? 'Done.',
+      action: parseChatActionFromTool(result.toolName, result.toolArgs),
+      message: result.message.trim() || 'Done.',
     };
   }
 
@@ -623,15 +481,39 @@ export class AiService {
       action?: Record<string, unknown>;
     }) => void,
   ): Promise<void> {
-    const result = await this.chat(dto);
-    const words = result.message.split(/(\s+)/);
-
-    for (const word of words) {
-      onChunk({ token: word });
-      await new Promise((resolve) => setTimeout(resolve, 20));
+    if (!this.openAi.isConfigured()) {
+      const result = await this.heuristicChat(dto);
+      if (result.message) {
+        onChunk({ token: result.message });
+      }
+      onChunk({ action: result.action });
+      return;
     }
 
-    onChunk({ action: result.action });
+    try {
+      const messages = buildChatMessages(dto);
+      const result = await this.openAi.streamChatWithTools(
+        messages,
+        EDITOR_CHAT_TOOLS,
+        (token) => onChunk({ token }),
+        { temperature: 0.4 },
+      );
+
+      onChunk({
+        action: parseChatActionFromTool(result.toolName, result.toolArgs),
+      });
+    } catch (error) {
+      this.logger.warn(
+        `LLM stream failed, using heuristic: ${
+          error instanceof Error ? error.message : error
+        }`,
+      );
+      const fallback = this.heuristicChat(dto);
+      if (fallback.message) {
+        onChunk({ token: fallback.message });
+      }
+      onChunk({ action: fallback.action });
+    }
   }
 
   async generateStoryboard(dto: GenerateStoryboardDto): Promise<{
@@ -640,15 +522,11 @@ export class AiService {
     source: 'llm' | 'heuristic';
   }> {
     const targetDurationMs = dto.targetDurationMs ?? 45000;
-    const intent = dto.intent ?? dto.brief?.intent;
-    const productUrl = dto.productUrl ?? dto.brief?.productUrl;
-    const apiKey = process.env.OPENAI_API_KEY;
 
-    if (apiKey) {
+    if (this.openAi.isConfigured()) {
       try {
         const llmScenes = await this.generateStoryboardWithLlm(
           dto,
-          apiKey,
           targetDurationMs,
         );
         return { ...llmScenes, source: 'llm' };
@@ -733,7 +611,6 @@ export class AiService {
 
   private async generateStoryboardWithLlm(
     dto: GenerateStoryboardDto,
-    apiKey: string,
     targetDurationMs: number,
   ): Promise<{ scenes: ScreenshotScene[]; stylePreset: StylePreset }> {
     const intent = dto.intent ?? dto.brief?.intent;
@@ -747,56 +624,25 @@ export class AiService {
       template ? `Template: ${template.name} — ${template.copyTone}` : null,
       `Screenshot count: ${dto.imageUrls.length}`,
       `Target total durationMs: ${targetDurationMs}`,
-      'Return JSON: { "stylePreset": "startup"|"linear"|"stripe"|"apple", "scenes": [{ "headline", "subheadline?", "voScript?", "durationMs" }] }',
       `voScript: spoken narration (1-2 sentences). Can differ from on-screen headline.`,
       `Generate exactly ${dto.imageUrls.length} scenes, one per screenshot in order.`,
     ]
       .filter(Boolean)
       .join('\n');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
-        temperature: 0.4,
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You write headlines for SaaS launch videos from app screenshots. Confident, minimal copy. Output JSON only.',
-          },
-          { role: 'user', content: userPrompt },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`OpenAI error ${response.status}: ${body}`);
-    }
-
-    const payload = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = payload.choices?.[0]?.message?.content;
-    if (!content) {
-      throw new Error('OpenAI returned empty content');
-    }
-
-    const parsed = JSON.parse(content) as {
-      stylePreset?: string;
-      scenes?: Array<{
-        headline?: string;
-        subheadline?: string;
-        voScript?: string;
-        durationMs?: number;
-      }>;
-    };
+    const parsed = await this.openAi.completeStructured(
+      storyboardResponseSchema,
+      'storyboard',
+      [
+        {
+          role: 'system',
+          content:
+            'You write headlines for SaaS launch videos from app screenshots. Confident, minimal copy.',
+        },
+        { role: 'user', content: userPrompt },
+      ],
+      { temperature: 0.4 },
+    );
 
     const motions: ScreenshotScene['motion'][] = [
       'ken-burns-in',
