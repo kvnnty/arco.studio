@@ -6,15 +6,18 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
-import type { AuthSession } from "@/lib/auth/constants";
+import type { AuthSession, AuthUser } from "@/lib/auth/constants";
+import { createWebApiClient } from "@/lib/api/axios";
 
 type AuthContextValue = {
   session: AuthSession | null;
   loading: boolean;
   refresh: () => Promise<void>;
+  setSessionUser: (user: AuthSession["user"]) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -27,17 +30,36 @@ export function AuthProvider({
   children: React.ReactNode;
 }) {
   const [session, setSession] = useState<AuthSession | null>(initialSession);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!initialSession);
+  const refreshPromiseRef = useRef<Promise<void> | null>(null);
 
   const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/auth/session", { cache: "no-store" });
-      const payload = (await response.json()) as { session: AuthSession | null };
-      setSession(payload.session);
-    } finally {
-      setLoading(false);
+    if (refreshPromiseRef.current) {
+      return refreshPromiseRef.current;
     }
+
+    const promise = (async () => {
+      setLoading(true);
+      try {
+        const client = createWebApiClient();
+        const { data } = await client.get<{ session: AuthSession | null }>(
+          "/api/auth/session",
+        );
+        setSession(data.session);
+      } catch {
+        setSession(null);
+      } finally {
+        setLoading(false);
+        refreshPromiseRef.current = null;
+      }
+    })();
+
+    refreshPromiseRef.current = promise;
+    return promise;
+  }, []);
+
+  const setSessionUser = useCallback((user: AuthUser) => {
+    setSession((current) => (current ? { ...current, user } : current));
   }, []);
 
   useEffect(() => {
@@ -47,8 +69,8 @@ export function AuthProvider({
   }, [initialSession, refresh]);
 
   const value = useMemo(
-    () => ({ session, loading, refresh }),
-    [session, loading, refresh],
+    () => ({ session, loading, refresh, setSessionUser }),
+    [session, loading, refresh, setSessionUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { Request } from 'express';
@@ -22,11 +23,14 @@ function extractJwt(req: Request): string | null {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly sessions: SessionService) {
+  constructor(
+    private readonly sessions: SessionService,
+    config: ConfigService,
+  ) {
     super({
       jwtFromRequest: extractJwt,
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'arco-dev-secret',
+      secretOrKey: config.get<string>('JWT_SECRET') ?? 'arco-dev-secret',
     });
   }
 

@@ -55,3 +55,19 @@ export const ONBOARDING_GOALS: OnboardingGoal[] = [
 
 export const ONBOARDING_PLAN_SUMMARY =
   "Pro is the best way to get started — ship every social format without hiring a motion designer.";
+
+export type OnboardingReferralSource = {
+  id: string;
+  label: string;
+};
+
+export const ONBOARDING_REFERRAL_SOURCES: OnboardingReferralSource[] = [
+  { id: "product-hunt", label: "Product Hunt" },
+  { id: "twitter", label: "Twitter / X" },
+  { id: "linkedin", label: "LinkedIn" },
+  { id: "google", label: "Google search" },
+  { id: "friend", label: "Friend or colleague" },
+  { id: "youtube", label: "YouTube" },
+  { id: "podcast", label: "Podcast" },
+  { id: "other", label: "Other" },
+];

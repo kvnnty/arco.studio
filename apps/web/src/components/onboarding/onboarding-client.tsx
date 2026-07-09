@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { useAuth } from "@/components/providers/auth-provider";
 import { OnboardingOptionGrid } from "@/components/onboarding/onboarding-option-grid";
 import { OnboardingPricingStep } from "@/components/onboarding/onboarding-pricing-step";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
@@ -10,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCompleteOnboardingMutation } from "@/lib/api/hooks/auth";
 import { useCheckoutMutation } from "@/lib/api/hooks/billing";
 import type { CheckoutPlan } from "@/lib/api/client";
@@ -17,21 +25,34 @@ import type { AuthUser } from "@/lib/auth/constants";
 import {
   ONBOARDING_GOALS,
   ONBOARDING_PERSONAS,
+  ONBOARDING_REFERRAL_SOURCES,
   ONBOARDING_STEPS,
   resolveOnboardingStep,
   type OnboardingStep,
 } from "@/lib/onboarding/constants";
 
 type OnboardingClientProps = {
-  user: AuthUser;
+  user: AuthUser | null;
 };
 
-export function OnboardingClient({ user }: OnboardingClientProps) {
+export function OnboardingClient({ user: initialUser }: OnboardingClientProps) {
   const router = useRouter();
-  const [step, setStep] = useState<OnboardingStep>(() =>
-    resolveOnboardingStep(user.onboardingStep),
-  );
-  const [name, setName] = useState(user.name ?? "");
+  const { session, loading } = useAuth();
+  const user = session?.user ?? initialUser;
+
+  useEffect(() => {
+    if (loading || user) return;
+    router.replace("/login");
+  }, [loading, user, router]);
+
+  useEffect(() => {
+    if (user?.onboardingCompleted) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
+
+  const [step, setStep] = useState<OnboardingStep>("profile");
+  const [name, setName] = useState("");
   const [referralSource, setReferralSource] = useState("");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [persona, setPersona] = useState("");
@@ -41,6 +62,26 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
   const completeOnboarding = useCompleteOnboardingMutation();
   const checkout = useCheckoutMutation();
   const pending = completeOnboarding.isPending || checkout.isPending;
+  const didInitializeStep = useRef(false);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!didInitializeStep.current) {
+      didInitializeStep.current = true;
+      setStep(resolveOnboardingStep(user.onboardingStep));
+    }
+    setName(user.name ?? "");
+  }, [user]);
+
+  if (!user) {
+    return (
+      <OnboardingShell>
+        <p className="text-sm text-muted-foreground">
+          {loading ? "Loading your account…" : "Redirecting to sign in…"}
+        </p>
+      </OnboardingShell>
+    );
+  }
 
   const stepIndex = ONBOARDING_STEPS.indexOf(step);
 
@@ -150,12 +191,21 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
               >
                 How did you hear about us? (optional)
               </Label>
-              <Input
-                id="onboarding-referral"
-                value={referralSource}
-                onChange={(event) => setReferralSource(event.target.value)}
-                placeholder="Product Hunt, a friend, Twitter…"
-              />
+              <Select
+                value={referralSource || null}
+                onValueChange={(value) => setReferralSource(value ?? "")}
+              >
+                <SelectTrigger id="onboarding-referral" className="w-full">
+                  <SelectValue placeholder="Select one" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ONBOARDING_REFERRAL_SOURCES.map((source) => (
+                    <SelectItem key={source.id} value={source.id}>
+                      {source.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <label className="flex items-start gap-3 text-sm leading-relaxed text-muted-foreground">

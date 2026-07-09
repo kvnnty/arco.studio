@@ -33,6 +33,7 @@ export function OAuthButtons({ providers: initialProviders = [] }: OAuthButtonsP
               type="button"
               className="w-full"
               disabled={!isEnabled}
+              nativeButton={!isEnabled}
               title={
                 isEnabled
                   ? `Continue with ${label}`

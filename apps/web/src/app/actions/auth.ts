@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 
-import { ApiError, getApiUrl } from "@/lib/api/client";
+import { postBackendAuth } from "@/lib/api/auth-server";
+import { createApiClient } from "@/lib/api/axios";
 import { clearAuthCookies, setAuthCookies } from "@/lib/auth/cookies";
 import type { AuthTokensResponse } from "@/lib/auth/constants";
 import {
@@ -19,29 +20,6 @@ export type AuthFormState = {
   message?: string;
 };
 
-async function postAuth<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${getApiUrl()}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    let message = "Something went wrong.";
-    try {
-      const payload = (await response.json()) as { message?: string | string[] };
-      if (typeof payload.message === "string") message = payload.message;
-      if (Array.isArray(payload.message)) message = payload.message.join(", ");
-    } catch {
-      // ignore
-    }
-    throw new ApiError(response.status, message);
-  }
-
-  return response.json() as Promise<T>;
-}
-
 export async function magicLinkAction(
   _prev: AuthFormState,
   formData: FormData,
@@ -52,7 +30,7 @@ export async function magicLinkAction(
   }
 
   try {
-    await postAuth<{ sent: boolean }>("/auth/magic-link", {
+    await postBackendAuth<{ sent: boolean }>("/auth/magic-link", {
       email: parsed.data.email,
     });
     return { sent: true };
@@ -73,7 +51,7 @@ export async function passwordLoginAction(
   }
 
   try {
-    const tokens = await postAuth<AuthTokensResponse>("/auth/login", parsed.data);
+    const tokens = await postBackendAuth<AuthTokensResponse>("/auth/login", parsed.data);
     await setAuthCookies(tokens);
     redirect(tokens.user.onboardingCompleted ? "/dashboard" : "/onboarding");
   } catch (error) {
@@ -93,7 +71,7 @@ export async function passwordRegisterAction(
   }
 
   try {
-    const result = await postAuth<{ sent: boolean; message: string }>(
+    const result = await postBackendAuth<{ sent: boolean; message: string }>(
       "/auth/register",
       parsed.data,
     );
@@ -110,7 +88,7 @@ export async function passwordRegisterAction(
 
 export async function verifyMagicLinkAction(token: string) {
   try {
-    const tokens = await postAuth<AuthTokensResponse>("/auth/magic-link/verify", {
+    const tokens = await postBackendAuth<AuthTokensResponse>("/auth/magic-link/verify", {
       token,
     });
     await setAuthCookies(tokens);
@@ -124,7 +102,7 @@ export async function verifyMagicLinkAction(token: string) {
 
 export async function completeOAuthAction(token: string) {
   try {
-    const tokens = await postAuth<AuthTokensResponse>("/auth/oauth/complete", {
+    const tokens = await postBackendAuth<AuthTokensResponse>("/auth/oauth/complete", {
       token,
     });
     await setAuthCookies(tokens);
@@ -146,7 +124,7 @@ export async function forgotPasswordAction(
   }
 
   try {
-    const result = await postAuth<{ sent: boolean; message: string }>(
+    const result = await postBackendAuth<{ sent: boolean; message: string }>(
       "/auth/password/forgot",
       { email: parsed.data.email },
     );
@@ -168,7 +146,7 @@ export async function resetPasswordAction(
   }
 
   try {
-    await postAuth("/auth/password/reset", parsed.data);
+    await postBackendAuth("/auth/password/reset", parsed.data);
     redirect("/login?reset=1");
   } catch (error) {
     return {
@@ -183,7 +161,7 @@ export async function signOutAction() {
 
   if (refreshToken) {
     try {
-      await postAuth("/auth/logout", { refreshToken });
+      await postBackendAuth("/auth/logout", { refreshToken });
     } catch {
       // ignore logout failures
     }
@@ -200,19 +178,7 @@ export async function completeOnboardingAction(input: {
   const { requireServerSession } = await import("@/lib/auth/session");
   const session = await requireServerSession();
 
-  const response = await fetch(`${getApiUrl()}/auth/onboarding`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${session.accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Could not save onboarding progress.");
-  }
-
-  return response.json();
+  const client = createApiClient(session.accessToken);
+  const { data } = await client.patch("/auth/onboarding", input);
+  return data;
 }

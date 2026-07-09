@@ -1,39 +1,47 @@
 import { NextResponse } from "next/server";
 
-import { getApiUrl } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/axios";
+import { refreshBackendSession } from "@/lib/api/auth-server";
 import {
-  clearAuthCookies,
+  getAccessTokenFromCookies,
   getRefreshTokenFromCookies,
-  setAuthCookies,
+  clearAuthCookiesOnResponse,
+  setAuthCookiesOnResponse,
 } from "@/lib/auth/cookies";
-import type { AuthTokensResponse } from "@/lib/auth/constants";
+import { buildSessionFromAccessToken } from "@/lib/auth/session";
 
 export async function GET() {
+  const accessToken = await getAccessTokenFromCookies();
+  if (accessToken) {
+    const session = await buildSessionFromAccessToken(accessToken);
+    if (session) {
+      return NextResponse.json({ session });
+    }
+  }
+
   const refreshToken = await getRefreshTokenFromCookies();
   if (!refreshToken) {
     return NextResponse.json({ session: null });
   }
 
-  const response = await fetch(`${getApiUrl()}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-    cache: "no-store",
-  });
+  try {
+    const tokens = await refreshBackendSession(refreshToken);
 
-  if (!response.ok) {
-    await clearAuthCookies();
+    return setAuthCookiesOnResponse(
+      NextResponse.json({
+        session: {
+          user: tokens.user,
+          accessToken: tokens.accessToken,
+          expiresAt: Date.now() + tokens.expiresIn * 1000,
+        },
+      }),
+      tokens,
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      return clearAuthCookiesOnResponse(NextResponse.json({ session: null }));
+    }
+
     return NextResponse.json({ session: null });
   }
-
-  const tokens = (await response.json()) as AuthTokensResponse;
-  await setAuthCookies(tokens);
-
-  return NextResponse.json({
-    session: {
-      user: tokens.user,
-      accessToken: tokens.accessToken,
-      expiresAt: Date.now() + tokens.expiresIn * 1000,
-    },
-  });
 }

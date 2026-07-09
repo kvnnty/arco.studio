@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { postBackendAuth } from "@/lib/api/auth-server";
 import {
-  clearAuthCookies,
+  clearAuthCookiesOnResponse,
   getRefreshTokenFromCookies,
 } from "@/lib/auth/cookies";
 
@@ -17,6 +17,5 @@ export async function POST() {
     }
   }
 
-  await clearAuthCookies();
-  return NextResponse.json({ ok: true });
+  return clearAuthCookiesOnResponse(NextResponse.json({ ok: true }));
 }
