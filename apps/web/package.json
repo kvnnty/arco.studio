@@ -23,6 +23,7 @@
     "jose": "^6.2.3",
     "lucide-react": "^1.8.0",
     "next": "15.2.6",
+    "nextjs-toploader": "^3.9.17",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "remotion": "^4.0.286",
