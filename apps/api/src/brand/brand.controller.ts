@@ -1,8 +1,8 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { SubscriptionGuard } from '../billing/subscription.guard.js';
-import { BrandService } from './brand.service.js';
-import { AnalyzeUrlDto } from './dto/analyze-url.dto.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SubscriptionGuard } from '../billing/subscription.guard';
+import { BrandService } from './brand.service';
+import { AnalyzeUrlDto } from './dto/analyze-url.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('brand')

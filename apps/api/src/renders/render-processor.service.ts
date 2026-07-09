@@ -1,9 +1,10 @@
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import {
-  Injectable,
-  Logger,
-  OnModuleInit,
-} from '@nestjs/common';
-import { getExportDimensions, parseArcoProject, screenshotProjectDurationMs, isScreenshotProject } from '@arco/project-schema';
+  getExportDimensions,
+  parseArcoProject,
+  screenshotProjectDurationMs,
+  isScreenshotProject,
+} from '@arco/project-schema';
 import type { ArcoProject, ExportQuality } from '@arco/project-schema';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
@@ -11,10 +12,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
-import { PrismaService } from '../prisma/prisma.service.js';
-import { S3Service } from '../storage/s3.service.js';
-import { BillingService } from '../billing/billing.service.js';
-import { normalizeExportQuality } from '../billing/plans.js';
+import { PrismaService } from '../prisma/prisma.service';
+import { S3Service } from '../storage/s3.service';
+import { BillingService } from '../billing/billing.service';
+import { normalizeExportQuality } from '../billing/plans';
 
 @Injectable()
 export class RenderProcessorService implements OnModuleInit {
@@ -97,11 +98,7 @@ export class RenderProcessorService implements OnModuleInit {
         job.project,
         job.quality ?? '1080p',
       );
-      await writeFile(
-        propsPath,
-        JSON.stringify({ project }),
-        'utf8',
-      );
+      await writeFile(propsPath, JSON.stringify({ project }), 'utf8');
 
       await this.runRemotionRender(propsPath, outputPath);
 

@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { SubscriptionGuard } from '../billing/subscription.guard.js';
-import { GenerateVoiceDto, PreviewVoiceDto } from './dto/voice.dto.js';
-import { VoiceService } from './voice.service.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SubscriptionGuard } from '../billing/subscription.guard';
+import { GenerateVoiceDto, PreviewVoiceDto } from './dto/voice.dto';
+import { VoiceService } from './voice.service';
 
 type AuthedRequest = Request & { user: { id: string; email: string } };
 

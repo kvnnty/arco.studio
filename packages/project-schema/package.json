@@ -2,15 +2,29 @@
   "name": "@arco/project-schema",
   "version": "0.0.1",
   "private": true,
-  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./style-presets": "./src/style-presets.ts",
-    "./templates": "./src/templates.ts",
-    "./voices": "./src/voices.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./style-presets": {
+      "types": "./dist/style-presets.d.ts",
+      "default": "./dist/style-presets.js"
+    },
+    "./templates": {
+      "types": "./dist/templates.d.ts",
+      "default": "./dist/templates.js"
+    },
+    "./voices": {
+      "types": "./dist/voices.d.ts",
+      "default": "./dist/voices.js"
+    }
   },
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

@@ -40,10 +40,7 @@ export function LoginForm({
   oauthProviders = [],
 }: LoginFormProps) {
   const [mode, setMode] = useState<LoginMode>("magic");
-  const [magicSent, setMagicSent] = useState<{
-    devVerifyUrl?: string;
-    message?: string;
-  } | null>(null);
+  const [magicSent, setMagicSent] = useState(false);
 
   const magicLink = useMagicLinkMutation();
   const login = useLoginMutation();
@@ -64,31 +61,10 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {magicSent.message ? (
-            <Alert>
-              <AlertDescription>{magicSent.message}</AlertDescription>
-            </Alert>
-          ) : null}
-          {process.env.NODE_ENV === "development" && magicSent.devVerifyUrl ? (
-            <>
-              <Alert>
-                <AlertDescription>
-                  Email delivery is not configured yet. Use this link during
-                  development.
-                </AlertDescription>
-              </Alert>
-              <Button
-                className="w-full"
-                render={<Link href={magicSent.devVerifyUrl} />}
-              >
-                Open sign-in link
-              </Button>
-            </>
-          ) : null}
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => setMagicSent(null)}
+            onClick={() => setMagicSent(false)}
           >
             Use a different email
           </Button>
@@ -129,10 +105,8 @@ export function LoginForm({
               const formData = new FormData(event.currentTarget);
               const email = String(formData.get("email") ?? "");
               magicLink.mutate(email, {
-                onSuccess: (result) => {
-                  setMagicSent({
-                    devVerifyUrl: result.devVerifyUrl,
-                  });
+                onSuccess: () => {
+                  setMagicSent(true);
                 },
               });
             }}

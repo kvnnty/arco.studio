@@ -1,35 +1,38 @@
 import { useMutation } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/components/providers/auth-provider";
 import {
-  apiCompleteOnboarding,
   apiForgotPassword,
   apiRegister,
   apiRequestMagicLink,
   apiResetPassword,
 } from "@/lib/api/client";
-import { useApiClient } from "@/lib/api/hooks/use-api-client";
+import { createWebApiClient } from "@/lib/api/axios";
+import type { AuthUser } from "@/lib/auth/constants";
 import { readReferralCode } from "@/lib/referral";
 
-async function postAuthRoute<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  const payload = (await response.json()) as T & { message?: string };
-
-  if (!response.ok) {
-    throw new Error(
-      typeof payload.message === "string"
-        ? payload.message
-        : "Something went wrong.",
-    );
+async function requestAuthRoute<T>(
+  path: string,
+  body: unknown,
+  method: "POST" | "PATCH" = "POST",
+): Promise<T> {
+  try {
+    const client = createWebApiClient();
+    const { data } = await client.request<T>({ method, url: path, data: body });
+    return data;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const payload = error.response?.data as { message?: string } | undefined;
+      throw new Error(
+        typeof payload?.message === "string"
+          ? payload.message
+          : "Something went wrong.",
+      );
+    }
+    throw error;
   }
-
-  return payload;
 }
 
 export function useMagicLinkMutation() {
@@ -73,12 +76,12 @@ export function useLoginMutation() {
 
   return useMutation({
     mutationFn: (input: { email: string; password: string }) =>
-      postAuthRoute<{ user: { onboardingCompleted: boolean } }>(
+      requestAuthRoute<{ user: { onboardingCompleted: boolean } }>(
         "/api/auth/login",
         input,
       ),
-    onSuccess: async (data) => {
-      await refresh();
+    onSuccess: (data) => {
+      void refresh();
       router.push(data.user.onboardingCompleted ? "/dashboard" : "/onboarding");
     },
   });
@@ -89,7 +92,7 @@ export function useLogoutMutation() {
   const { refresh } = useAuth();
 
   return useMutation({
-    mutationFn: () => postAuthRoute("/api/auth/logout", {}),
+    mutationFn: () => requestAuthRoute("/api/auth/logout", {}),
     onSuccess: async () => {
       await refresh();
       router.push("/login");
@@ -98,12 +101,13 @@ export function useLogoutMutation() {
 }
 
 export function useCompleteOnboardingMutation() {
-  const { token } = useApiClient();
+  const { setSessionUser } = useAuth();
 
   return useMutation({
-    mutationFn: (input: { name?: string; step?: string }) => {
-      if (!token) throw new Error("Not authenticated");
-      return apiCompleteOnboarding(token, input);
+    mutationFn: (input: { name?: string; step?: string }) =>
+      requestAuthRoute<AuthUser>("/api/auth/onboarding", input, "PATCH"),
+    onSuccess: (user) => {
+      setSessionUser(user);
     },
   });
 }

@@ -1,6 +1,6 @@
-export type { BillingInterval } from './polar.config.js';
+export type { BillingInterval } from './polar.config';
 export {
   planRank,
   resolvePlanFromProductId,
   resolvePolarProductId,
-} from './polar.config.js';
+} from './polar.config';

@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 
-import { loginAndSetCookies } from "@/lib/api/auth-server";
+import { loginWithPassword } from "@/lib/api/auth-server";
 import { ApiError } from "@/lib/api/client";
+import { setAuthCookiesOnResponse } from "@/lib/auth/cookies";
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { email: string; password: string };
-    const tokens = await loginAndSetCookies(body);
-    return NextResponse.json({ user: tokens.user });
+    const tokens = await loginWithPassword(body);
+    return setAuthCookiesOnResponse(
+      NextResponse.json({ user: tokens.user }),
+      tokens,
+    );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : 400;
     return NextResponse.json(

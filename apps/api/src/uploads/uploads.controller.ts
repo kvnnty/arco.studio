@@ -14,11 +14,11 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import type { Request, Response } from 'express';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { SubscriptionGuard } from '../billing/subscription.guard.js';
-import { BillingService } from '../billing/billing.service.js';
-import { ProPlanGuard } from '../billing/pro-plan.guard.js';
-import { UploadsService } from './uploads.service.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SubscriptionGuard } from '../billing/subscription.guard';
+import { BillingService } from '../billing/billing.service';
+import { ProPlanGuard } from '../billing/pro-plan.guard';
+import { UploadsService } from './uploads.service';
 
 type AuthedRequest = Request & { user: { id: string; email: string } };
 

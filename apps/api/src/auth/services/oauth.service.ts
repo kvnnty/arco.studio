@@ -6,21 +6,21 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { Response } from 'express';
-import { PrismaService } from '../../prisma/prisma.service.js';
+import { PrismaService } from '../../prisma/prisma.service';
 import {
   AUTH_AUDIT_EVENTS,
   MAGIC_LINK_PURPOSES,
   type AuthContext,
   type AuthTokensResponse,
-} from '../auth.constants.js';
-import { normalizeEmail } from '../utils/crypto.util.js';
-import { AuditService } from '../services/audit.service.js';
-import { MagicLinkService } from '../services/magic-link.service.js';
-import { SessionService } from '../services/session.service.js';
-import { ReferralsService } from '../../referrals/referrals.service.js';
-import { GitHubOAuthProvider } from '../providers/github-oauth.provider.js';
-import { GoogleOAuthProvider } from '../providers/google-oauth.provider.js';
-import type { OAuthProviderId } from '../providers/oauth-provider.interface.js';
+} from '../auth.constants';
+import { normalizeEmail } from '../utils/crypto.util';
+import { AuditService } from '../services/audit.service';
+import { MagicLinkService } from '../services/magic-link.service';
+import { SessionService } from '../services/session.service';
+import { ReferralsService } from '../../referrals/referrals.service';
+import { GitHubOAuthProvider } from '../providers/github-oauth.provider';
+import { GoogleOAuthProvider } from '../providers/google-oauth.provider';
+import type { OAuthProviderId } from '../providers/oauth-provider.interface';
 
 type OAuthStatePayload = {
   provider: OAuthProviderId;
@@ -136,7 +136,9 @@ export class OAuthService {
       MAGIC_LINK_PURPOSES.OAUTH_COMPLETE,
     );
     if (!consumed?.userId) {
-      throw new UnauthorizedException('This sign-in link is invalid or expired.');
+      throw new UnauthorizedException(
+        'This sign-in link is invalid or expired.',
+      );
     }
 
     const user = await this.prisma.user.findUnique({

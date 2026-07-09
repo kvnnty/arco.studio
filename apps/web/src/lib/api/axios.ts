@@ -2,6 +2,8 @@ import axios, { isAxiosError, type AxiosInstance } from "axios";
 
 import { getApiUrl } from "@/lib/api/config";
 
+const API_TIMEOUT_MS = 8_000;
+
 export class ApiError extends Error {
   status: number;
 
@@ -30,6 +32,7 @@ function extractErrorMessage(error: unknown): string {
 export function createApiClient(token?: string): AxiosInstance {
   const client = axios.create({
     baseURL: getApiUrl(),
+    timeout: API_TIMEOUT_MS,
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
@@ -49,4 +52,11 @@ export function createApiClient(token?: string): AxiosInstance {
   );
 
   return client;
+}
+
+export function createWebApiClient(): AxiosInstance {
+  return axios.create({
+    timeout: API_TIMEOUT_MS,
+    withCredentials: true,
+  });
 }

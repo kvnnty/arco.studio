@@ -1,4 +1,4 @@
-import type { ArcoPlan } from './plans.js';
+import type { ArcoPlan } from './plans';
 
 export type BillingInterval = 'monthly' | 'annual';
 
@@ -110,7 +110,8 @@ export function resolvePlanFromProductId(productId: string): ArcoPlan | null {
 
   const studioMonthly = process.env.POLAR_PRODUCT_STUDIO_MONTHLY?.trim();
   const studioAnnual = process.env.POLAR_PRODUCT_STUDIO_ANNUAL?.trim();
-  if (productId === studioMonthly || productId === studioAnnual) return 'studio';
+  if (productId === studioMonthly || productId === studioAnnual)
+    return 'studio';
 
   return null;
 }

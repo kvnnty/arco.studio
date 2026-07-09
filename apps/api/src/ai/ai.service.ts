@@ -1,22 +1,30 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { ClickEffect, Marker, ScreenshotScene, StylePreset } from '@arco/project-schema';
-import { createScreenshotPendingProject, spokenScriptFromScene } from '@arco/project-schema';
+import type {
+  ClickEffect,
+  Marker,
+  ScreenshotScene,
+  StylePreset,
+} from '@arco/project-schema';
+import {
+  createScreenshotPendingProject,
+  spokenScriptFromScene,
+} from '@arco/project-schema';
 import {
   applyTemplateBlueprint,
   applyTemplateToScreenshotProject,
   getTemplate,
   mergeTemplateMotionOntoMarkers,
 } from '@arco/project-schema/templates';
-import { GenerateDraftDto } from './dto/generate-draft.dto.js';
-import { GenerateStoryboardDto } from './dto/generate-storyboard.dto.js';
-import { RegenerateMarkerDto } from './dto/regenerate-marker.dto.js';
-import { RefineProjectDto } from './dto/refine-project.dto.js';
-import { ChatDto } from './dto/chat.dto.js';
+import { GenerateDraftDto } from './dto/generate-draft.dto';
+import { GenerateStoryboardDto } from './dto/generate-storyboard.dto';
+import { RegenerateMarkerDto } from './dto/regenerate-marker.dto';
+import { RefineProjectDto } from './dto/refine-project.dto';
+import { ChatDto } from './dto/chat.dto';
 import {
   generateHeuristicDraftMarkers,
   normalizeStylePreset,
   scenesToMarkers,
-} from './draft-heuristic.js';
+} from './draft-heuristic';
 
 type LlmDraftResponse = {
   markers?: Array<{
@@ -80,11 +88,7 @@ export class AiService {
       const template = getTemplate(dto.templateId);
       if (template) {
         return {
-          markers: applyTemplateBlueprint(
-            template,
-            dto.durationMs,
-            dto.title,
-          ),
+          markers: applyTemplateBlueprint(template, dto.durationMs, dto.title),
           stylePreset: template.stylePreset,
           source: 'heuristic',
         };
@@ -120,15 +124,11 @@ export class AiService {
       `Product title: ${dto.title}`,
       dto.intent ? `Video intent: ${dto.intent}` : null,
       dto.productUrl ? `Product URL: ${dto.productUrl}` : null,
-      dto.brandContext?.title
-        ? `Site title: ${dto.brandContext.title}`
-        : null,
+      dto.brandContext?.title ? `Site title: ${dto.brandContext.title}` : null,
       dto.brandContext?.description
         ? `Site description: ${dto.brandContext.description}`
         : null,
-      dto.brandContext?.tone
-        ? `Brand tone: ${dto.brandContext.tone}`
-        : null,
+      dto.brandContext?.tone ? `Brand tone: ${dto.brandContext.tone}` : null,
       dto.platform ? `Platform: ${dto.platform}` : null,
       `Recording durationMs: ${dto.durationMs}`,
       ...templateLines,
@@ -231,7 +231,10 @@ export class AiService {
     label?: string;
   } {
     const alternatives = [
-      { text: 'See every metric instantly', subtext: 'Understand what drives growth' },
+      {
+        text: 'See every metric instantly',
+        subtext: 'Understand what drives growth',
+      },
       { text: 'Ship features faster', subtext: 'Built for modern teams' },
       { text: 'Make better decisions', subtext: 'Data you can act on' },
       { text: 'Launch with confidence', subtext: 'Polished from day one' },
@@ -317,7 +320,10 @@ export class AiService {
   }
 
   async refineProject(dto: RefineProjectDto): Promise<{
-    markers: Array<{ callout: { text: string; subtext?: string }; label?: string }>;
+    markers: Array<{
+      callout: { text: string; subtext?: string };
+      label?: string;
+    }>;
     source: 'llm' | 'heuristic';
   }> {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -353,13 +359,19 @@ export class AiService {
       if (instruction.includes('shorter')) {
         const words = text.split(/\s+/).slice(0, 5).join(' ');
         return {
-          callout: { text: words, subtext: subtext?.split(/\s+/).slice(0, 6).join(' ') },
+          callout: {
+            text: words,
+            subtext: subtext?.split(/\s+/).slice(0, 6).join(' '),
+          },
           label: words,
         };
       }
 
       if (instruction.includes('technical')) {
-        const next = text.replace(/instantly|beautiful|amazing/gi, 'programmatically');
+        const next = text.replace(
+          /instantly|beautiful|amazing/gi,
+          'programmatically',
+        );
         return { callout: { text: next, subtext }, label: next };
       }
 
@@ -379,7 +391,10 @@ export class AiService {
     dto: RefineProjectDto,
     apiKey: string,
   ): Promise<{
-    markers: Array<{ callout: { text: string; subtext?: string }; label?: string }>;
+    markers: Array<{
+      callout: { text: string; subtext?: string };
+      label?: string;
+    }>;
   }> {
     const scenes = dto.markers
       .map(
@@ -493,7 +508,11 @@ export class AiService {
   } {
     const lower = dto.message.toLowerCase();
 
-    if (lower.includes('shorter') || lower.includes('technical') || lower.includes('bold')) {
+    if (
+      lower.includes('shorter') ||
+      lower.includes('technical') ||
+      lower.includes('bold')
+    ) {
       return {
         action: {
           type: 'refine_all_copy',
@@ -503,7 +522,10 @@ export class AiService {
       };
     }
 
-    if (lower.includes('regenerate') && dto.project.selectedMarkerIndex !== undefined) {
+    if (
+      lower.includes('regenerate') &&
+      dto.project.selectedMarkerIndex !== undefined
+    ) {
       return {
         action: {
           type: 'regenerate_marker',
@@ -525,7 +547,8 @@ export class AiService {
 
     return {
       action: { type: 'reply' },
-      message: 'Try “Make headlines shorter”, “Regenerate selected scene”, or “Add scene here”.',
+      message:
+        'Try “Make headlines shorter”, “Regenerate selected scene”, or “Add scene here”.',
     };
   }
 
@@ -595,7 +618,10 @@ export class AiService {
 
   async streamChat(
     dto: ChatDto,
-    onChunk: (chunk: { token?: string; action?: Record<string, unknown> }) => void,
+    onChunk: (chunk: {
+      token?: string;
+      action?: Record<string, unknown>;
+    }) => void,
   ): Promise<void> {
     const result = await this.chat(dto);
     const words = result.message.split(/(\s+)/);
@@ -794,7 +820,9 @@ export class AiService {
         subheadline: llmScene?.subheadline,
         voScript:
           llmScene?.voScript ??
-          [llmScene?.headline, llmScene?.subheadline].filter(Boolean).join('. '),
+          [llmScene?.headline, llmScene?.subheadline]
+            .filter(Boolean)
+            .join('. '),
         motion: motions[index % motions.length],
         transition: { type: 'fade' },
       };

@@ -4,6 +4,7 @@ import { Geist_Mono, Inter, Figtree } from "next/font/google";
 import { ConsentProvider } from "@/components/consent/consent-provider";
 import { GoogleConsentDefaultScript } from "@/components/consent/google-consent-default";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { NavigationProgress } from "@/components/providers/navigation-progress";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -43,6 +44,7 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${geistMono.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
       >
+        <NavigationProgress />
         <AuthProvider initialSession={session}>
           <QueryProvider>
             <ConsentProvider>

@@ -1,14 +1,14 @@
 import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { BillingService } from '../billing/billing.service.js';
-import { SubscriptionGuard } from '../billing/subscription.guard.js';
-import { AiService } from './ai.service.js';
-import { GenerateDraftDto } from './dto/generate-draft.dto.js';
-import { GenerateStoryboardDto } from './dto/generate-storyboard.dto.js';
-import { RegenerateMarkerDto } from './dto/regenerate-marker.dto.js';
-import { RefineProjectDto } from './dto/refine-project.dto.js';
-import { ChatDto } from './dto/chat.dto.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { BillingService } from '../billing/billing.service';
+import { SubscriptionGuard } from '../billing/subscription.guard';
+import { AiService } from './ai.service';
+import { GenerateDraftDto } from './dto/generate-draft.dto';
+import { GenerateStoryboardDto } from './dto/generate-storyboard.dto';
+import { RegenerateMarkerDto } from './dto/regenerate-marker.dto';
+import { RefineProjectDto } from './dto/refine-project.dto';
+import { ChatDto } from './dto/chat.dto';
 
 type AuthedRequest = Request & { user: { id: string; email: string } };
 

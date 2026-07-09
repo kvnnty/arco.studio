@@ -1,22 +1,26 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from './prisma/prisma.module.js';
-import { StorageModule } from './storage/storage.module.js';
-import { AuthModule } from './auth/auth.module.js';
-import { UsersModule } from './users/users.module.js';
-import { ProjectsModule } from './projects/projects.module.js';
-import { UploadsModule } from './uploads/uploads.module.js';
-import { RendersModule } from './renders/renders.module.js';
-import { AiModule } from './ai/ai.module.js';
-import { BrandModule } from './brand/brand.module.js';
-import { VoiceModule } from './voice/voice.module.js';
-import { BillingModule } from './billing/billing.module.js';
-import { ReferralsModule } from './referrals/referrals.module.js';
-import { HealthController } from './health/health.controller.js';
+import { getEnvFilePaths } from './config/env-path';
+import { PrismaModule } from './prisma/prisma.module';
+import { StorageModule } from './storage/storage.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { ProjectsModule } from './projects/projects.module';
+import { UploadsModule } from './uploads/uploads.module';
+import { RendersModule } from './renders/renders.module';
+import { AiModule } from './ai/ai.module';
+import { BrandModule } from './brand/brand.module';
+import { VoiceModule } from './voice/voice.module';
+import { BillingModule } from './billing/billing.module';
+import { ReferralsModule } from './referrals/referrals.module';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: getEnvFilePaths(),
+    }),
     PrismaModule,
     StorageModule,
     BillingModule,

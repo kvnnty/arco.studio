@@ -9,15 +9,13 @@ import {
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { BillingService } from './billing.service.js';
-import { CreateCheckoutDto } from './dto/create-checkout.dto.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { BillingService } from './billing.service';
+import { CreateCheckoutDto } from './dto/create-checkout.dto';
 
 type AuthedRequest = Request & { user: { id: string; email: string } };
 
-function normalizeHeaders(
-  headers: Request['headers'],
-): Record<string, string> {
+function normalizeHeaders(headers: Request['headers']): Record<string, string> {
   const normalized: Record<string, string> = {};
   for (const [key, value] of Object.entries(headers)) {
     if (typeof value === 'string') {

@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
-import { ReferralsController } from './referrals.controller.js';
-import { ReferralsService } from './referrals.service.js';
+import { ReferralsController } from './referrals.controller';
+import { ReferralsService } from './referrals.service';
 
 @Global()
 @Module({

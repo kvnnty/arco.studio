@@ -1,7 +1,7 @@
 "use server";
 
+import { createApiClient } from "@/lib/api/axios";
 import { getAccessToken } from "@/lib/auth/session";
-import { getApiUrl } from "@/lib/api/client";
 
 async function requireToken() {
   const token = await getAccessToken();
@@ -11,35 +11,15 @@ async function requireToken() {
 
 export async function updateProfileAction(input: { name?: string }) {
   const token = await requireToken();
-  const response = await fetch(`${getApiUrl()}/users/me`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Could not update profile.");
-  }
-
-  return response.json();
+  const client = createApiClient(token);
+  const { data } = await client.patch("/users/me", input);
+  return data;
 }
 
 export async function listSessionsAction() {
   const token = await requireToken();
-  const response = await fetch(`${getApiUrl()}/auth/sessions`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Could not load sessions.");
-  }
-
-  return response.json() as Promise<
+  const client = createApiClient(token);
+  const { data } = await client.get<
     Array<{
       id: string;
       deviceLabel: string | null;
@@ -48,35 +28,26 @@ export async function listSessionsAction() {
       createdAt: string;
       current: boolean;
     }>
-  >;
+  >("/auth/sessions");
+  return data;
 }
 
 export async function revokeSessionAction(sessionId: string) {
   const token = await requireToken();
-  const response = await fetch(`${getApiUrl()}/auth/sessions/${sessionId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!response.ok) {
-    throw new Error("Could not revoke session.");
-  }
+  const client = createApiClient(token);
+  await client.delete(`/auth/sessions/${sessionId}`);
 }
 
 export async function logoutAllSessionsAction() {
   const token = await requireToken();
   const refreshToken = (await import("@/lib/auth/cookies")).getRefreshTokenFromCookies();
+  const client = createApiClient(token);
 
-  await fetch(`${getApiUrl()}/auth/logout-all`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await client.post("/auth/logout-all");
 
   if (refreshToken) {
-    await fetch(`${getApiUrl()}/auth/logout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken: await refreshToken }),
+    await createApiClient().post("/auth/logout", {
+      refreshToken: await refreshToken,
     });
   }
 
@@ -85,16 +56,6 @@ export async function logoutAllSessionsAction() {
 
 export async function setPasswordAction(password: string) {
   const token = await requireToken();
-  const response = await fetch(`${getApiUrl()}/auth/password/set`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ password }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Could not set password.");
-  }
+  const client = createApiClient(token);
+  await client.post("/auth/password/set", { password });
 }

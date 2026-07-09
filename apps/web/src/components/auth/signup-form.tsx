@@ -34,10 +34,7 @@ type SignupFormProps = {
 
 export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
   const [mode, setMode] = useState<SignupMode>("magic");
-  const [sent, setSent] = useState<{
-    message?: string;
-    devVerifyUrl?: string;
-  } | null>(null);
+  const [sent, setSent] = useState<{ message?: string } | null>(null);
 
   const magicLink = useMagicLinkMutation();
   const register = useRegisterMutation();
@@ -59,21 +56,6 @@ export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {process.env.NODE_ENV === "development" && sent.devVerifyUrl ? (
-            <>
-              <Alert>
-                <AlertDescription>
-                  Development mode: open the verification link below.
-                </AlertDescription>
-              </Alert>
-              <Button
-                className="w-full"
-                render={<Link href={sent.devVerifyUrl} />}
-              >
-                Open verification link
-              </Button>
-            </>
-          ) : null}
           <Button
             variant="outline"
             className="w-full"
@@ -105,8 +87,8 @@ export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
               event.preventDefault();
               const formData = new FormData(event.currentTarget);
               magicLink.mutate(String(formData.get("email") ?? ""), {
-                onSuccess: (result) => {
-                  setSent({ devVerifyUrl: result.devVerifyUrl });
+                onSuccess: () => {
+                  setSent({});
                 },
               });
             }}
@@ -148,10 +130,7 @@ export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
                 },
                 {
                   onSuccess: (result) => {
-                    setSent({
-                      message: result.message,
-                      devVerifyUrl: result.devVerifyUrl,
-                    });
+                    setSent({ message: result.message });
                   },
                 },
               );

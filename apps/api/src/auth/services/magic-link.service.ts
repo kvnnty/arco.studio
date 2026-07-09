@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service.js';
-import { MAGIC_LINK_TTL_MS, MAGIC_LINK_PURPOSES } from '../auth.constants.js';
-import { generateOpaqueToken, hashToken, normalizeEmail } from '../utils/crypto.util.js';
-import type { AuthContext } from '../auth.constants.js';
+import { PrismaService } from '../../prisma/prisma.service';
+import { MAGIC_LINK_TTL_MS, MAGIC_LINK_PURPOSES } from '../auth.constants';
+import {
+  generateOpaqueToken,
+  hashToken,
+  normalizeEmail,
+} from '../utils/crypto.util';
+import type { AuthContext } from '../auth.constants';
 
 @Injectable()
 export class MagicLinkService {
@@ -32,7 +36,10 @@ export class MagicLinkService {
     return token;
   }
 
-  async consumeToken(token: string, expectedPurpose?: string): Promise<{
+  async consumeToken(
+    token: string,
+    expectedPurpose?: string,
+  ): Promise<{
     email: string;
     purpose: string;
     userId: string | null;
@@ -42,7 +49,11 @@ export class MagicLinkService {
       where: { tokenHash },
     });
 
-    if (!record || record.consumedAt || record.expiresAt.getTime() <= Date.now()) {
+    if (
+      !record ||
+      record.consumedAt ||
+      record.expiresAt.getTime() <= Date.now()
+    ) {
       return null;
     }
 

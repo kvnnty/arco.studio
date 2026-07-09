@@ -67,7 +67,7 @@ export type AuthTokensResponse = {
 };
 
 export async function apiRequestMagicLink(email: string, referralCode?: string) {
-  return apiRequest<{ sent: boolean; devVerifyUrl?: string }>(
+  return apiRequest<{ sent: boolean }>(
     "/auth/magic-link",
     {
       method: "POST",
@@ -105,7 +105,7 @@ export async function apiRegister(input: {
   email: string;
   password: string;
   referralCode?: string;
-}): Promise<{ sent: boolean; message: string; devVerifyUrl?: string }> {
+}): Promise<{ sent: boolean; message: string }> {
   return apiRequest("/auth/register", {
     method: "POST",
     body: {

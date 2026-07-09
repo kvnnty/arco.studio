@@ -1,11 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
-import { AnalyzeUrlDto } from './dto/analyze-url.dto.js';
-import { assertSafePublicUrl } from './url-guard.js';
+import { AnalyzeUrlDto } from './dto/analyze-url.dto';
+import { assertSafePublicUrl } from './url-guard';
 
 export type BrandKitResult = {
   url: string;
@@ -91,14 +87,10 @@ export class BrandService {
       $(`meta[property="${name}"]`).attr('content')?.trim();
 
     const title =
-      meta('og:title') ||
-      $('title').first().text().trim() ||
-      undefined;
+      meta('og:title') || $('title').first().text().trim() || undefined;
 
     const description =
-      meta('og:description') ||
-      meta('description') ||
-      undefined;
+      meta('og:description') || meta('description') || undefined;
 
     const ogImage = meta('og:image');
     const themeColor = meta('theme-color');
@@ -115,7 +107,9 @@ export class BrandService {
       $('link[rel="icon"]').attr('href') ||
       $('link[rel="shortcut icon"]').attr('href');
 
-    const screenshotUrl = ogImage ? this.resolveUrl(baseUrl, ogImage) : undefined;
+    const screenshotUrl = ogImage
+      ? this.resolveUrl(baseUrl, ogImage)
+      : undefined;
     const logoUrl = faviconHref
       ? this.resolveUrl(baseUrl, faviconHref)
       : screenshotUrl;

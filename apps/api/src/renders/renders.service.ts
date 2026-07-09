@@ -6,11 +6,11 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { parseArcoProject, projectDurationMs } from '@arco/project-schema';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { BillingService } from '../billing/billing.service.js';
-import { normalizeExportQuality } from '../billing/plans.js';
-import { CreateRenderDto } from './dto/create-render.dto.js';
-import { RenderProcessorService } from './render-processor.service.js';
+import { PrismaService } from '../prisma/prisma.service';
+import { BillingService } from '../billing/billing.service';
+import { normalizeExportQuality } from '../billing/plans';
+import { CreateRenderDto } from './dto/create-render.dto';
+import { RenderProcessorService } from './render-processor.service';
 
 @Injectable()
 export class RendersService {

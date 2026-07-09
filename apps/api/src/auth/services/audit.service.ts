@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service.js';
-import { AUTH_AUDIT_EVENTS } from '../auth.constants.js';
-import type { AuthContext } from '../auth.constants.js';
+import { PrismaService } from '../../prisma/prisma.service';
+import { AUTH_AUDIT_EVENTS } from '../auth.constants';
+import type { AuthContext } from '../auth.constants';
 
 @Injectable()
 export class AuditService {

@@ -6,15 +6,17 @@ import {
   getOAuthStartUrl,
   type OAuthProviderId,
 } from "@/lib/auth/oauth";
+import { useOAuthProviders } from "@/lib/auth/use-oauth-providers";
 import { readReferralCode } from "@/lib/referral";
 
 const ALL_PROVIDERS: OAuthProviderId[] = ["google", "github"];
 
 type OAuthButtonsProps = {
-  providers: OAuthProviderId[];
+  providers?: OAuthProviderId[];
 };
 
-export function OAuthButtons({ providers }: OAuthButtonsProps) {
+export function OAuthButtons({ providers: initialProviders = [] }: OAuthButtonsProps) {
+  const providers = useOAuthProviders(initialProviders);
   const enabled = new Set(providers);
 
   return (
@@ -31,6 +33,7 @@ export function OAuthButtons({ providers }: OAuthButtonsProps) {
               type="button"
               className="w-full"
               disabled={!isEnabled}
+              nativeButton={!isEnabled}
               title={
                 isEnabled
                   ? `Continue with ${label}`

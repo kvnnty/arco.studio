@@ -7,10 +7,10 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { SubscriptionGuard } from '../billing/subscription.guard.js';
-import { RendersService } from './renders.service.js';
-import { CreateRenderDto } from './dto/create-render.dto.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SubscriptionGuard } from '../billing/subscription.guard';
+import { RendersService } from './renders.service';
+import { CreateRenderDto } from './dto/create-render.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('renders')
@@ -32,10 +32,7 @@ export class RendersController {
   }
 
   @Get(':id')
-  findOne(
-    @Request() req: { user: { id: string } },
-    @Param('id') id: string,
-  ) {
+  findOne(@Request() req: { user: { id: string } }, @Param('id') id: string) {
     return this.rendersService.findOne(id, req.user.id);
   }
 }
