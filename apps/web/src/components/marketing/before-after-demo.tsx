@@ -19,25 +19,25 @@ export function BeforeAfterDemo() {
             Before & after
           </p>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Raw recording → launch-ready demo
+            Static screenshots → launch-ready demo
           </h2>
           <p className="mt-3 text-[15px] text-marketing-muted">
-            Same product UI — Arco adds motion, zooms, and titles so you ship a
-            video you&apos;d actually post.
+            Same product UI — Arco adds framing, motion, voice-over, and music so
+            you ship a video you&apos;d actually post.
           </p>
         </MotionReveal>
 
         <div className="mt-12 grid gap-6 md:grid-cols-2">
           <DemoPanel
-            label="Raw screen recording"
-            description="Flat OBS capture — no polish"
+            label="Raw screenshots"
+            description="Flat UI stills — no polish"
             poster={BEFORE_POSTER}
             muted
             reduced={reduced}
           />
           <DemoPanel
             label="Arco export"
-            description="Zooms, ripples, titles, music"
+            description="Frames, motion, VO, music"
             poster={AFTER_POSTER}
             highlight
             reduced={reduced}

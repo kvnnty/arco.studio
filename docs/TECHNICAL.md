@@ -589,23 +589,29 @@ Tune per template; total frames must match `durationInFrames`.
 
 ## QA checklist
 
-### Sprint 1 golden path (manual)
+### Motion pipeline golden path (manual)
 
 Run on local stack (Postgres + MinIO + FFmpeg + API + web):
 
-1. **Recording** — Sign in → dashboard create hero → upload MP4 → wait for AI draft → open editor → export 16:9 → download from project detail. Repeat export twice on same project (re-export should succeed).
-2. **Screenshots** — Dashboard Screenshots tab → upload 3+ images → generate storyboard → drag-reorder scenes in strip → export → confirm failed renders show `errorMessage` + **Retry export** on project detail.
-3. **Billing slots** — On Intro plan at 5/5 projects → delete one from list or detail → confirm slot frees → create new project.
+1. **Screenshots (primary)** — Sign in → dashboard **Product demo** tab → paste URL + brief → upload 5 screenshots → pick voice + BGM → Make video → watch Analyze→Draft→Voice→Layout→Ready → preview framed scenes → chat “Make headlines shorter” → export 16:9 → download. Target: under 10 minutes.
+2. **Recording (secondary)** — Advanced tab → upload MP4 → wait for draft → export. Heuristic markers only (no CV).
+3. **Billing slots** — On Intro plan at 5/5 projects → delete one → confirm slot frees → create new project.
 
 ### Template / screenshot quality
 
-- [ ] All headlines readable at 1080p on phone
-- [ ] Screenshots sharp, correct aspect ratio
-- [ ] No VO / no “AI ad” cadence
-- [ ] Music fits mood; no jarring loop point
+- [ ] Device frame visible (browser or phone)
+- [ ] Transitions are not fade-only across all scenes
+- [ ] All headlines readable at 1080p / 9:16
+- [ ] Screenshots sharp inside frame
+- [ ] VO ducks music on speaking scenes
 - [ ] CTA legible last 3 seconds
 - [ ] Does not feel like stock slideshow
-- [ ] Passes 5s comparison vs Canva/InVideo template
+- [ ] Passes 5s comparison vs CapCut static slideshow
+
+### Sprint 1 golden path (legacy recording)
+
+1. **Recording** — Sign in → dashboard → upload MP4 → AI draft → export 16:9 → re-export twice on same project.
+2. **Screenshots** — Upload 3+ images → storyboard → reorder → export → failed renders show retry.
 
 ## Optional B-roll prompt (Phase 2 only)
 

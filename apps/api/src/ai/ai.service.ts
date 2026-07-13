@@ -262,8 +262,33 @@ export class AiService {
       callout: { text: string; subtext?: string };
       label?: string;
     }>;
+    scenes?: Array<{
+      headline?: string;
+      subheadline?: string;
+      voScript?: string;
+    }>;
     source: 'llm' | 'heuristic';
   }> {
+    if (dto.scenes && dto.scenes.length > 0) {
+      if (this.openAi.isConfigured()) {
+        try {
+          const result = await this.refineScenesWithLlm(dto);
+          return { markers: [], scenes: result.scenes, source: 'llm' };
+        } catch (error) {
+          this.logger.warn(
+            `LLM scene refine failed, using heuristic: ${
+              error instanceof Error ? error.message : error
+            }`,
+          );
+        }
+      }
+      return {
+        markers: [],
+        scenes: this.heuristicRefineScenes(dto),
+        source: 'heuristic',
+      };
+    }
+
     if (this.openAi.isConfigured()) {
       try {
         const result = await this.refineProjectWithLlm(dto);
@@ -283,12 +308,109 @@ export class AiService {
     };
   }
 
+  private heuristicRefineScenes(
+    dto: RefineProjectDto,
+  ): Array<{
+    headline?: string;
+    subheadline?: string;
+    voScript?: string;
+  }> {
+    const instruction = dto.instruction.toLowerCase();
+    return (dto.scenes ?? []).map((scene) => {
+      let headline = scene.headline ?? 'Scene headline';
+      let subheadline = scene.subheadline;
+      let voScript = scene.voScript ?? headline;
+
+      if (instruction.includes('shorter')) {
+        headline = headline.split(/\s+/).slice(0, 5).join(' ');
+        subheadline = subheadline?.split(/\s+/).slice(0, 6).join(' ');
+        voScript = voScript.split(/\s+/).slice(0, 12).join(' ');
+      } else if (instruction.includes('technical')) {
+        headline = headline.replace(
+          /instantly|beautiful|amazing/gi,
+          'programmatically',
+        );
+        voScript = voScript.replace(
+          /instantly|beautiful|amazing/gi,
+          'programmatically',
+        );
+      } else if (instruction.includes('bold')) {
+        headline = headline.toUpperCase();
+      } else if (
+        instruction.includes('cta') ||
+        instruction.includes('stronger')
+      ) {
+        headline = headline.replace(/\.*$/, '');
+        if (!/try|start|get|join|book/i.test(headline)) {
+          headline = `${headline}. Start free`;
+        }
+        voScript = `${voScript} Ready to get started?`;
+      }
+
+      return { headline, subheadline, voScript };
+    });
+  }
+
+  private async refineScenesWithLlm(
+    dto: RefineProjectDto,
+  ): Promise<{
+    scenes: Array<{
+      headline?: string;
+      subheadline?: string;
+      voScript?: string;
+    }>;
+  }> {
+    const scenes = (dto.scenes ?? [])
+      .map(
+        (scene, index) =>
+          `${index + 1}. headline="${scene.headline ?? ''}" sub="${scene.subheadline ?? ''}" vo="${scene.voScript ?? ''}"`,
+      )
+      .join('\n');
+
+    const userPrompt = [
+      `Product title: ${dto.title}`,
+      dto.intent ? `Video intent: ${dto.intent}` : null,
+      dto.productUrl ? `Product URL: ${dto.productUrl}` : null,
+      `Instruction: ${dto.instruction}`,
+      'Current screenshot scenes:',
+      scenes,
+      'Return the same number of scenes with updated headline, subheadline, and voScript.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const parsed = await this.openAi.completeStructured(
+      refineResponseSchema,
+      'refine',
+      [
+        {
+          role: 'system',
+          content:
+            'You refine screenshot storyboard copy for SaaS launch videos. Keep headlines concise. voScript should be speakable narration (1-2 sentences).',
+        },
+        { role: 'user', content: userPrompt },
+      ],
+      { temperature: 0.5 },
+    );
+
+    return {
+      scenes: (parsed.scenes ?? []).map((scene, index) => {
+        const fallback = dto.scenes?.[index];
+        return {
+          headline: scene.headline ?? fallback?.headline,
+          subheadline: scene.subheadline ?? fallback?.subheadline,
+          voScript: scene.voScript ?? fallback?.voScript ?? scene.headline,
+        };
+      }),
+    };
+  }
+
   private heuristicRefineProject(
     dto: RefineProjectDto,
   ): Array<{ callout: { text: string; subtext?: string }; label?: string }> {
     const instruction = dto.instruction.toLowerCase();
 
-    return dto.markers.map((marker) => {
+    return (dto.markers ?? []).map((marker) => {
       const text = marker.callout?.text ?? marker.label ?? 'Scene headline';
       const subtext = marker.callout?.subtext;
 
@@ -331,7 +453,7 @@ export class AiService {
       label?: string;
     }>;
   }> {
-    const scenes = dto.markers
+    const scenes = (dto.markers ?? [])
       .map(
         (marker, index) =>
           `${index + 1}. "${marker.callout?.text ?? marker.label ?? 'Scene'}" at ${marker.startMs}ms`,
@@ -365,7 +487,7 @@ export class AiService {
     );
 
     const markers = (parsed.markers ?? []).map((marker, index) => {
-      const fallback = dto.markers[index];
+      const fallback = dto.markers?.[index];
       const text =
         marker.callout?.text ??
         marker.label ??
@@ -430,18 +552,24 @@ export class AiService {
 
     if (
       lower.includes('regenerate') &&
-      dto.project.selectedMarkerIndex !== undefined
+      (dto.project.selectedMarkerIndex !== undefined ||
+        dto.project.selectedSceneIndex !== undefined)
     ) {
       return {
         action: {
           type: 'regenerate_marker',
-          markerIndex: dto.project.selectedMarkerIndex,
+          markerIndex:
+            dto.project.selectedSceneIndex ?? dto.project.selectedMarkerIndex,
         },
         message: 'Regenerating the selected scene.',
       };
     }
 
-    if (lower.includes('add scene') && dto.project.playheadMs !== undefined) {
+    if (
+      lower.includes('add scene') &&
+      dto.project.playheadMs !== undefined &&
+      dto.project.projectMode !== 'screenshots'
+    ) {
       return {
         action: {
           type: 'add_marker_at_ms',
@@ -454,7 +582,7 @@ export class AiService {
     return {
       action: { type: 'reply' },
       message:
-        'Try “Make headlines shorter”, “Regenerate selected scene”, or “Add scene here”.',
+        'Try “Make headlines shorter”, “More bold”, or “Regenerate selected scene”.',
     };
   }
 

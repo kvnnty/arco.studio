@@ -1,4 +1,4 @@
-import type { ArcoProject } from "./index.js";
+import type { ArcoProject, TransitionType } from "./index.js";
 
 export const stylePresetSchema = [
   "linear",
@@ -19,6 +19,10 @@ export type StylePresetConfig = {
     rippleIntensity: number;
     titleSize: number;
     easing: [number, number, number, number];
+    /** Ken Burns / pan strength for screenshot mode (0.04–0.18). */
+    kenBurnsAmplitude: number;
+    defaultTransition: TransitionType;
+    titleLayout: "bottom" | "card";
   };
   audioId: string;
 };
@@ -34,8 +38,11 @@ export const STYLE_PRESETS: Record<StylePreset, StylePresetConfig> = {
       rippleIntensity: 0.7,
       titleSize: 52,
       easing: [0.25, 0.1, 0.25, 1],
+      kenBurnsAmplitude: 0.06,
+      defaultTransition: "fade",
+      titleLayout: "bottom",
     },
-    audioId: "modern-saas",
+    audioId: "calm-focus",
   },
   stripe: {
     id: "stripe",
@@ -47,8 +54,11 @@ export const STYLE_PRESETS: Record<StylePreset, StylePresetConfig> = {
       rippleIntensity: 0.75,
       titleSize: 54,
       easing: [0.4, 0, 0.2, 1],
+      kenBurnsAmplitude: 0.09,
+      defaultTransition: "push",
+      titleLayout: "bottom",
     },
-    audioId: "modern-saas",
+    audioId: "bright-pulse",
   },
   apple: {
     id: "apple",
@@ -60,8 +70,11 @@ export const STYLE_PRESETS: Record<StylePreset, StylePresetConfig> = {
       rippleIntensity: 0.5,
       titleSize: 48,
       easing: [0.42, 0, 0.58, 1],
+      kenBurnsAmplitude: 0.05,
+      defaultTransition: "blur",
+      titleLayout: "card",
     },
-    audioId: "modern-saas",
+    audioId: "mountain-rise",
   },
   startup: {
     id: "startup",
@@ -73,20 +86,35 @@ export const STYLE_PRESETS: Record<StylePreset, StylePresetConfig> = {
       rippleIntensity: 0.9,
       titleSize: 56,
       easing: [0.34, 1.56, 0.64, 1],
+      kenBurnsAmplitude: 0.14,
+      defaultTransition: "scale",
+      titleLayout: "bottom",
     },
-    audioId: "modern-saas",
+    audioId: "launch-drive",
   },
 };
+
+/** Default mix level for curated library tracks. */
+export const LIBRARY_MUSIC_VOLUME = 0.25;
 
 export function applyStylePreset(
   project: ArcoProject,
   preset: StylePreset,
 ): ArcoProject {
   const config = STYLE_PRESETS[preset];
+  const keepCustomMusic = Boolean(project.audio?.customMusicSrc);
   return {
     ...project,
     stylePreset: preset,
-    brand: { ...config.brand },
-    audio: { musicId: config.audioId, volume: 0.85 },
+    brand: {
+      ...config.brand,
+      logoSrc: project.brand?.logoSrc,
+    },
+    audio: {
+      ...project.audio,
+      musicId: keepCustomMusic ? undefined : config.audioId,
+      customMusicSrc: project.audio?.customMusicSrc,
+      volume: project.audio?.volume ?? LIBRARY_MUSIC_VOLUME,
+    },
   };
 }

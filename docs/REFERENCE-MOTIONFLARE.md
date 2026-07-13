@@ -4,7 +4,7 @@
 
 **Formerly:** [LaunchVideo.app](https://launchvideo.app) — same product, rebranded to Motionflare.
 
-**Purpose:** Document Motionflare’s full flow and user journey, then define how **Arco combines** Motionflare’s AI-first creation UX with Arco’s **real recording + motion editor** differentiator.
+**Purpose:** Document Motionflare’s full flow and user journey as the **cost model** for Arco. **Target result quality = Motion.so** (studio motion design). **Cost path = Motionflare-style pipeline** (URL/screenshots → storyboard → TTS → Remotion presets — not generative video). Recording is secondary; real UI screenshots are the visual source of truth. See [DECISIONS.md](./DECISIONS.md).
 
 ---
 

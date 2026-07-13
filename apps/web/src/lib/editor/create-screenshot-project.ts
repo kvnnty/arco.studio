@@ -1,22 +1,12 @@
 import type { ExportFormat, StylePreset } from "@arco/project-schema";
-import {
-  createScreenshotPendingProject,
-  screenshotProjectDurationMs,
-} from "@arco/project-schema";
-import { applyStylePreset } from "@arco/project-schema/style-presets";
-import { applyTemplateToProject, getTemplate } from "@arco/project-schema/templates";
+import { createScreenshotPendingProject } from "@arco/project-schema";
+import { getTemplate } from "@arco/project-schema/templates";
+import { getDefaultVoiceId } from "@arco/project-schema/voices";
 
-import {
-  apiGenerateStoryboard,
-  apiGetBillingStatus,
-  uploadImageWithProgress,
-} from "@/lib/api/client";
+import { uploadImageWithProgress } from "@/lib/api/client";
 import { createProject, syncProjectRecord } from "@/lib/api/projects";
-import { assertWithinDurationLimit } from "@/lib/billing/duration-limits";
 import type { ProjectPlatform } from "@/lib/editor/create-project";
 import { deriveProjectTitle } from "@/lib/editor/create-from-template";
-import { generateVoiceForScreenshotProject } from "@/lib/editor/generate-voice-for-project";
-import { getDefaultVoiceId } from "@arco/project-schema/voices";
 
 export type CreateScreenshotProjectInput = {
   accessToken: string;
@@ -37,6 +27,10 @@ export type CreateScreenshotProjectInput = {
   onUploadProgress?: (percent: number) => void;
 };
 
+/**
+ * Upload screenshots and create a pending project.
+ * Storyboard / VO / layout run in the editor Motion pipeline.
+ */
 export async function createScreenshotProject(
   input: CreateScreenshotProjectInput,
 ): Promise<{ projectId: string }> {
@@ -83,85 +77,56 @@ export async function createScreenshotProject(
     imageUrls.push(result.url);
   }
 
-  const storyboard = await apiGenerateStoryboard(input.accessToken, {
-    title,
-    imageUrls,
-    intent: input.brief?.intent,
-    productUrl: input.brief?.productUrl,
-    templateId: input.templateId,
-    brief: input.brief,
-    targetDurationMs: 45000,
-  });
-
-  const scenes = storyboard.scenes.map((scene, index) => ({
-    ...scene,
-    imageSrc: imageUrls[index] ?? scene.imageSrc,
+  const stubScenes = imageUrls.map((url, index) => ({
+    id: `scene-${index + 1}`,
+    imageSrc: url,
+    durationMs: 4000,
+    motion: "ken-burns-in" as const,
   }));
 
-  let project = createScreenshotPendingProject(title, scenes);
+  const voiceEnabled = input.voiceEnabled !== false;
+  const voiceId = input.voiceId ?? getDefaultVoiceId();
+  const musicId =
+    input.musicId ?? template?.audio.musicId ?? "warm-launch";
+
+  let project = createScreenshotPendingProject(title, stubScenes);
 
   if (input.brief) {
     project = { ...project, brief: input.brief };
   }
 
   if (template) {
-    project = applyTemplateToProject(project, template);
+    project = {
+      ...project,
+      template: { id: template.id, name: template.name },
+      stylePreset: template.stylePreset,
+    };
   } else if (input.stylePreset) {
-    project = applyStylePreset(project, input.stylePreset);
-  } else {
-    project = { ...project, stylePreset: storyboard.stylePreset };
+    project = { ...project, stylePreset: input.stylePreset };
   }
 
   if (input.exportFormat) {
     project = { ...project, exportFormat: input.exportFormat };
   }
 
-  const musicId =
-    input.musicId ?? template?.audio.musicId ?? "modern-saas";
-  const voiceEnabled = input.voiceEnabled !== false;
-  const voiceId = input.voiceId ?? getDefaultVoiceId();
-
-  let finalScenes = scenes;
-
-  if (voiceEnabled && voiceId) {
-    try {
-      finalScenes = await generateVoiceForScreenshotProject(
-        input.accessToken,
-        {
-          ...createScreenshotPendingProject(title, scenes),
-          scenes,
-        },
-        voiceId,
-      );
-    } catch {
-      // Continue without voice if ElevenLabs is unavailable
-    }
-  }
-
   project = {
     ...project,
     projectMode: "screenshots",
-    scenes: finalScenes,
+    pipelineStatus: "pending",
+    scenes: stubScenes,
     audio: {
-      musicId: input.customMusicSrc ? undefined : musicId ?? undefined,
+      musicId: input.customMusicSrc ? undefined : musicId,
       customMusicSrc: input.customMusicSrc ?? undefined,
-      volume: template?.audio.volume ?? 0.85,
+      volume: template?.audio.volume ?? 0.25,
       voiceId: voiceEnabled ? voiceId : undefined,
       voiceEnabled,
       duckUnderVoice: true,
     },
     recording: {
       src: "placeholder",
-      durationMs: screenshotProjectDurationMs({ ...project, scenes: finalScenes }),
+      durationMs: stubScenes.reduce((sum, scene) => sum + scene.durationMs, 0),
     },
   };
-
-  const billing = await apiGetBillingStatus(input.accessToken);
-  assertWithinDurationLimit(
-    project.recording.durationMs,
-    billing.maxProjectDurationMs,
-    billing.plan,
-  );
 
   await syncProjectRecord(input.accessToken, {
     projectId: id,

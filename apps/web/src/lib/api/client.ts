@@ -484,6 +484,11 @@ export type RefineProjectResponse = {
     callout: { text: string; subtext?: string };
     label?: string;
   }>;
+  scenes?: Array<{
+    headline?: string;
+    subheadline?: string;
+    voScript?: string;
+  }>;
   source: "llm" | "heuristic";
 };
 
@@ -494,10 +499,16 @@ export async function apiRefineProject(
     instruction: string;
     intent?: string;
     productUrl?: string;
-    markers: Array<{
+    markers?: Array<{
       label?: string;
       callout?: { text: string; subtext?: string };
       startMs: number;
+    }>;
+    scenes?: Array<{
+      id?: string;
+      headline?: string;
+      subheadline?: string;
+      voScript?: string;
     }>;
   },
 ): Promise<RefineProjectResponse> {
@@ -526,14 +537,23 @@ export async function apiChat(
       durationMs: number;
       intent?: string;
       productUrl?: string;
-      markers: Array<{
+      projectMode?: "recording" | "screenshots";
+      markers?: Array<{
         id: string;
         startMs: number;
         durationMs: number;
         label?: string;
         callout?: { text: string; subtext?: string };
       }>;
+      scenes?: Array<{
+        id: string;
+        durationMs: number;
+        headline?: string;
+        subheadline?: string;
+        voScript?: string;
+      }>;
       selectedMarkerIndex?: number;
+      selectedSceneIndex?: number;
       playheadMs?: number;
     };
   },

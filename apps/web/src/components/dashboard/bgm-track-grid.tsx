@@ -96,7 +96,10 @@ export function BgmTrackGrid({
                   {track.mood}
                 </Badge>
               </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                {track.description}
+              </p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
                 {track.durationSec}s
               </p>
             </button>

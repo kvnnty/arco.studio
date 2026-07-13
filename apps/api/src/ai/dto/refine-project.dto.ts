@@ -4,7 +4,6 @@ import {
   IsObject,
   IsOptional,
   IsString,
-  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -22,6 +21,24 @@ class MarkerSummaryDto {
   @IsInt()
   @Min(0)
   startMs!: number;
+}
+
+class SceneSummaryDto {
+  @IsString()
+  @IsOptional()
+  id?: string;
+
+  @IsString()
+  @IsOptional()
+  headline?: string;
+
+  @IsString()
+  @IsOptional()
+  subheadline?: string;
+
+  @IsString()
+  @IsOptional()
+  voScript?: string;
 }
 
 export class RefineProjectDto {
@@ -42,5 +59,12 @@ export class RefineProjectDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MarkerSummaryDto)
-  markers!: MarkerSummaryDto[];
+  @IsOptional()
+  markers?: MarkerSummaryDto[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SceneSummaryDto)
+  @IsOptional()
+  scenes?: SceneSummaryDto[];
 }

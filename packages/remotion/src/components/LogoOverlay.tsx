@@ -1,5 +1,5 @@
 import type { ArcoProject } from "@arco/project-schema";
-import { AbsoluteFill, Img } from "remotion";
+import { AbsoluteFill, Img, interpolate, useCurrentFrame } from "remotion";
 
 type LogoOverlayProps = {
   project: ArcoProject;
@@ -8,6 +8,14 @@ type LogoOverlayProps = {
 export function LogoOverlay({ project }: LogoOverlayProps) {
   const logoSrc = project.brand?.logoSrc;
   if (!logoSrc) return null;
+
+  const frame = useCurrentFrame();
+  const introScale = interpolate(frame, [0, 15], [0.85, 1], {
+    extrapolateRight: "clamp",
+  });
+  const introOpacity = interpolate(frame, [0, 10], [0, 1], {
+    extrapolateRight: "clamp",
+  });
 
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
@@ -20,6 +28,9 @@ export function LogoOverlay({ project }: LogoOverlayProps) {
           width: 120,
           height: 48,
           objectFit: "contain",
+          opacity: introOpacity,
+          transform: `scale(${introScale})`,
+          transformOrigin: "top left",
         }}
       />
     </AbsoluteFill>

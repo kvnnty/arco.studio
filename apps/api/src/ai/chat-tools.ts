@@ -104,14 +104,34 @@ export function buildChatMessages(
     .slice(-8)
     .map((item) => ({ role: item.role, content: item.content }));
 
-  const systemPrompt = [
-    'You are Arco, an assistant for editing SaaS launch videos from screen recordings.',
-    'Respond with a short, helpful user-facing message in plain text.',
-    'When the user wants to edit the project, call the appropriate tool.',
-    'If no edit is needed, reply conversationally without calling a tool.',
-    'Available edits: refine_all_copy, regenerate_marker, update_style_preset, add_marker_at_ms, delete_marker.',
-    `Project: ${JSON.stringify(dto.project)}`,
-  ].join('\n');
+  const snapshot = (dto.project ?? {}) as {
+    projectMode?: string;
+    scenes?: unknown[];
+    markers?: unknown[];
+  };
+
+  const isScreenshots =
+    snapshot.projectMode === 'screenshots' ||
+    (Array.isArray(snapshot.scenes) && snapshot.scenes.length > 0);
+
+  const systemPrompt = isScreenshots
+    ? [
+        'You are Arco, an assistant for editing SaaS launch videos from product screenshots.',
+        'Respond with a short, helpful user-facing message in plain text.',
+        'When the user wants to edit the project, call the appropriate tool.',
+        'If no edit is needed, reply conversationally without calling a tool.',
+        'Available edits: refine_all_copy (headlines + VO scripts), regenerate_marker (one scene by index), update_style_preset, delete_marker.',
+        'Do not use add_marker_at_ms for screenshot projects.',
+        `Project: ${JSON.stringify(dto.project)}`,
+      ].join('\n')
+    : [
+        'You are Arco, an assistant for editing SaaS launch videos from screen recordings.',
+        'Respond with a short, helpful user-facing message in plain text.',
+        'When the user wants to edit the project, call the appropriate tool.',
+        'If no edit is needed, reply conversationally without calling a tool.',
+        'Available edits: refine_all_copy, regenerate_marker, update_style_preset, add_marker_at_ms, delete_marker.',
+        `Project: ${JSON.stringify(dto.project)}`,
+      ].join('\n');
 
   return [
     { role: 'system', content: systemPrompt },

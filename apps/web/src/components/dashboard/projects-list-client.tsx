@@ -47,7 +47,7 @@ export function ProjectsListClient() {
       <EmptyState
         icon={Film}
         title="No projects yet"
-        description="Create your first launch video — upload a screen recording and Arco handles the motion design."
+        description="Create your first launch video — paste a URL, drop screenshots, and Arco runs the Motion pipeline."
         action={{
           label: "Create first project",
           href: "/dashboard",

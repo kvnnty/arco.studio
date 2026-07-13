@@ -41,7 +41,7 @@ export function DashboardHomeClient({
   const { data: billing } = useBillingStatus();
   const [bgmOpen, setBgmOpen] = useState(false);
   const [selectedMusicId, setSelectedMusicId] = useState<MusicTrackId | null>(
-    "modern-saas",
+    "warm-launch",
   );
   const [customMusic, setCustomMusic] = useState<CustomMusicSelection | null>(
     null,

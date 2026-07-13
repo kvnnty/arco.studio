@@ -5,7 +5,6 @@ import {
   IsObject,
   IsOptional,
   IsString,
-  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -40,6 +39,27 @@ class ChatMarkerDto {
   callout?: { text: string; subtext?: string };
 }
 
+class ChatSceneDto {
+  @IsString()
+  id!: string;
+
+  @IsInt()
+  @Min(0)
+  durationMs!: number;
+
+  @IsString()
+  @IsOptional()
+  headline?: string;
+
+  @IsString()
+  @IsOptional()
+  subheadline?: string;
+
+  @IsString()
+  @IsOptional()
+  voScript?: string;
+}
+
 class ChatProjectSnapshotDto {
   @IsString()
   title!: string;
@@ -60,15 +80,31 @@ class ChatProjectSnapshotDto {
   @IsOptional()
   productUrl?: string;
 
+  @IsString()
+  @IsOptional()
+  projectMode?: 'recording' | 'screenshots';
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChatMarkerDto)
-  markers!: ChatMarkerDto[];
+  @IsOptional()
+  markers?: ChatMarkerDto[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ChatSceneDto)
+  @IsOptional()
+  scenes?: ChatSceneDto[];
 
   @IsInt()
   @Min(0)
   @IsOptional()
   selectedMarkerIndex?: number;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  selectedSceneIndex?: number;
 
   @IsNumber()
   @Min(0)

@@ -40,8 +40,8 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
     background: "#07080a",
   };
   const audio = project.audio ?? {
-    musicId: "modern-saas",
-    volume: 0.85,
+    musicId: "warm-launch",
+    volume: 0.25,
     voiceEnabled: true,
   };
 
@@ -78,7 +78,7 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
 
     updateAudio({
       customMusicSrc: undefined,
-      musicId: audio.musicId ?? "modern-saas",
+      musicId: audio.musicId ?? "warm-launch",
     });
   };
 
@@ -169,10 +169,10 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
             <BgmTrackGrid
               compact
               showNone={false}
-              selectedId={(audio.musicId as MusicTrackId) ?? "modern-saas"}
+              selectedId={(audio.musicId as MusicTrackId) ?? "warm-launch"}
               onSelect={(id) =>
                 updateAudio({
-                  musicId: id ?? "modern-saas",
+                  musicId: id ?? "warm-launch",
                   customMusicSrc: undefined,
                 })
               }

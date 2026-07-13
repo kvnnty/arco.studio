@@ -1,5 +1,9 @@
 import type { ArcoProject, Marker, MarkerEffect } from "@arco/project-schema";
-import { DEFAULT_FOCUS, isScreenshotProject } from "@arco/project-schema";
+import {
+  DEFAULT_FOCUS,
+  isScreenshotPipelinePending,
+  isScreenshotProject,
+} from "@arco/project-schema";
 
 export type ProjectPlatform = "web" | "mobile" | "both";
 
@@ -131,6 +135,9 @@ export function setEffect(
 
 export function inferJourneyStep(project: ArcoProject): JourneyStep {
   if (isScreenshotProject(project)) {
+    if (isScreenshotPipelinePending(project)) {
+      return "analyzing";
+    }
     if (project.scenes && project.scenes.length > 0) {
       return "edit";
     }

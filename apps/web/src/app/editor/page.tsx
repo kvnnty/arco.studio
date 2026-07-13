@@ -2,7 +2,7 @@ import { EditorRouteClient } from "@/components/editor/editor-route-client";
 
 export const metadata = {
   title: "Editor — Arco",
-  description: "Upload a screen recording and add motion design.",
+  description: "Create a product demo from screenshots — Motion pipeline to export.",
 };
 
 export default function EditorRoute() {

@@ -16,7 +16,12 @@ export async function generateVoiceForScreenshotProject(
       id: scene.id,
       voScript: spokenScriptFromScene(scene),
     }))
-    .filter((scene) => scene.voScript.length > 0);
+    .filter((scene) => {
+      const full = scenes.find((s) => s.id === scene.id);
+      if (!scene.voScript.length) return false;
+      // Only synthesize scenes missing audio (re-TTS after copy edits).
+      return !full?.voAudioSrc;
+    });
 
   if (payload.length === 0) return scenes;
 

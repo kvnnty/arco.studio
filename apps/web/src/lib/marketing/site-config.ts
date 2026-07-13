@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "Arco",
   tagline: "Launch videos without hiring a motion designer",
   description:
-    "Built for product owners. Upload your app recording, describe the launch — Arco adds motion, titles, and polish. Ship social ads, demos, and feature videos in minutes.",
+    "Built for product owners. Paste your URL, drop product screenshots, pick a voice — Arco storyboards, narrates, and animates a launch-ready demo in minutes.",
   url: "https://arco.app",
   links: {
     twitter: "https://twitter.com/arco",
