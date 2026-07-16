@@ -1,7 +1,7 @@
 "use client";
 
 import type { ArcoProject, FocusRegion, Marker, StylePreset } from "@arco/project-schema";
-import { isScreenshotProject } from "@arco/project-schema";
+import { isScreenshotPipelinePending, isScreenshotProject } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 import { getTemplate } from "@arco/project-schema/templates";
 import type { PlayerRef } from "@remotion/player";
@@ -46,6 +46,7 @@ import {
 import {
   applyChatAction,
   mergeRefinedMarkers,
+  mergeRefinedScenes,
   type ChatAction,
 } from "@/lib/editor/apply-chat-action";
 import { buildDraftProject, type DraftAnalysisResult } from "@/lib/editor/analyze-recording";
@@ -64,6 +65,9 @@ import {
   createInitialPipelineState,
   type PipelineState,
 } from "@/lib/editor/generation-pipeline";
+import { generateVoiceForScreenshotProject } from "@/lib/editor/generate-voice-for-project";
+import { getDefaultVoiceId } from "@arco/project-schema/voices";
+import { spokenScriptFromScene } from "@arco/project-schema";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -105,8 +109,9 @@ export function EditorShell({
   const screenshotMode = isScreenshotProject(project);
   const scenes = project.scenes ?? [];
   const isAnalyzing =
-    session.journeyStep === "analyzing" && !screenshotMode;
-  const chatReady = session.journeyStep === "edit";
+    session.journeyStep === "analyzing" ||
+    (screenshotMode && isScreenshotPipelinePending(project));
+  const chatReady = session.journeyStep === "edit" && !isAnalyzing;
   const productHostname = project.brief?.productUrl
     ? getUrlHostname(project.brief.productUrl)
     : undefined;
@@ -128,6 +133,11 @@ export function EditorShell({
     () => scenes.find((scene) => scene.id === selectedId) ?? null,
     [scenes, selectedId],
   );
+
+  const selectedSceneIndex = useMemo(() => {
+    if (!selectedScene) return undefined;
+    return scenes.findIndex((scene) => scene.id === selectedScene.id);
+  }, [scenes, selectedScene]);
 
   const selectedMarkerIndex = useMemo(() => {
     if (!selectedMarker) return undefined;
@@ -246,6 +256,35 @@ export function EditorShell({
     persist({ ...session, project: withBrand });
   }, [persist, session]);
 
+  const handleScreenshotPipelineComplete = useCallback(
+    (nextProject: ArcoProject) => {
+      const nextSession: EditorSession = {
+        ...session,
+        project: nextProject,
+        journeyStep:
+          nextProject.pipelineStatus === "failed" ? "analyzing" : "edit",
+      };
+
+      if (nextProject.pipelineStatus === "failed") {
+        toast.error(
+          "Video generation failed. Check the chat for details, then try creating again.",
+        );
+        persist(nextSession);
+        return;
+      }
+
+      syncProject.mutate({
+        projectId: session.projectId,
+        project: nextProject,
+        platform: session.platform,
+        recordingSrc: session.recordingUrl || "placeholder",
+      });
+      setSelectedId(nextProject.scenes?.[0]?.id ?? null);
+      persist(nextSession);
+    },
+    [persist, session, syncProject],
+  );
+
   const handleAnalysisComplete = useCallback(
     (result: DraftAnalysisResult) => {
       const kit = result.brandKit ?? brandKitRef.current;
@@ -305,6 +344,26 @@ export function EditorShell({
       if (type === "refine_all_copy") {
         const instruction =
           (action.instruction as string | undefined) ?? "Improve the copy";
+
+        if (screenshotMode) {
+          const refined = await refineProject.mutateAsync({
+            title: project.meta.title,
+            instruction,
+            intent: project.brief?.intent,
+            productUrl: project.brief?.productUrl,
+            scenes: (project.scenes ?? []).map((scene) => ({
+              id: scene.id,
+              headline: scene.headline,
+              subheadline: scene.subheadline,
+              voScript: scene.voScript,
+            })),
+          });
+          return {
+            type: "refine_all_scenes",
+            scenes: mergeRefinedScenes(project, refined.scenes ?? []),
+          };
+        }
+
         const sorted = [...project.markers].sort((a, b) => a.startMs - b.startMs);
         const refined = await refineProject.mutateAsync({
           title: project.meta.title,
@@ -323,7 +382,41 @@ export function EditorShell({
         };
       }
 
-      if (type === "regenerate_marker") {
+      if (type === "regenerate_marker" || type === "regenerate_scene") {
+        if (screenshotMode) {
+          const sceneIndex =
+            (action.markerIndex as number | undefined) ??
+            (action.sceneIndex as number | undefined) ??
+            selectedSceneIndex ??
+            0;
+          const scene = (project.scenes ?? [])[sceneIndex];
+          if (!scene) {
+            return { type: "reply", message: "Could not find that scene." };
+          }
+          const refined = await refineProject.mutateAsync({
+            title: project.meta.title,
+            instruction: "Regenerate this scene with stronger launch copy",
+            intent: project.brief?.intent,
+            productUrl: project.brief?.productUrl,
+            scenes: [
+              {
+                id: scene.id,
+                headline: scene.headline,
+                subheadline: scene.subheadline,
+                voScript: scene.voScript,
+              },
+            ],
+          });
+          const update = refined.scenes?.[0];
+          return {
+            type: "regenerate_scene",
+            sceneIndex,
+            headline: update?.headline ?? scene.headline,
+            subheadline: update?.subheadline ?? scene.subheadline,
+            voScript: update?.voScript ?? scene.voScript,
+          };
+        }
+
         const markerIndex =
           (action.markerIndex as number | undefined) ?? selectedMarkerIndex ?? 0;
         const sorted = [...project.markers].sort((a, b) => a.startMs - b.startMs);
@@ -366,7 +459,16 @@ export function EditorShell({
         };
       }
 
-      if (type === "delete_marker") {
+      if (type === "delete_marker" || type === "delete_scene") {
+        if (screenshotMode) {
+          return {
+            type: "delete_scene",
+            sceneIndex:
+              (action.markerIndex as number | undefined) ??
+              (action.sceneIndex as number | undefined) ??
+              0,
+          };
+        }
         return {
           type: "delete_marker",
           markerIndex: (action.markerIndex as number) ?? 0,
@@ -375,7 +477,54 @@ export function EditorShell({
 
       return { type: "reply", message: "Done." };
     },
-    [project, selectedMarkerIndex, refineProject, regenerateMarker],
+    [
+      project,
+      regenerateMarker,
+      refineProject,
+      screenshotMode,
+      selectedMarkerIndex,
+      selectedSceneIndex,
+    ],
+  );
+
+  const maybeRettsScenes = useCallback(
+    async (nextProject: ArcoProject, previous: ArcoProject) => {
+      const token = authSession?.accessToken;
+      if (!token || !isScreenshotProject(nextProject)) return nextProject;
+      if (nextProject.audio?.voiceEnabled === false) return nextProject;
+
+      const prevById = new Map(
+        (previous.scenes ?? []).map((scene) => [scene.id, scene]),
+      );
+      const needsVoice = (nextProject.scenes ?? []).some((scene) => {
+        const prev = prevById.get(scene.id);
+        const script = spokenScriptFromScene(scene);
+        if (!script) return false;
+        return (
+          !scene.voAudioSrc ||
+          (prev &&
+            (prev.voScript !== scene.voScript ||
+              prev.headline !== scene.headline))
+        );
+      });
+
+      if (!needsVoice) return nextProject;
+
+      const voiceId =
+        nextProject.audio?.voiceId ?? getDefaultVoiceId();
+      try {
+        const scenes = await generateVoiceForScreenshotProject(
+          token,
+          nextProject,
+          voiceId,
+        );
+        return { ...nextProject, scenes };
+      } catch {
+        toast.error("Could not update voice-over. Copy was saved.");
+        return nextProject;
+      }
+    },
+    [authSession?.accessToken],
   );
 
   const handleSendMessage = useCallback(
@@ -398,14 +547,27 @@ export function EditorShell({
           durationMs: project.recording.durationMs,
           intent: project.brief?.intent,
           productUrl: project.brief?.productUrl,
-          markers: sorted.map((marker) => ({
-            id: marker.id,
-            startMs: marker.startMs,
-            durationMs: marker.durationMs,
-            label: marker.label,
-            callout: marker.callout,
-          })),
-          selectedMarkerIndex,
+          projectMode: project.projectMode,
+          markers: screenshotMode
+            ? []
+            : sorted.map((marker) => ({
+                id: marker.id,
+                startMs: marker.startMs,
+                durationMs: marker.durationMs,
+                label: marker.label,
+                callout: marker.callout,
+              })),
+          scenes: screenshotMode
+            ? (project.scenes ?? []).map((scene) => ({
+                id: scene.id,
+                durationMs: scene.durationMs,
+                headline: scene.headline,
+                subheadline: scene.subheadline,
+                voScript: scene.voScript,
+              }))
+            : undefined,
+          selectedMarkerIndex: screenshotMode ? undefined : selectedMarkerIndex,
+          selectedSceneIndex: screenshotMode ? selectedSceneIndex : undefined,
           playheadMs,
         },
       };
@@ -453,19 +615,52 @@ export function EditorShell({
           : chatAction,
       );
 
-      updateProject(nextProject);
+      const withVoice = await maybeRettsScenes(nextProject, project);
+      updateProject(withVoice);
       return reply || chatResult.message;
     },
     [
       authSession?.accessToken,
       chatMutation,
       executeChatAction,
+      maybeRettsScenes,
       project,
+      screenshotMode,
       selectedMarkerIndex,
+      selectedSceneIndex,
       session.projectId,
       updateProject,
     ],
   );
+
+  const handleRegenerateScene = useCallback(async () => {
+    if (screenshotMode) {
+      if (selectedSceneIndex === undefined || selectedSceneIndex < 0) return;
+      const chatAction = await executeChatAction({
+        type: "regenerate_scene",
+        sceneIndex: selectedSceneIndex,
+      });
+      const { project: nextProject } = applyChatAction(project, chatAction);
+      const withVoice = await maybeRettsScenes(nextProject, project);
+      updateProject(withVoice);
+      return;
+    }
+    if (selectedMarkerIndex === undefined || selectedMarkerIndex < 0) return;
+    const chatAction = await executeChatAction({
+      type: "regenerate_marker",
+      markerIndex: selectedMarkerIndex,
+    });
+    const { project: nextProject } = applyChatAction(project, chatAction);
+    updateProject(nextProject);
+  }, [
+    executeChatAction,
+    maybeRettsScenes,
+    project,
+    screenshotMode,
+    selectedMarkerIndex,
+    selectedSceneIndex,
+    updateProject,
+  ]);
 
   const reorderMarkers = useCallback(
     (orderedIds: string[]) => {
@@ -504,16 +699,6 @@ export function EditorShell({
     },
     [project, updateProject],
   );
-
-  const handleRegenerateScene = useCallback(async () => {
-    if (selectedMarkerIndex === undefined || selectedMarkerIndex < 0) return;
-    const chatAction = await executeChatAction({
-      type: "regenerate_marker",
-      markerIndex: selectedMarkerIndex,
-    });
-    const { project: nextProject } = applyChatAction(project, chatAction);
-    updateProject(nextProject);
-  }, [executeChatAction, project, selectedMarkerIndex, updateProject]);
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -598,6 +783,7 @@ export function EditorShell({
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)]">
         <aside className="flex max-h-[42vh] min-h-0 flex-col border-b border-border lg:max-h-none lg:border-b-0 lg:border-r">
           <ChatPanel
+            project={project}
             projectTitle={session.projectName}
             platform={session.platform}
             durationMs={project.recording.durationMs}
@@ -607,9 +793,11 @@ export function EditorShell({
             isAnalyzing={isAnalyzing}
             chatReady={chatReady}
             selectedMarker={selectedMarker}
+            selectedSceneId={selectedScene?.id ?? null}
             pipelineMarkers={pipelineMarkers}
             onBrandAnalyzed={handleBrandAnalyzed}
             onAnalysisComplete={handleAnalysisComplete}
+            onScreenshotPipelineComplete={handleScreenshotPipelineComplete}
             onPipelineChange={handlePipelineChange}
             onSendMessage={handleSendMessage}
             onRegenerateScene={handleRegenerateScene}

@@ -58,7 +58,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     previewPosterUrl: "/templates/saas-launch-poster.svg",
     stylePreset: "startup",
     exportFormat: "16:9",
-    audio: { musicId: "modern-saas", volume: 0.85 },
+    audio: { musicId: "warm-launch", volume: 0.25 },
     copyTone: "Confident, minimal, devtool audience. Short punchy headlines.",
     sceneBlueprint: blueprint([
       {
@@ -104,7 +104,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     previewPosterUrl: "/templates/dev-tool-poster.svg",
     stylePreset: "linear",
     exportFormat: "16:9",
-    audio: { musicId: "modern-saas", volume: 0.8 },
+    audio: { musicId: "calm-focus", volume: 0.25 },
     copyTone: "Technical, precise, engineer-friendly. No hype.",
     sceneBlueprint: blueprint([
       {
@@ -142,7 +142,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     previewPosterUrl: "/templates/mobile-app-poster.svg",
     stylePreset: "apple",
     exportFormat: "16:9",
-    audio: { musicId: "modern-saas", volume: 0.85 },
+    audio: { musicId: "mountain-rise", volume: 0.25 },
     copyTone: "Clean, consumer-friendly, benefit-led.",
     sceneBlueprint: blueprint([
       {
@@ -188,7 +188,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     previewPosterUrl: "/templates/product-hunt-poster.svg",
     stylePreset: "stripe",
     exportFormat: "16:9",
-    audio: { musicId: "modern-saas", volume: 0.9 },
+    audio: { musicId: "bright-pulse", volume: 0.25 },
     copyTone: "Excited but credible. Hook → problem → solution → CTA.",
     sceneBlueprint: blueprint([
       {
@@ -234,7 +234,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     previewPosterUrl: "/templates/feature-drop-poster.svg",
     stylePreset: "startup",
     exportFormat: "16:9",
-    audio: { musicId: "modern-saas", volume: 0.85 },
+    audio: { musicId: "launch-drive", volume: 0.25 },
     copyTone: "Announce what's new. Lead with the feature name.",
     sceneBlueprint: blueprint([
       {
@@ -272,7 +272,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     previewPosterUrl: "/templates/onboarding-poster.svg",
     stylePreset: "apple",
     exportFormat: "16:9",
-    audio: { musicId: "modern-saas", volume: 0.75 },
+    audio: { musicId: "up-bit", volume: 0.25 },
     copyTone: "Friendly, instructional, step-by-step.",
     sceneBlueprint: blueprint([
       {

@@ -71,14 +71,21 @@ export function PricingCards({
               annual ? "text-foreground" : "text-marketing-muted",
             )}
           >
-            Annual
-            <span className="ml-1.5 text-[12px] text-primary">Save 17%</span>
+            Yearly
+            <span className="ml-1.5 text-[12px] text-primary">Save 2 months</span>
           </span>
         </MotionStaggerItem>
       </MotionStagger>
       ) : null}
 
-      <MotionStagger className="grid gap-6 lg:grid-cols-3" stagger={0.1}>
+      <MotionStagger
+        className={cn(
+          "mx-auto grid gap-5",
+          plans.length === 2 && "max-w-3xl sm:grid-cols-2",
+          plans.length >= 3 && "lg:grid-cols-3",
+        )}
+        stagger={0.1}
+      >
         {plans.map((plan) => {
           const price = annual ? plan.annualPrice : plan.monthlyPrice;
           const isTrial = plan.id === "trial";
@@ -90,10 +97,10 @@ export function PricingCards({
             <MotionStaggerItem key={plan.id}>
               <MotionCard
                 className={cn(
-                  "relative flex h-full flex-col rounded-2xl border p-6 sm:p-8",
+                  "relative flex h-full flex-col rounded-(--marketing-radius) border p-6 sm:p-8",
                   plan.popular
-                    ? "border- bg-secondary text-secondary-foreground ring-1 ring-secondary-foreground/20"
-                    : "border-marketing-border bg-marketing-surface",
+                    ? "border-foreground/15 bg-secondary text-secondary-foreground ring-1 ring-secondary-foreground/15"
+                    : "border-marketing-border bg-marketing-elevated",
                 )}
               >
                 {plan.popular ? (

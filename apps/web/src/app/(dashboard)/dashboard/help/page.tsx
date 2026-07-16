@@ -19,18 +19,19 @@ import {
 
 const gettingStarted = [
   {
-    title: "Upload your first recording",
-    description: "Learn how to upload a screen recording and start a project.",
-    href: "/dashboard/projects/new",
+    title: "Create your first product demo",
+    description:
+      "Paste a URL, upload screenshots, pick a voice — watch the Motion pipeline.",
+    href: "/dashboard",
   },
   {
     title: "Choose a format and style",
     description: "Pick the right aspect ratio and motion preset for your use case.",
-    href: "/dashboard/projects/new",
+    href: "/dashboard",
   },
   {
     title: "Export and share",
-    description: "Download your finished video and share it with your team.",
+    description: "Download your finished video and share it with your audience.",
     href: "/dashboard/projects",
   },
 ];
@@ -38,11 +39,11 @@ const gettingStarted = [
 const faqs = [
   {
     q: "What file formats are supported?",
-    a: "Arco accepts MP4 and MOV screen recordings up to 500MB.",
+    a: "Primary path: PNG/JPG screenshots (3–10). Advanced: MP4/MOV screen recordings up to 500MB.",
   },
   {
     q: "How do credits work?",
-    a: "Each video generation consumes credits based on length and complexity. Your plan includes a monthly allowance.",
+    a: "Your plan includes monthly credits. AI actions, voice generation, and exports spend credits. Top up anytime if you need more before your next billing period.",
   },
   {
     q: "Can I edit after generation?",

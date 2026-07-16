@@ -55,6 +55,22 @@ export class BillingController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('credits')
+  getCredits(@Req() req: AuthedRequest) {
+    return this.billing.getCredits(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('top-up-checkout')
+  createTopUpCheckout(@Req() req: AuthedRequest) {
+    return this.billing.createTopUpCheckout(
+      req.user.id,
+      req.user.email,
+      resolveCustomerIp(req),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('checkout-session')
   createCheckout(@Req() req: AuthedRequest, @Body() body: CreateCheckoutDto) {
     return this.billing.createCheckoutSession(

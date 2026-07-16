@@ -115,7 +115,7 @@ export function buildDraftProject(
   return {
     ...withStyle,
     markers: markers ?? generateDraftMarkers(project.recording.durationMs),
-    audio: { musicId: "modern-saas", volume: 0.85 },
+    audio: { musicId: "warm-launch", volume: 0.25 },
   };
 }
 

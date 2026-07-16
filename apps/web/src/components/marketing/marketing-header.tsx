@@ -18,18 +18,15 @@ export function MarketingHeader() {
 
   return (
     <motion.header
-      className="sticky top-0 z-50 border-b border-marketing-border bg-marketing-header-bg backdrop-blur-xl"
+      className="sticky top-0 z-50 border-b border-marketing-border/80 bg-marketing-header-bg backdrop-blur-xl"
       initial={reduced ? false : { y: -8, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={transitionMedium}
     >
-      <div className="marketing-container flex h-16 items-center justify-between">
-        <MarketingLogo
-          className="h-7 w-24 sm:h-8 sm:w-28"
-          priority
-        />
+      <div className="marketing-container flex h-14 items-center justify-between sm:h-16">
+        <MarketingLogo className="h-7 w-24 sm:h-8 sm:w-28" priority />
 
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
+        <nav className="hidden items-center gap-7 md:flex" aria-label="Main">
           {mainNav.map((item, i) => (
             <motion.div
               key={item.href}
@@ -47,23 +44,23 @@ export function MarketingHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-2 md:flex">
           <Button
             variant="ghost"
             size="sm"
-            className="text-[var(--marketing-muted)] hover:text-foreground"
+            className="text-marketing-muted hover:text-foreground"
             render={<Link href="/login" />}
           >
             Sign in
           </Button>
           <Button size="sm" render={<Link href="/signup" />}>
-            Get started
+            Start a video
           </Button>
         </div>
 
         <button
           type="button"
-          className="inline-flex size-10 items-center justify-center rounded-lg text-[var(--marketing-muted)] transition-colors hover:text-foreground md:hidden"
+          className="inline-flex size-10 items-center justify-center rounded-xl text-marketing-muted transition-colors hover:text-foreground md:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
@@ -74,7 +71,7 @@ export function MarketingHeader() {
 
       <div
         className={cn(
-          "border-t border-[var(--marketing-border)] md:hidden",
+          "border-t border-marketing-border md:hidden",
           mobileOpen ? "block" : "hidden",
         )}
       >
@@ -83,22 +80,22 @@ export function MarketingHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-lg px-3 py-2.5 text-[14px] font-medium text-marketing-muted transition-colors hover:bg-marketing-hover hover:text-foreground"
+              className="rounded-xl px-3 py-2.5 text-[14px] font-medium text-marketing-muted transition-colors hover:bg-marketing-hover hover:text-foreground"
               onClick={() => setMobileOpen(false)}
             >
               {item.label}
             </Link>
           ))}
-          <div className="mt-3 flex flex-col gap-2 border-t border-[var(--marketing-border)] pt-4">
+          <div className="mt-3 flex flex-col gap-2 border-t border-marketing-border pt-4">
             <Button
               variant="outline"
-              className="w-full border-[var(--marketing-border)] bg-transparent"
+              className="w-full border-marketing-border bg-transparent"
               render={<Link href="/login" />}
             >
               Sign in
             </Button>
             <Button className="w-full" render={<Link href="/signup" />}>
-              Get started
+              Start a video
             </Button>
           </div>
         </nav>

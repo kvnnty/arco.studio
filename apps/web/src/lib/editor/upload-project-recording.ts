@@ -126,7 +126,7 @@ export async function uploadProjectRecording(
   }
 
   const musicId =
-    input.musicId ?? template?.audio.musicId ?? project.audio?.musicId ?? "modern-saas";
+    input.musicId ?? template?.audio.musicId ?? project.audio?.musicId ?? "warm-launch";
   project = {
     ...project,
     audio: {

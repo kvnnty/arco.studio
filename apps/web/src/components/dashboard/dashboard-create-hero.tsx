@@ -59,7 +59,7 @@ export function DashboardCreateHero({
   const { session } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [mode, setMode] = useState<CreateMode>("recording");
+  const [mode, setMode] = useState<CreateMode>("screenshots");
   const [productUrl, setProductUrl] = useState("");
   const [brief, setBrief] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
@@ -211,8 +211,8 @@ export function DashboardCreateHero({
           What would you like to create?
         </CardTitle>
         <CardDescription>
-          Paste your product URL, describe the video, pick a template, and add
-          visuals.
+          Paste your product URL, describe the video, upload screenshots, pick
+          voice and BGM — then Make video.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -221,8 +221,8 @@ export function DashboardCreateHero({
           onValueChange={(value) => setMode(value as CreateMode)}
         >
           <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="recording">Recording</TabsTrigger>
-            <TabsTrigger value="screenshots">Screenshots</TabsTrigger>
+            <TabsTrigger value="screenshots">Product demo</TabsTrigger>
+            <TabsTrigger value="recording">Screen recording (advanced)</TabsTrigger>
           </TabsList>
 
           <div className="mt-4 space-y-3">

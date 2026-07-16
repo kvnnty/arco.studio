@@ -1,6 +1,8 @@
 "use client";
 
 import type { ArcoProject, ScreenshotScene } from "@arco/project-schema";
+import { spokenScriptFromScene } from "@arco/project-schema";
+import { getDefaultVoiceId } from "@arco/project-schema/voices";
 import { toast } from "sonner";
 
 import {
@@ -12,9 +14,11 @@ import type { PlayerRef } from "@remotion/player";
 import { GripVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { formatMs } from "@/lib/editor/format-time";
+import { generateVoiceForScreenshotProject } from "@/lib/editor/generate-voice-for-project";
 import { cn } from "@/lib/utils";
 
 type ScreenshotSceneStripProps = {
@@ -146,6 +150,9 @@ export function ScreenshotSceneInspector({
   maxProjectDurationMs = 0,
   plan = null,
 }: ScreenshotSceneInspectorProps) {
+  const { session } = useAuth();
+  const [voiceBusy, setVoiceBusy] = useState(false);
+
   if (!scene) {
     return (
       <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
@@ -176,6 +183,54 @@ export function ScreenshotSceneInspector({
       recording: { ...project.recording, durationMs },
     });
     onChange(nextScene);
+  };
+
+  const retoneVoice = async (nextScene: ScreenshotScene) => {
+    const token = session?.accessToken;
+    if (!token || project.audio?.voiceEnabled === false) {
+      applyScene(nextScene);
+      return;
+    }
+    if (!spokenScriptFromScene(nextScene)) {
+      applyScene({ ...nextScene, voAudioSrc: undefined });
+      return;
+    }
+
+    const patched: ArcoProject = {
+      ...project,
+      scenes: (project.scenes ?? []).map((s) =>
+        s.id === nextScene.id
+          ? { ...nextScene, voAudioSrc: undefined }
+          : s,
+      ),
+    };
+
+    setVoiceBusy(true);
+    try {
+      const scenes = await generateVoiceForScreenshotProject(
+        token,
+        patched,
+        project.audio?.voiceId ?? getDefaultVoiceId(),
+      );
+      const durationMs = scenes.reduce((sum, s) => sum + s.durationMs, 0);
+      onProjectUpdate({
+        ...project,
+        scenes,
+        recording: { ...project.recording, durationMs },
+      });
+      const updated = scenes.find((s) => s.id === nextScene.id) ?? nextScene;
+      onChange(updated);
+      toast.success("Voice-over updated");
+    } catch (error) {
+      applyScene({ ...nextScene, voAudioSrc: undefined });
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not update voice-over",
+      );
+    } finally {
+      setVoiceBusy(false);
+    }
   };
 
   return (
@@ -211,10 +266,24 @@ export function ScreenshotSceneInspector({
         <textarea
           className="flex min-h-[72px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
           value={scene.voScript ?? ""}
+          disabled={voiceBusy}
           onChange={(event) =>
-            applyScene({ ...scene, voScript: event.target.value })
+            applyScene({
+              ...scene,
+              voScript: event.target.value,
+              voAudioSrc: undefined,
+            })
           }
+          onBlur={(event) => {
+            const script = event.target.value.trim();
+            if (script && !scene.voAudioSrc) {
+              void retoneVoice({ ...scene, voScript: event.target.value });
+            }
+          }}
         />
+        {voiceBusy ? (
+          <p className="text-xs text-muted-foreground">Updating voice-over…</p>
+        ) : null}
       </label>
       <label className="block space-y-1.5">
         <span className="text-sm font-medium">
@@ -230,6 +299,48 @@ export function ScreenshotSceneInspector({
             applyScene({ ...scene, durationMs: Number(event.target.value) });
           }}
         />
+      </label>
+      <label className="block space-y-1.5">
+        <span className="text-sm font-medium">Motion</span>
+        <select
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+          value={scene.motion ?? "ken-burns-in"}
+          onChange={(event) =>
+            applyScene({
+              ...scene,
+              motion: event.target.value as ScreenshotScene["motion"],
+            })
+          }
+        >
+          <option value="ken-burns-in">Ken Burns in</option>
+          <option value="ken-burns-out">Ken Burns out</option>
+          <option value="pan-left">Pan left</option>
+          <option value="static">Static</option>
+        </select>
+      </label>
+      <label className="block space-y-1.5">
+        <span className="text-sm font-medium">Transition</span>
+        <select
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+          value={scene.transition?.type ?? "fade"}
+          onChange={(event) =>
+            applyScene({
+              ...scene,
+              transition: {
+                type: event.target.value as NonNullable<
+                  ScreenshotScene["transition"]
+                >["type"],
+              },
+            })
+          }
+        >
+          <option value="fade">Fade</option>
+          <option value="push">Push</option>
+          <option value="scale">Scale</option>
+          <option value="blur">Blur</option>
+          <option value="morph">Morph</option>
+          <option value="slide">Slide</option>
+        </select>
       </label>
     </div>
   );

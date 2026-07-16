@@ -119,7 +119,9 @@ export class RenderProcessorService implements OnModuleInit {
         },
       });
 
-      await this.billing.recordExport(job.project.userId, jobId);
+      if (job.creditReservationId) {
+        await this.billing.settleReservation(job.creditReservationId);
+      }
 
       this.logger.log(`Render completed: ${jobId}`);
     } catch (error) {
@@ -133,6 +135,20 @@ export class RenderProcessorService implements OnModuleInit {
           errorMessage: message,
         },
       });
+
+      if (job.creditReservationId) {
+        await this.billing
+          .refundReservation(job.creditReservationId, 'render_failed')
+          .catch((refundError) => {
+            this.logger.error(
+              `Failed to refund render reservation ${job.creditReservationId}: ${
+                refundError instanceof Error
+                  ? refundError.message
+                  : refundError
+              }`,
+            );
+          });
+      }
 
       this.logger.error(`Render failed: ${jobId} — ${message}`);
     } finally {

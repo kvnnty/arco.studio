@@ -100,6 +100,10 @@ export function resolvePolarProductId(
   return productId;
 }
 
+export function polarTopUpProductId(): string | undefined {
+  return process.env.POLAR_PRODUCT_TOPUP?.trim() || undefined;
+}
+
 export function resolvePlanFromProductId(productId: string): ArcoPlan | null {
   const trial = process.env.POLAR_PRODUCT_TRIAL_MONTHLY?.trim();
   if (productId === trial) return 'trial';
@@ -114,6 +118,11 @@ export function resolvePlanFromProductId(productId: string): ArcoPlan | null {
     return 'studio';
 
   return null;
+}
+
+export function isTopUpProductId(productId: string): boolean {
+  const topUp = polarTopUpProductId();
+  return !!topUp && productId === topUp;
 }
 
 export function planRank(plan: ArcoPlan): number {

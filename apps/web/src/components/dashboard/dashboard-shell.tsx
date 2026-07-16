@@ -20,7 +20,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
   const { data: billing } = useBillingStatus();
 
   const planActive = billing?.canUseProduct ?? false;
-  const projectSlotsRemaining = billing?.activeProjectsRemaining ?? 0;
+  const availableCredits = billing?.credits.available ?? 0;
 
   return (
     <SidebarProvider persistState={consent.functional}>
@@ -28,8 +28,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
       <SidebarInset>
         <AppTopbar
           user={user}
-          projectSlotsRemaining={projectSlotsRemaining}
-          unlimitedProjects={billing?.hasUnlimitedProjects ?? false}
+          availableCredits={availableCredits}
           planActive={planActive}
         />
         <div className="flex-1 overflow-y-auto p-6">

@@ -105,7 +105,7 @@ const docsPages: Record<string, DocPage> = {
         type: "list",
         items: [
           "An Arco account (sign up free at /signup)",
-          "A screen recording of your product (MP4 or WebM)",
+          "3–10 product screenshots (PNG/JPG) and optionally your product URL",
         ],
       },
       {
@@ -117,11 +117,11 @@ const docsPages: Record<string, DocPage> = {
         type: "list",
         ordered: true,
         items: [
-          "Sign in and click New Project on the dashboard",
-          "Upload your screen recording",
-          "Wait for scene analysis to complete",
-          "Review and customize titles, brand, and music",
-          "Click Export to render your MP4",
+          "Sign in and open the dashboard",
+          "On Product demo, paste your URL or brief and upload screenshots",
+          "Pick voice and BGM, then click Make video",
+          "Watch the Motion pipeline (Analyze → Draft → Voice → Layout)",
+          "Refine copy in chat or the scene inspector, then Export",
         ],
       },
       {

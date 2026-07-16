@@ -17,24 +17,30 @@ import type { CustomerStateSubscription } from '@polar-sh/sdk/models/components/
 import type { Subscription } from '@polar-sh/sdk/models/components/subscription';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReferralsService } from '../referrals/referrals.service';
+import { CreditsService } from './credits.service';
 import {
-  activeProjectLimit,
   allowedExportQualities,
   canUploadCustomMusic,
   canUseExportQuality,
   canUseProjectDuration,
-  hasUnlimitedProjects,
+  creditCostForAction,
+  creditCostForExport,
   maxProjectDurationMs,
   parsePlan,
+  planLabel,
+  topUpCreditsAmount,
   type ArcoPlan,
+  type CreditActionType,
   type ExportQuality,
 } from './plans';
 import {
+  isTopUpProductId,
   planRank,
   polarAccessToken,
   polarBillingConfigured,
   polarCheckoutUrls,
   polarServer,
+  polarTopUpProductId,
   polarWebhookSecret,
   resolvePlanFromProductId,
   resolvePolarProductId,
@@ -45,15 +51,22 @@ import {
 export type BillingStatus = {
   planStatus: string;
   plan: string | null;
+  planLabel: string;
   activeProjectCount: number;
-  activeProjectLimit: number;
-  activeProjectsRemaining: number;
-  hasUnlimitedProjects: boolean;
   periodEnd: string | null;
   canUseProduct: boolean;
   canUploadCustomMusic: boolean;
   allowedExportQualities: ExportQuality[];
   maxProjectDurationMs: number;
+  credits: {
+    included: number;
+    purchased: number;
+    reserved: number;
+    available: number;
+    periodStart: string | null;
+    periodEnd: string | null;
+    topUpAmount: number;
+  };
 };
 
 export type CheckoutPlan = ArcoPlan;
@@ -66,6 +79,7 @@ export class BillingService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly referrals: ReferralsService,
+    private readonly credits: CreditsService,
   ) {
     const token = polarAccessToken();
     if (token) {
@@ -101,12 +115,11 @@ export class BillingService implements OnModuleInit {
       where: { id: userId },
     });
     const plan = parsePlan(user.plan);
-    const limit = activeProjectLimit(plan) + user.extraProjectSlots;
     const activeProjectCount = await this.prisma.project.count({
       where: { userId },
     });
 
-    return { user, plan, limit, activeProjectCount };
+    return { user, plan, activeProjectCount };
   }
 
   async getStatus(userId: string): Promise<BillingStatus> {
@@ -120,18 +133,15 @@ export class BillingService implements OnModuleInit {
       });
     }
 
-    const { user, plan, limit, activeProjectCount } =
+    const { user, plan, activeProjectCount } =
       await this.getUserPlanContext(userId);
-
-    const activeProjectsRemaining = Math.max(0, limit - activeProjectCount);
+    const creditBalance = await this.credits.getBalance(userId);
 
     return {
       planStatus: user.planStatus,
       plan: user.plan,
+      planLabel: planLabel(plan),
       activeProjectCount,
-      activeProjectLimit: limit,
-      activeProjectsRemaining,
-      hasUnlimitedProjects: hasUnlimitedProjects(plan),
       periodEnd: user.periodEnd?.toISOString() ?? null,
       canUseProduct: user.planStatus === 'active',
       canUploadCustomMusic: canUploadCustomMusic(plan, user.planStatus),
@@ -139,7 +149,24 @@ export class BillingService implements OnModuleInit {
         user.planStatus === 'active' ? allowedExportQualities(plan) : [],
       maxProjectDurationMs:
         user.planStatus === 'active' ? maxProjectDurationMs(plan) : 0,
+      credits: {
+        included: creditBalance.includedCredits,
+        purchased: creditBalance.purchasedCredits,
+        reserved: creditBalance.reservedCredits,
+        available: creditBalance.availableCredits,
+        periodStart: creditBalance.creditsPeriodStart,
+        periodEnd: creditBalance.creditsPeriodEnd,
+        topUpAmount: topUpCreditsAmount(),
+      },
     };
+  }
+
+  async getCredits(userId: string) {
+    const [balance, ledger] = await Promise.all([
+      this.credits.getBalance(userId),
+      this.credits.getLedger(userId),
+    ]);
+    return { balance, ledger };
   }
 
   async assertProPlan(userId: string): Promise<void> {
@@ -168,23 +195,6 @@ export class BillingService implements OnModuleInit {
 
   async assertCanCreateProject(userId: string): Promise<void> {
     await this.assertActive(userId);
-
-    const { plan, limit, activeProjectCount } =
-      await this.getUserPlanContext(userId);
-
-    if (activeProjectCount >= limit) {
-      const upgradeHint =
-        plan === 'trial'
-          ? ' Upgrade to Pro or Studio for more project slots.'
-          : plan === 'pro'
-            ? ' Upgrade to Studio for unlimited projects, or delete a project to free a slot.'
-            : '';
-
-      throw new HttpException(
-        `You have ${activeProjectCount} of ${limit} active projects. Delete a project to create a new one.${upgradeHint}`,
-        HttpStatus.PAYMENT_REQUIRED,
-      );
-    }
   }
 
   async assertProjectDuration(
@@ -265,37 +275,95 @@ export class BillingService implements OnModuleInit {
     }
   }
 
-  async recordExport(userId: string, renderJobId: string): Promise<void> {
-    const existing = await this.prisma.usageEvent.findFirst({
-      where: {
-        userId,
-        type: 'export',
-        metadata: { contains: renderJobId },
-      },
-    });
-    if (existing) return;
+  creditCostForAction(action: CreditActionType): number {
+    return creditCostForAction(action);
+  }
 
-    await this.prisma.usageEvent.create({
-      data: {
-        userId,
-        type: 'export',
-        metadata: JSON.stringify({ renderJobId }),
-      },
+  creditCostForExport(quality: string): number {
+    return creditCostForExport(quality);
+  }
+
+  async reserveForAction(
+    userId: string,
+    action: CreditActionType,
+    referenceType: string,
+    referenceId: string,
+    amount?: number,
+    metadata?: Record<string, unknown>,
+  ) {
+    const cost = amount ?? creditCostForAction(action);
+    return this.credits.reserveCredits({
+      userId,
+      amount: cost,
+      actionType: action,
+      referenceType,
+      referenceId,
+      metadata,
     });
   }
 
-  async recordAiUsage(
+  async reserveForExport(
     userId: string,
-    type: string,
-    metadata?: object,
-  ): Promise<void> {
-    await this.prisma.usageEvent.create({
-      data: {
-        userId,
-        type,
-        metadata: JSON.stringify(metadata ?? {}),
-      },
+    renderJobId: string,
+    quality: string,
+  ) {
+    const cost = creditCostForExport(quality);
+    return this.credits.reserveCredits({
+      userId,
+      amount: cost,
+      actionType:
+        quality === '4k'
+          ? 'export_4k'
+          : quality === '720p'
+            ? 'export_720p'
+            : 'export_1080p',
+      referenceType: 'render_job',
+      referenceId: renderJobId,
+      metadata: { quality },
     });
+  }
+
+  async settleReservation(reservationId: string) {
+    return this.credits.settleReservation(reservationId);
+  }
+
+  async refundReservation(reservationId: string, reason?: string) {
+    return this.credits.refundReservation(reservationId, reason);
+  }
+
+  async updateReservationReference(
+    reservationId: string,
+    referenceId: string,
+    metadata?: Record<string, unknown>,
+  ) {
+    return this.credits.updateReservationReference(
+      reservationId,
+      referenceId,
+      metadata,
+    );
+  }
+
+  async withCreditReservation<T>(
+    userId: string,
+    action: CreditActionType,
+    referenceType: string,
+    referenceId: string,
+    fn: () => Promise<T>,
+    amount?: number,
+    metadata?: Record<string, unknown>,
+  ): Promise<T> {
+    const cost = amount ?? creditCostForAction(action);
+    return this.credits.withCreditReservation(
+      {
+        userId,
+        amount: cost,
+        actionType: action,
+        referenceType,
+        referenceId,
+        metadata,
+      },
+      fn,
+    );
   }
 
   async getUsageBreakdown(userId: string) {
@@ -303,10 +371,13 @@ export class BillingService implements OnModuleInit {
     since.setDate(1);
     since.setHours(0, 0, 0, 0);
 
-    const events = await this.prisma.usageEvent.findMany({
-      where: { userId, createdAt: { gte: since } },
-      orderBy: { createdAt: 'desc' },
-    });
+    const [events, ledger] = await Promise.all([
+      this.prisma.usageEvent.findMany({
+        where: { userId, createdAt: { gte: since } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.credits.getLedger(userId, 100),
+    ]);
 
     const counts: Record<string, number> = {};
     for (const event of events) {
@@ -314,7 +385,7 @@ export class BillingService implements OnModuleInit {
       counts[event.type] = (counts[event.type] ?? 0) + 1;
     }
 
-    return { events, counts };
+    return { events, counts, ledger };
   }
 
   async createCheckoutSession(
@@ -372,6 +443,41 @@ export class BillingService implements OnModuleInit {
         where: { id: userId },
         data: { polarCustomerId: session.customerId },
       });
+    }
+
+    return { url: session.url };
+  }
+
+  async createTopUpCheckout(
+    userId: string,
+    email: string,
+    customerIpAddress?: string,
+  ): Promise<{ url: string }> {
+    const polar = this.requirePolar();
+    const productId = polarTopUpProductId();
+
+    if (!productId) {
+      throw new ServiceUnavailableException(
+        'Top-up product is not configured. Set POLAR_PRODUCT_TOPUP.',
+      );
+    }
+
+    await this.assertActive(userId);
+
+    const { successUrl, returnUrl } = polarCheckoutUrls();
+
+    const session = await polar.checkouts.create({
+      products: [productId],
+      externalCustomerId: userId,
+      customerEmail: email,
+      customerIpAddress: customerIpAddress ?? undefined,
+      metadata: { userId, type: 'top_up' },
+      successUrl: `${successUrl}&topup=1`,
+      returnUrl,
+    });
+
+    if (!session.url) {
+      throw new BadRequestException('Could not create top-up checkout session.');
     }
 
     return { url: session.url };
@@ -449,9 +555,37 @@ export class BillingService implements OnModuleInit {
       case 'subscription.revoked':
         await this.applySubscriptionAccess(event.data, 'inactive');
         break;
+      case 'order.paid':
+        await this.applyTopUpOrder(event.data);
+        break;
       default:
         break;
     }
+  }
+
+  private async applyTopUpOrder(order: {
+    id: string;
+    productId?: string | null;
+    customer?: { externalId?: string | null } | null;
+    metadata?: Record<string, unknown> | null;
+  }): Promise<void> {
+    const productId = order.productId ?? '';
+    if (!isTopUpProductId(productId)) {
+      return;
+    }
+
+    const userId =
+      order.customer?.externalId ??
+      (typeof order.metadata?.userId === 'string'
+        ? order.metadata.userId
+        : null);
+
+    if (!userId) {
+      this.logger.warn(`Top-up order ${order.id} missing user id`);
+      return;
+    }
+
+    await this.credits.grantTopUpCredits(userId, order.id);
   }
 
   private async refreshCustomerStateFromPolar(userId: string): Promise<void> {
@@ -571,7 +705,7 @@ export class BillingService implements OnModuleInit {
 
     const previous = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { planStatus: true },
+      select: { planStatus: true, creditsPeriodStart: true },
     });
 
     await this.prisma.user.update({
@@ -584,6 +718,32 @@ export class BillingService implements OnModuleInit {
         periodEnd: subscription.currentPeriodEnd,
       },
     });
+
+    if (planStatus === 'active' && plan) {
+      const periodStart = subscription.currentPeriodStart ?? new Date();
+      const periodEnd =
+        subscription.currentPeriodEnd ??
+        new Date(periodStart.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      const periodChanged =
+        !previous?.creditsPeriodStart ||
+        previous.creditsPeriodStart.getTime() !== periodStart.getTime();
+
+      if (periodChanged) {
+        await this.credits.grantMonthlyCredits(
+          userId,
+          plan,
+          periodStart,
+          periodEnd,
+        );
+      } else if (previous?.planStatus !== 'active') {
+        await this.credits.seedInitialCreditsForActiveUser(
+          userId,
+          plan,
+          periodEnd,
+        );
+      }
+    }
 
     if (previous?.planStatus !== 'active' && planStatus === 'active') {
       await this.referrals.rewardReferrer(userId);

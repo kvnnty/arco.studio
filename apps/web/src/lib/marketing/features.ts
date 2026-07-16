@@ -14,42 +14,65 @@ export type Feature = {
   description: string;
 };
 
-export const heroFeatures = [
-  "Social ads to product launches",
-  "No motion designer to hire",
-  "Export in minutes",
+export type StarterPrompt = {
+  title: string;
+  description: string;
+  href: string;
+};
+
+export const starterPrompts: StarterPrompt[] = [
+  {
+    title: "Feature launch",
+    description: "Announce a new capability with a crisp walkthrough.",
+    href: "/signup?brief=feature-launch",
+  },
+  {
+    title: "Social ad",
+    description: "A punchy 15–30s clip for LinkedIn, X, or Meta.",
+    href: "/signup?brief=social-ad",
+  },
+  {
+    title: "Changelog reel",
+    description: "Ship what changed this week without a freelancer.",
+    href: "/signup?brief=changelog",
+  },
+  {
+    title: "Waitlist teaser",
+    description: "Build anticipation before your product is live.",
+    href: "/signup?brief=waitlist",
+  },
 ];
 
 export const coreFeatures: Feature[] = [
   {
     icon: Film,
-    title: "Upload once",
+    title: "Screenshots in",
     description:
-      "Drop a screen recording and Arco analyzes every scene, click, and transition automatically.",
+      "Upload 3–10 product screenshots plus your URL or brief. No screen recorder required.",
   },
   {
     icon: Sparkles,
-    title: "AI motion design",
+    title: "Motion pipeline",
     description:
-      "Smart zooms, ripples, and title cards are applied based on what happens on screen — no timeline editing.",
+      "Analyze → draft scenes → voice-over → layout → ready. Studio pacing without generative video costs.",
   },
   {
     icon: Palette,
     title: "Brand from URL",
     description:
-      "Paste your website URL and Arco extracts colors, fonts, and logo to match your product identity.",
+      "Paste your website URL and Arco extracts colors and logo to match your product identity.",
   },
   {
     icon: MousePointerClick,
-    title: "Click highlights",
+    title: "Chat refine",
     description:
-      "Every interaction gets a subtle ripple and focus treatment so viewers never miss the action.",
+      "Ask for punchier CTAs or shorter headlines — copy and voice-over update without rebuilding.",
   },
   {
     icon: Layers,
     title: "Resolution export",
     description:
-      "Export at 720p, 1080p, or 4K — your project keeps its native aspect ratio from the recording.",
+      "Export 16:9, 1:1, or 9:16 at 720p, 1080p, or Studio 4K — framed UI, music, and VO mixed in.",
   },
   {
     icon: Zap,
@@ -62,47 +85,17 @@ export const coreFeatures: Feature[] = [
 export const workflowSteps = [
   {
     step: "01",
-    title: "Record your product",
-    description: "Capture a walkthrough of your app with any screen recorder.",
+    title: "Paste URL + screenshots",
+    description: "Add your product link, a short brief, and 3–10 UI shots.",
   },
   {
     step: "02",
-    title: "Arco analyzes scenes",
-    description: "AI detects clicks, scrolls, and key moments to highlight.",
+    title: "Watch the Motion pipeline",
+    description: "Arco analyzes brand, drafts scenes, records VO, and lays out motion.",
   },
   {
     step: "03",
-    title: "Customize and export",
-    description: "Tweak copy, brand, and music — then export a polished MP4.",
+    title: "Refine and export",
+    description: "Tweak copy in chat or the inspector — then export a polished MP4.",
   },
-];
-
-export const testimonials = [
-  {
-    quote:
-      "We replaced our entire motion design contractor with Arco. Our launch demos now ship the same day we record.",
-    author: "Sarah Chen",
-    role: "Head of Product, Latticeflow",
-  },
-  {
-    quote:
-      "The brand-from-URL feature alone saved us hours. Every demo looks like it came from our design team.",
-    author: "Marcus Webb",
-    role: "Founder, Stackline",
-  },
-  {
-    quote:
-      "Our conversion rate on the landing page jumped 34% after switching to Arco-generated product videos.",
-    author: "Elena Rodriguez",
-    role: "Growth Lead, Nomad OS",
-  },
-];
-
-export const logoCloud = [
-  "Latticeflow",
-  "Stackline",
-  "Nomad OS",
-  "Clearpath",
-  "Forma",
-  "Relay",
 ];

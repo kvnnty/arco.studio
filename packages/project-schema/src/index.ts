@@ -145,6 +145,8 @@ export const arcoProjectSchema = z.object({
   exportFormat: exportFormatSchema.default("16:9"),
   projectMode: projectModeSchema.default("recording"),
   scenes: z.array(screenshotSceneSchema).optional(),
+  /** Screenshot Motion pipeline: pending until Analyze→…→Ready finishes. */
+  pipelineStatus: z.enum(["pending", "ready", "failed"]).optional(),
 });
 
 export type EffectType = z.infer<typeof effectTypeSchema>;
@@ -233,6 +235,15 @@ export function createScreenshotPendingProject(
 
 export function isScreenshotProject(project: ArcoProject): boolean {
   return project.projectMode === "screenshots";
+}
+
+/** True when screenshot project still needs Motion pipeline (Analyze→Ready). */
+export function isScreenshotPipelinePending(project: ArcoProject): boolean {
+  return (
+    isScreenshotProject(project) &&
+    (project.pipelineStatus === "pending" ||
+      project.pipelineStatus === "failed")
+  );
 }
 
 export function screenshotProjectDurationMs(project: ArcoProject): number {

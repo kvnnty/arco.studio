@@ -9,9 +9,23 @@ Execution plan, backlog, excellence targets, and initiative history.
 # Part 1 — Polish plan (active)
 
 
-**Purpose:** Actionable plan to finish **partial (`[~]`)** features and raise quality from “works locally” to **production-ready**. Execute phases in order; each phase has exit criteria before moving on.
+**Purpose (July 2026):** Deliver a **cost-effective Motion.so** product — screenshot + URL → Analyze→Draft→Voice→Layout → Remotion motion design → chat refine → export. Recording is secondary. **CV / click detection is not active work.**
 
-**Related:** [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) (not built) · [STATUS.md](./STATUS.md#feature-checklist) · [STATUS.md](./STATUS.md#engineering-checklist) · [AUDIO.md](./AUDIO.md)
+**North star:** [DECISIONS.md](./DECISIONS.md) · UX reference: [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md) (Motion.so quality via Motionflare-cost pipeline)
+
+**Related:** [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) (not built) · [STATUS.md](./STATUS.md#feature-checklist) · [AUDIO.md](./AUDIO.md)
+
+---
+
+## Active delivery — Motion pipeline
+
+| Phase | Goal | Exit |
+|-------|------|------|
+| **M0** Docs lock | Decisions / Status / Roadmap match north star | Done when contributors stop optimizing CV markers |
+| **M1** Pipeline UX | Screenshot create runs real Analyze→Draft→Voice→Layout | User sees theater then preview |
+| **M2** Visual quality | Device frames, real transitions, preset motion, timed ducking, licensed BGM | Export ≠ captioned slideshow |
+| **M3** Chat refine | Scene copy + re-TTS without full rebuild | “Stronger CTA” updates last scene + VO |
+| **M4** Trust | Errors surfaced, brand always applied, screenshot-first messaging | Soft-launch golden path < 10 min |
 
 ---
 
@@ -21,22 +35,16 @@ Current gaps — shipped in code but not production-grade.
 
 | Area | Feature | Current state | Target state |
 |------|---------|---------------|--------------|
-| **Workflow** | End-to-end < 20 min | Needs Postgres + MinIO + FFmpeg locally | Documented one-command or hosted staging env |
-| **AI** | Analyze recording | Heuristic timing + honest UI labels | CV click detection (backlog) |
-| **AI** | Feature callout preset | Shipped — inspector + Remotion | — |
-| **Brand** | Brand kit | Per-project `ArcoProject.brand` | Document as v1; optional workspace kit later |
-| **Monetization** | Invoices & history | Polar Customer Portal only | Portal linked prominently; optional in-app list |
-| **Dashboard** | Usage chart | Derived from usage events | Accurate labels; hide if sparse data |
-| **Dashboard** | Assets library | Mock-derived from projects | Real list of recordings + exports |
-| **Dashboard** | Notifications | Derived from render status | Reliable poll + read state |
-| **Auth** | Magic link | UI exists | Verify email delivery in production |
-| **Auth** | OAuth | Google/GitHub in forms | E2E tested on staging |
-| **Export** | 9:16 / 1:1 | Picker + preview | Confirm render crop matches preview |
-| **Export** | Studio 4K + social pack | Tier advertised | QA render dimensions + batch download |
-| **Audio** | BGM library | 5 IDs; **placeholder audio files** | Licensed distinct tracks — see Phase A |
-| **Audio** | VO pipeline UX | API + render work | Chat step “Recording voice-over…” |
-| **Infra** | Render queue | In-memory | Survives API restart (Redis or DB poll) |
-| **Docs** | STATUS engineering checklist Phases 1-3 | Many unchecked | Align with reality or archive stale items |
+| **Workflow** | Screenshot Motion pipeline | Create jumps to edit; pipeline recording-only | Real Analyze→Draft→Voice→Layout for screenshots |
+| **Visual** | Screenshot Remotion | Ken Burns + fade + Inter titles | Device frames + rich transitions + preset type |
+| **AI** | Chat refine | Marker-centric | Scene headlines / VO / tone |
+| **Audio** | BGM library | **6 distinct tracks shipped** | Keep IDs stable; document licenses in [AUDIO.md](./AUDIO.md) |
+| **Audio** | VO ducking | Flat volume when any VO | Timed duck around VO segments |
+| **Brand** | Brand kit | Per-project; not always applied on screenshot create | Analyze URL → brand on every screenshot project |
+| **Export** | 9:16 / 1:1 / Studio 4K | Picker + preview | Confirm render crop matches preview (backlog) |
+| **Dashboard** | Assets / usage / notifications | Partial / mock-shaped | Backlog after Motion path |
+| **Infra** | Render queue | In-memory | Backlog unless beta blocked |
+| **AI (recording)** | Heuristic markers | Honest UI labels | Leave as-is — **no CV roadmap** |
 
 ---
 
@@ -531,14 +539,15 @@ Document mix decisions in [AUDIO.md](./AUDIO.md) when implemented in Remotion.
 
 ## Priority order (backlog)
 
-What to build **after** partial items in [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) are addressed:
+What to build **after** Motion pipeline (M1–M4) ships:
 
-1. **Licensed BGM assets** — highest leverage for perceived quality; legal blocker for launch (deferred from Sprint 1)
-2. **Landing MP4 demos** — replace poster stand-ins with real Arco exports
-3. **Vision / click detection** — recording mode quality moat
-4. **Hybrid mode** — recording + screenshot B-roll
-5. **VO on recording mode** — optional stretch
-6. **Free tier** — funnel (if GTM requires)
+1. **Licensed BGM assets** — if not done in M2 (legal + perceived quality)
+2. **Landing MP4 demos** — real Arco screenshot exports
+3. **Format fidelity QA** — 9:16 / 1:1 / Studio 4K
+4. **Hybrid mode** — recording + screenshot B-roll (low priority)
+5. **Free tier** — funnel (if GTM requires)
+
+**Not prioritized:** Vision / click detection on recordings.
 
 ---
 

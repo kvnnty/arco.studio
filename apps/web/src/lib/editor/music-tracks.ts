@@ -1,42 +1,63 @@
 export const MUSIC_TRACKS = [
   {
-    id: "modern-saas",
-    label: "Modern SaaS",
-    mood: "UPBEAT",
-    durationSec: 90,
-    previewUrl: "/music/modern-saas.mp3",
-  },
-  {
-    id: "ambient-tech",
-    label: "Ambient Tech",
-    mood: "STEADY",
-    durationSec: 90,
-    previewUrl: "/music/ambient-tech.mp3",
-  },
-  {
-    id: "corporate-clean",
-    label: "Corporate Clean",
-    mood: "BRIGHT",
-    durationSec: 90,
-    previewUrl: "/music/corporate-clean.mp3",
-  },
-  {
-    id: "startup-launch",
-    label: "Startup Launch",
+    id: "warm-launch",
+    label: "Warm Launch",
+    description: "Polished, optimistic bed for SaaS announcements.",
     mood: "WARM",
-    durationSec: 90,
-    previewUrl: "/music/startup-launch.mp3",
+    durationSec: 76,
+    volume: 0.25,
+    previewUrl: "/music/warm-launch.mp3",
   },
   {
-    id: "energetic-reveal",
-    label: "Energetic Reveal",
+    id: "bright-pulse",
+    label: "Bright Pulse",
+    description: "Upbeat electronic pulse for energetic product demos.",
+    mood: "BRIGHT",
+    durationSec: 65,
+    volume: 0.25,
+    previewUrl: "/music/bright-pulse.mp3",
+  },
+  {
+    id: "launch-drive",
+    label: "Launch Drive",
+    description: "Driving commercial bed for fast-paced launch stories.",
     mood: "DRIVING",
-    durationSec: 90,
-    previewUrl: "/music/energetic-reveal.mp3",
+    durationSec: 71,
+    volume: 0.25,
+    previewUrl: "/music/launch-drive.mp3",
+  },
+  {
+    id: "calm-focus",
+    label: "Calm Focus",
+    description: "Light, steady background for quieter product walkthroughs.",
+    mood: "STEADY",
+    durationSec: 117,
+    volume: 0.25,
+    previewUrl: "/music/calm-focus.mp3",
+  },
+  {
+    id: "mountain-rise",
+    label: "Mountain Rise",
+    description: "Cinematic lift for launches that need a bigger finish.",
+    mood: "CINEMATIC",
+    durationSec: 86,
+    volume: 0.25,
+    previewUrl: "/music/mountain-rise.mp3",
+  },
+  {
+    id: "up-bit",
+    label: "Up Bit",
+    description: "Playful bit-pop bed for fast, light launches.",
+    mood: "UPBEAT",
+    durationSec: 67,
+    volume: 0.25,
+    previewUrl: "/music/up-bit.mp3",
   },
 ] as const;
 
 export type MusicTrackId = (typeof MUSIC_TRACKS)[number]["id"];
+
+export const DEFAULT_MUSIC_TRACK_ID: MusicTrackId = "warm-launch";
 
 export function getMusicTrack(id: string | null | undefined) {
   if (!id) return null;
@@ -44,9 +65,10 @@ export function getMusicTrack(id: string | null | undefined) {
 }
 
 export const MUSIC_FILE_BY_ID: Record<MusicTrackId, string> = {
-  "modern-saas": "music/modern-saas.mp3",
-  "ambient-tech": "music/ambient-tech.mp3",
-  "corporate-clean": "music/corporate-clean.mp3",
-  "startup-launch": "music/startup-launch.mp3",
-  "energetic-reveal": "music/energetic-reveal.mp3",
+  "warm-launch": "music/warm-launch.mp3",
+  "bright-pulse": "music/bright-pulse.mp3",
+  "launch-drive": "music/launch-drive.mp3",
+  "calm-focus": "music/calm-focus.mp3",
+  "mountain-rise": "music/mountain-rise.mp3",
+  "up-bit": "music/up-bit.mp3",
 };

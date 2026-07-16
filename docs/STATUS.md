@@ -6,10 +6,12 @@ Current snapshot, feature matrix, and engineering checklist.
 
 ---
 
-# Snapshot (June 2026)
+# Snapshot (July 2026)
 
 
-**Updated:** June 2026 — Studio tier, screenshot + voice mode, project-slot billing.
+**Updated:** July 2026 — Motion.so-cost pipeline: screenshot-first create, real Analyze→Draft→Voice→Layout, device frames + transitions, scene chat refine + re-TTS. Recording demoted. CV cut from active plan.
+
+**North star:** [DECISIONS.md](./DECISIONS.md) · Active delivery: [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active)
 
 ---
 
@@ -20,12 +22,12 @@ Current snapshot, feature matrix, and engineering checklist.
 | **Billing tiers** | Intro $9 · Pro $29 · **Studio $59** |
 | **Project slots** | 5 / 15 / unlimited — delete to free a slot (dashboard UI shipped) |
 | **Exports** | Unlimited re-exports per project |
-| **Studio export** | 4K + batch social format pack *(QA: [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active))* |
+| **Studio export** | 4K + batch social format pack *(QA pending)* |
 | Screenshot storyboard + ElevenLabs VO + custom music (Pro+) | Done |
 | Export MP4 | Render worker + screenshot + recording compositions |
 | Core loop | Sign up → create → upload → AI draft → editor → export → download |
 | Templates + dashboard quick-create | Shipped June 2026 |
-| BGM picker + custom upload | UI + render wired; **audio files are placeholders** |
+| BGM picker + custom upload | UI + render wired; **6 distinct library tracks shipped** |
 
 ---
 
@@ -33,10 +35,12 @@ Current snapshot, feature matrix, and engineering checklist.
 
 | Gap | Doc |
 |-----|-----|
-| BGM library sounds identical (placeholder files) | [AUDIO.md](./AUDIO.md) |
-| Recording AI uses heuristics, not CV | [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) |
+| Screenshot pipeline UX (Analyze→Draft→Voice→Layout) incomplete | [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) |
+| Screenshot export = basic Ken Burns (no device frames / rich transitions) | [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) |
+| Chat refine is marker-centric (not screenshot scenes) | [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) |
+| BGM library sounds identical (placeholder files) | ~~Resolved — see [AUDIO.md](./AUDIO.md)~~ |
 | Duplicate project | [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) |
-| Render queue in-memory | [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) Phase D |
+| Render queue in-memory | Backlog — not active |
 
 ---
 
@@ -67,10 +71,11 @@ Add Polar product IDs in `apps/api/.env` for all plan checkouts (see `.env.examp
 
 ## Next work (recommended order)
 
-1. **Phase A1** — Licensed BGM ([AUDIO.md](./AUDIO.md)) — deferred from Sprint 1
-2. **Phase B4 / C / D** — Format QA, real assets page, persistent render queue, vision/CV
+1. **Format QA** — 9:16 / 1:1 / Studio 4K match preview
+2. **Landing MP4 demos** — real Arco screenshot exports
+3. **Staging ops** — auth/env/deploy checklist
 
-Full backlog: [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets)
+Licensed/distinct BGM: **shipped** ([AUDIO.md](./AUDIO.md)). CV / click detection is **not** next work.
 
 ---
 
@@ -380,15 +385,15 @@ All must be checked before MVP launch:
 
 See **[ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active)** for phased execution. Summary:
 
-1. **Phase A1** — Licensed BGM ([AUDIO.md](./AUDIO.md)) — deferred from Sprint 1
-2. **Phase B4** — Format fidelity QA (9:16, 1:1, Studio 4K)
-3. **Phase C** — Real assets page, auth on staging, usage/notifications
-4. **Phase D** — Persistent render queue, vision/click detection
-5. **Backlog** — Hybrid mode, VO on recording, free tier, landing MP4 demos ([ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets))
+1. **Screenshot Motion pipeline** — Analyze→Draft→Voice→Layout theater + brand into project
+2. **Screenshot Remotion quality** — device frames, real transitions, preset motion, timed ducking
+3. **Chat refine + re-TTS** for scenes
+4. **Licensed BGM** ([AUDIO.md](./AUDIO.md))
+5. **Backlog** — format QA, assets page, hybrid mode, free tier — not CV/click detection
 
 ---
 
-*Last updated: June 2026*
+*Last updated: July 2026*
 
 ---
 

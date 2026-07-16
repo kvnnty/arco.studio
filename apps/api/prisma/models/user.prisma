@@ -16,6 +16,11 @@ model User {
   exportAllowance       Int              @default(15)
   exportsUsedThisPeriod Int              @default(0)
   extraProjectSlots     Int              @default(0)
+  includedCreditsBalance Int             @default(0)
+  purchasedCreditsBalance Int            @default(0)
+  reservedCreditsBalance Int             @default(0)
+  creditsPeriodStart    DateTime?
+  creditsPeriodEnd      DateTime?
   periodEnd             DateTime?
   referralCode          String?          @unique
   referredByUserId      String?
@@ -25,6 +30,7 @@ model User {
   referralsReceived     Referral?        @relation("ReferralsReceived")
   projects              Project[]
   usageEvents           UsageEvent[]
+  creditLedgerEntries   CreditLedgerEntry[]
   authSessions          AuthSession[]
   magicLinkTokens       MagicLinkToken[]
   authAuditLogs         AuthAuditLog[]

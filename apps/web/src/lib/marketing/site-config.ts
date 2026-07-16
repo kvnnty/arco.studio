@@ -1,8 +1,8 @@
 export const siteConfig = {
   name: "Arco",
-  tagline: "Launch videos without hiring a motion designer",
+  tagline: "The fastest way to ship launch videos",
   description:
-    "Built for product owners. Upload your app recording, describe the launch — Arco adds motion, titles, and polish. Ship social ads, demos, and feature videos in minutes.",
+    "Record your product once. Tell Arco what you're shipping — a social ad, launch reel, or feature drop — and export polished motion in minutes.",
   url: "https://arco.app",
   links: {
     twitter: "https://twitter.com/arco",
@@ -21,7 +21,6 @@ export const mainNav: NavItem[] = [
   { label: "Pricing", href: "/pricing" },
   { label: "Docs", href: "/docs" },
   { label: "Blog", href: "/blog" },
-  { label: "Changelog", href: "/changelog" },
 ];
 
 export type FooterColumn = {
@@ -49,7 +48,6 @@ export const footerColumns: FooterColumn[] = [
       { label: "Documentation", href: "/docs" },
       { label: "Blog", href: "/blog" },
       { label: "Help Center", href: "/docs/help" },
-      { label: "API Reference", href: "/docs/api" },
     ],
   },
   {
@@ -64,7 +62,8 @@ export const footerColumns: FooterColumn[] = [
 
 export const announcement = {
   enabled: true,
-  message: "Launch offer — Pro is $9 for your first month.",
+  badge: "New",
+  message: "Pro is $9 for your first month.",
   href: "/pricing",
   linkLabel: "View pricing",
 };

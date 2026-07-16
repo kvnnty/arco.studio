@@ -211,9 +211,11 @@
   text-wrap: balance;
 }
 
-/* Marketing site — uses CSS variables above for easy light/dark switching */
+/* Marketing site — airy SaaS surfaces (daisy-style), Arco brand colors */
 .marketing-site {
-  --marketing-content-max-width: 1200px;
+  --marketing-content-max-width: 1120px;
+  --marketing-radius: 1.25rem;
+  --marketing-radius-lg: 1.75rem;
   background-color: var(--marketing-bg);
   color: var(--marketing-foreground);
 }
@@ -242,11 +244,11 @@
 
 .marketing-container-faq {
   @apply mx-auto w-full px-6 sm:px-8;
-  max-width: min(850px, var(--marketing-content-max-width));
+  max-width: min(720px, var(--marketing-content-max-width));
 }
 
 .marketing-heading {
-  @apply text-balance font-semibold tracking-[-0.02em];
+  @apply text-balance font-semibold tracking-[-0.03em];
   font-feature-settings: "liga" 0, "ss02" 1, "ss08" 1;
 }
 
@@ -264,6 +266,11 @@
     var(--marketing-glow-color),
     transparent 70%
   );
+}
+
+.marketing-media {
+  border-radius: var(--marketing-radius-lg);
+  overflow: hidden;
 }
 
 .prose-marketing h2 {

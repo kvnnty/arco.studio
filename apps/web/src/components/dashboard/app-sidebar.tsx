@@ -148,18 +148,22 @@ export function AppSidebar({ billing }: { billing?: BillingStatus | null }) {
           {isActive ? (
             <>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Project slots</span>
+                <span className="text-muted-foreground">Credits available</span>
                 <span className="font-semibold text-primary">
-                  {billing?.hasUnlimitedProjects
-                    ? "∞"
-                    : (billing?.activeProjectsRemaining ?? 0)}
+                  {billing?.credits.available ?? 0}
                 </span>
               </div>
               <Link
-                href="/dashboard/referrals"
+                href="/dashboard/billing"
                 className="mt-2 block text-xs text-accent-foreground hover:underline"
               >
-                Invite friends, earn slots
+                Top up credits
+              </Link>
+              <Link
+                href="/dashboard/referrals"
+                className="mt-1 block text-xs text-muted-foreground hover:underline"
+              >
+                Invite friends, earn credits
               </Link>
             </>
           ) : (

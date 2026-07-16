@@ -4,8 +4,9 @@ model RenderJob {
   status       String   @default("queued")
   format       String   @default("16:9")
   quality      String   @default("1080p")
-  outputUrl    String?
-  errorMessage String?
+  outputUrl            String?
+  errorMessage         String?
+  creditReservationId  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)

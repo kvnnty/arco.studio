@@ -484,6 +484,11 @@ export type RefineProjectResponse = {
     callout: { text: string; subtext?: string };
     label?: string;
   }>;
+  scenes?: Array<{
+    headline?: string;
+    subheadline?: string;
+    voScript?: string;
+  }>;
   source: "llm" | "heuristic";
 };
 
@@ -494,10 +499,16 @@ export async function apiRefineProject(
     instruction: string;
     intent?: string;
     productUrl?: string;
-    markers: Array<{
+    markers?: Array<{
       label?: string;
       callout?: { text: string; subtext?: string };
       startMs: number;
+    }>;
+    scenes?: Array<{
+      id?: string;
+      headline?: string;
+      subheadline?: string;
+      voScript?: string;
     }>;
   },
 ): Promise<RefineProjectResponse> {
@@ -526,14 +537,23 @@ export async function apiChat(
       durationMs: number;
       intent?: string;
       productUrl?: string;
-      markers: Array<{
+      projectMode?: "recording" | "screenshots";
+      markers?: Array<{
         id: string;
         startMs: number;
         durationMs: number;
         label?: string;
         callout?: { text: string; subtext?: string };
       }>;
+      scenes?: Array<{
+        id: string;
+        durationMs: number;
+        headline?: string;
+        subheadline?: string;
+        voScript?: string;
+      }>;
       selectedMarkerIndex?: number;
+      selectedSceneIndex?: number;
       playheadMs?: number;
     };
   },
@@ -583,15 +603,37 @@ export async function apiPreviewBrandUrl(
 export type BillingStatus = {
   planStatus: string;
   plan: string | null;
+  planLabel: string;
   activeProjectCount: number;
-  activeProjectLimit: number;
-  activeProjectsRemaining: number;
-  hasUnlimitedProjects: boolean;
   periodEnd: string | null;
   canUseProduct: boolean;
   canUploadCustomMusic: boolean;
   allowedExportQualities: Array<"720p" | "1080p" | "4k">;
   maxProjectDurationMs: number;
+  credits: {
+    included: number;
+    purchased: number;
+    reserved: number;
+    available: number;
+    periodStart: string | null;
+    periodEnd: string | null;
+    topUpAmount: number;
+  };
+};
+
+export type CreditLedgerItem = {
+  id: string;
+  kind: string;
+  status: string;
+  amount: number;
+  balanceType: string | null;
+  actionType: string | null;
+  referenceType: string | null;
+  referenceId: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  settledAt: string | null;
+  refundedAt: string | null;
 };
 
 export type BillingUsage = {
@@ -602,6 +644,7 @@ export type BillingUsage = {
     createdAt: string;
   }>;
   counts: Record<string, number>;
+  ledger: CreditLedgerItem[];
 };
 
 export async function apiGetBillingStatus(token: string): Promise<BillingStatus> {
@@ -635,6 +678,26 @@ export async function apiCreateBillingPortal(
     method: "POST",
     body: {},
   });
+}
+
+export async function apiCreateTopUpCheckout(
+  token: string,
+): Promise<{ url: string }> {
+  return apiRequest<{ url: string }>("/billing/top-up-checkout", {
+    token,
+    method: "POST",
+    body: {},
+  });
+}
+
+export async function apiGetBillingCredits(token: string): Promise<{
+  balance: BillingStatus["credits"] & {
+    creditsPeriodStart: string | null;
+    creditsPeriodEnd: string | null;
+  };
+  ledger: CreditLedgerItem[];
+}> {
+  return apiRequest("/billing/credits", { token });
 }
 
 export type ReferralInvite = {

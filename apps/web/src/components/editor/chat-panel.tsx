@@ -1,13 +1,14 @@
 "use client";
 
-import type { Marker } from "@arco/project-schema";
+import type { ArcoProject, Marker } from "@arco/project-schema";
+import { isScreenshotProject } from "@arco/project-schema";
 import { Send, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/components/providers/auth-provider";
 import type { BrandKit } from "@/lib/api/hooks/brand";
 import { useAnalyzeBrandMutation } from "@/lib/api/hooks/brand";
-import { useBillingStatus, useBillingUsage } from "@/lib/api/hooks/billing";
+import { useBillingStatus } from "@/lib/api/hooks/billing";
 import { ChatMessageBubble } from "@/components/editor/chat-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,22 +24,31 @@ import {
   type ChatMessage,
 } from "@/lib/editor/chat-types";
 import {
-  getAvailableSceneCredits,
-  hasEnoughSceneCredits,
+  creditCostHint,
+  getAvailableCredits,
+  hasEnoughCredits,
   inferBrandStyle,
-  sceneCreditsNeeded,
 } from "@/lib/editor/generation-credits";
 import {
   advancePipeline,
   createInitialPipelineState,
   type PipelineState,
+  type PipelineStepId,
 } from "@/lib/editor/generation-pipeline";
+import { runScreenshotPipeline } from "@/lib/editor/run-screenshot-pipeline";
 
 const QUICK_ACTIONS = [
   "Make headlines shorter",
   "More technical",
   "More bold",
 ] as const;
+
+const SCREENSHOT_STATUS_LABELS: Partial<Record<PipelineStepId, string>> = {
+  analyze: "Analyzing…",
+  draft: "Drafting scenes…",
+  voice: "Recording voice-over…",
+  layout: "Designing layout…",
+};
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -49,6 +59,7 @@ function formatElapsed(startedAt: number): number {
 }
 
 type ChatPanelProps = {
+  project: ArcoProject;
   projectTitle: string;
   platform: string;
   durationMs: number;
@@ -58,9 +69,11 @@ type ChatPanelProps = {
   isAnalyzing: boolean;
   chatReady: boolean;
   selectedMarker: Marker | null;
+  selectedSceneId?: string | null;
   pipelineMarkers: Marker[];
   onBrandAnalyzed: (kit: BrandKit) => void;
   onAnalysisComplete: (result: DraftAnalysisResult) => void;
+  onScreenshotPipelineComplete: (project: ArcoProject) => void;
   onPipelineChange: (pipeline: PipelineState, markers: Marker[]) => void;
   onSendMessage: (
     message: string,
@@ -70,6 +83,7 @@ type ChatPanelProps = {
 };
 
 export function ChatPanel({
+  project,
   projectTitle,
   platform,
   durationMs,
@@ -79,8 +93,10 @@ export function ChatPanel({
   isAnalyzing,
   chatReady,
   selectedMarker,
+  selectedSceneId,
   onBrandAnalyzed,
   onAnalysisComplete,
+  onScreenshotPipelineComplete,
   onPipelineChange,
   onSendMessage,
   onRegenerateScene,
@@ -93,9 +109,9 @@ export function ChatPanel({
   const { session } = useAuth();
   const analyzeBrand = useAnalyzeBrandMutation();
   const { data: billing } = useBillingStatus();
-  const { data: usage } = useBillingUsage();
 
   const hostname = productUrl ? getUrlHostname(productUrl) : undefined;
+  const screenshotMode = isScreenshotProject(project);
 
   const appendMessage = useCallback((message: ChatMessage) => {
     setMessages((prev) => [...prev, message]);
@@ -121,8 +137,11 @@ export function ChatPanel({
 
     setAnalysisStarted(true);
 
-    const prompt =
-      hostname != null
+    const prompt = screenshotMode
+      ? hostname != null
+        ? `Make me a video for ${hostname}`
+        : "Make me a video from these screenshots"
+      : hostname != null
         ? `Make me a video for ${hostname}`
         : "Make me a video from your recording";
 
@@ -134,13 +153,130 @@ export function ChatPanel({
       createdAt: Date.now(),
     });
 
-    const analyzeStatusId = createChatId();
-    const analyzeDetailId = createChatId();
-    const draftStatusId = createChatId();
-
     void (async () => {
       const accessToken = session?.accessToken;
       if (!accessToken) return;
+
+      if (screenshotMode) {
+        const analyzeStatusId = createChatId();
+        const statusIds: Partial<Record<PipelineStepId, string>> = {
+          analyze: analyzeStatusId,
+        };
+        const startedAt: Partial<Record<PipelineStepId, number>> = {
+          analyze: Date.now(),
+        };
+        let lastStep: PipelineStepId = "analyze";
+
+        appendMessage({
+          id: analyzeStatusId,
+          role: "status",
+          content: SCREENSHOT_STATUS_LABELS.analyze!,
+          createdAt: Date.now(),
+        });
+
+        const completeStatus = (step: PipelineStepId) => {
+          const id = statusIds[step];
+          const started = startedAt[step];
+          const label = SCREENSHOT_STATUS_LABELS[step];
+          if (!id || started == null || !label) return;
+          updateMessage(id, {
+            done: true,
+            elapsedSec: formatElapsed(started),
+            content: label,
+          });
+        };
+
+        try {
+          const result = await runScreenshotPipeline(accessToken, project, {
+            onPipelineChange: (pipeline, markers) => {
+              const step = pipeline.activeStep;
+              if (
+                step !== lastStep &&
+                (step === "draft" ||
+                  step === "voice" ||
+                  step === "layout")
+              ) {
+                completeStatus(lastStep);
+                const id = createChatId();
+                statusIds[step] = id;
+                startedAt[step] = Date.now();
+                appendMessage({
+                  id,
+                  role: "status",
+                  content: SCREENSHOT_STATUS_LABELS[step]!,
+                  createdAt: Date.now(),
+                });
+                lastStep = step;
+              } else if (
+                (step === "scenes" || step === "stitch") &&
+                lastStep === "layout"
+              ) {
+                completeStatus("layout");
+                lastStep = step;
+              }
+              onPipelineChange(pipeline, markers);
+            },
+            onBrandAnalyzed: (kit) => {
+              onBrandAnalyzed(kit);
+              appendMessage({
+                id: createChatId(),
+                role: "analyze-detail",
+                createdAt: Date.now(),
+                screenshotUrl: kit.screenshotUrl,
+                pageContent: kit.pageContent ?? kit.description,
+                pageContentChars:
+                  kit.pageContentChars ??
+                  kit.pageContent?.length ??
+                  kit.description?.length,
+                brandStyle: inferBrandStyle(kit.tone),
+                done: true,
+              });
+            },
+            analyzeBrand: (url) => analyzeBrand.mutateAsync(url),
+          });
+
+          completeStatus(lastStep);
+
+          appendMessage({
+            id: createChatId(),
+            role: "status",
+            content: "Ready",
+            done: true,
+            createdAt: Date.now(),
+          });
+
+          appendMessage({
+            id: createChatId(),
+            role: "assistant",
+            content:
+              "Your video draft is ready. Ask me to change tone, shorten scenes, or make headlines bolder.",
+            createdAt: Date.now(),
+          });
+
+          onScreenshotPipelineComplete(result.project);
+        } catch (error) {
+          completeStatus(lastStep);
+          appendMessage({
+            id: createChatId(),
+            role: "error",
+            content:
+              error instanceof Error
+                ? error.message
+                : "Screenshot pipeline failed.",
+            createdAt: Date.now(),
+          });
+          onScreenshotPipelineComplete({
+            ...project,
+            pipelineStatus: "failed",
+          });
+        }
+
+        return;
+      }
+
+      const analyzeStatusId = createChatId();
+      const analyzeDetailId = createChatId();
+      const draftStatusId = createChatId();
 
       let pipeline = createInitialPipelineState();
       onPipelineChange(pipeline, []);
@@ -269,11 +405,10 @@ export function ChatPanel({
         content: "Drafting scenes…",
       });
 
-      const creditsNeeded = sceneCreditsNeeded(result.markers.length);
-      const creditsAvailable = getAvailableSceneCredits(billing, usage);
-      const enoughCredits =
-        !billing ||
-        hasEnoughSceneCredits(result.markers.length, billing, usage);
+      const creditsNeeded =
+        creditCostHint("voice_generate") * Math.max(1, result.markers.length);
+      const creditsAvailable = getAvailableCredits(billing);
+      const enoughCredits = !billing || hasEnoughCredits(billing, creditsNeeded);
 
       appendMessage({
         id: createChatId(),
@@ -340,13 +475,15 @@ export function ChatPanel({
     onAnalysisComplete,
     onBrandAnalyzed,
     onPipelineChange,
+    onScreenshotPipelineComplete,
     platform,
     productUrl,
+    project,
     projectTitle,
+    screenshotMode,
     session?.accessToken,
     templateId,
     updateMessage,
-    usage,
   ]);
 
   const handleSend = async (text: string) => {
@@ -427,7 +564,9 @@ export function ChatPanel({
       </ScrollArea>
 
       <div className="space-y-2 border-t border-border p-3">
-        {chatReady && selectedMarker && onRegenerateScene ? (
+        {chatReady &&
+        (selectedMarker || selectedSceneId) &&
+        onRegenerateScene ? (
           <Button
             variant="outline"
             size="xs"
