@@ -11,7 +11,7 @@ import { createPageMetadata } from "@/lib/marketing/metadata";
 export const metadata: Metadata = createPageMetadata({
   title: "Pricing",
   description:
-    "Simple pricing for product owners. Ship launch videos without hiring a motion designer. Intro $9, Pro $29, Studio $59.",
+    "Simple, transparent pricing for product owners. Ship launch videos without hiring a motion designer. Intro $9, Pro $29, Studio $59.",
   path: "/pricing",
 });
 
@@ -21,9 +21,8 @@ export default function PricingPage() {
       <section className="py-20 sm:py-28">
         <div className="marketing-container">
           <SectionHeader
-            eyebrow="Pricing"
-            title="Pricing for product owners"
-            description="Ship every launch format yourself — no freelancer to hire for each release. Start at $9/month."
+            title="Simple, transparent pricing"
+            description="Pick a plan that fits how often you ship."
           />
           <div className="mt-16">
             <PricingCards plans={pricingPlans} />
@@ -33,18 +32,25 @@ export default function PricingPage() {
 
       <section className="border-t border-marketing-border py-24 sm:py-32">
         <div className="marketing-container">
-          <SectionHeader title="Compare plans" description="See what's included at each tier." />
+          <SectionHeader
+            title="Compare plans"
+            description="See what's included at each tier."
+          />
           <div className="mt-12">
             <FeatureComparisonTable />
           </div>
         </div>
       </section>
 
-      <FaqSection items={pricingFaqs} />
+      <FaqSection
+        description="Everything you need to know about our pricing and plans."
+        items={pricingFaqs}
+      />
 
       <CtaBand
-        title="Pick the plan that fits"
-        description="No free tier. Start with Intro at $9/month or subscribe to Pro at $29/month from day one."
+        title="Your next launch video is one recording away"
+        description="Stop briefing freelancers. Start exporting."
+        primaryCta={{ label: "Start a video", href: "/signup" }}
       />
     </>
   );

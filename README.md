@@ -1,33 +1,27 @@
 # Arco
 
-**Product demo & motion design workflow** — upload web/mobile app recordings, enhance with zooms, ripples, and callouts, edit, export.
+The fastest way to ship launch videos.
 
-## Build MVP
+Record your product once, brief Arco, and export polished motion — social ads, launch reels, feature drops — without hiring a motion designer.
+
+## Stack
+
+| Path | Role |
+|------|------|
+| `apps/web` | Next.js marketing site, dashboard, editor |
+| `apps/api` | NestJS API |
+| `packages/remotion` | Motion compositions |
+| `packages/project-schema` | Shared project types |
+
+## Develop
 
 ```bash
 pnpm install
-pnpm --filter @arco/remotion dev    # Remotion Studio — preview composition
+pnpm dev
 ```
 
-**Docs:** [docs/README.md](./docs/README.md) · **Status:** [docs/STATUS.md](./docs/STATUS.md) · **Roadmap:** [docs/ROADMAP.md](./docs/ROADMAP.md)
-
-## Packages
-
-| Package | Description |
-|---------|-------------|
-| `@arco/project-schema` | ArcoProject types + Zod validation |
-| `@arco/remotion` | Motion compositions + presets |
-| `@arco/web` | Next.js app (waitlist → editor) |
-
-## Quick start (Week 1)
-
-1. `pnpm --filter @arco/remotion dev` — see golden project with placeholder UI
-2. Edit `packages/remotion/src/sample/golden-project.json` markers
-3. Week 2: upload + editor in `apps/web`
-
-## Scripts
+Remotion Studio only:
 
 ```bash
-pnpm dev                              # turbo — all apps
-pnpm --filter @arco/remotion render:sample
+pnpm studio
 ```

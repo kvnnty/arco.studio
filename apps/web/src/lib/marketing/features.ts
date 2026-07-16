@@ -14,10 +14,33 @@ export type Feature = {
   description: string;
 };
 
-export const heroFeatures = [
-  "Social ads to product launches",
-  "No motion designer to hire",
-  "Export in minutes",
+export type StarterPrompt = {
+  title: string;
+  description: string;
+  href: string;
+};
+
+export const starterPrompts: StarterPrompt[] = [
+  {
+    title: "Feature launch",
+    description: "Announce a new capability with a crisp walkthrough.",
+    href: "/signup?brief=feature-launch",
+  },
+  {
+    title: "Social ad",
+    description: "A punchy 15–30s clip for LinkedIn, X, or Meta.",
+    href: "/signup?brief=social-ad",
+  },
+  {
+    title: "Changelog reel",
+    description: "Ship what changed this week without a freelancer.",
+    href: "/signup?brief=changelog",
+  },
+  {
+    title: "Waitlist teaser",
+    description: "Build anticipation before your product is live.",
+    href: "/signup?brief=waitlist",
+  },
 ];
 
 export const coreFeatures: Feature[] = [
@@ -43,7 +66,7 @@ export const coreFeatures: Feature[] = [
     icon: MousePointerClick,
     title: "Chat refine",
     description:
-      "Ask for punchier CTAs or shorter headlines — copy and voice-over update without rebuilding from scratch.",
+      "Ask for punchier CTAs or shorter headlines — copy and voice-over update without rebuilding.",
   },
   {
     icon: Layers,
@@ -75,34 +98,4 @@ export const workflowSteps = [
     title: "Refine and export",
     description: "Tweak copy in chat or the inspector — then export a polished MP4.",
   },
-];
-
-export const testimonials = [
-  {
-    quote:
-      "We replaced our entire motion design contractor with Arco. Our launch demos now ship the same day we record.",
-    author: "Sarah Chen",
-    role: "Head of Product, Latticeflow",
-  },
-  {
-    quote:
-      "The brand-from-URL feature alone saved us hours. Every demo looks like it came from our design team.",
-    author: "Marcus Webb",
-    role: "Founder, Stackline",
-  },
-  {
-    quote:
-      "Our conversion rate on the landing page jumped 34% after switching to Arco-generated product videos.",
-    author: "Elena Rodriguez",
-    role: "Growth Lead, Nomad OS",
-  },
-];
-
-export const logoCloud = [
-  "Latticeflow",
-  "Stackline",
-  "Nomad OS",
-  "Clearpath",
-  "Forma",
-  "Relay",
 ];

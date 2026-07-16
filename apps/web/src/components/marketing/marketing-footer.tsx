@@ -13,8 +13,8 @@ export function MarketingFooter() {
             <Link href="/" aria-label="Arco home">
               <MarketingLogo className="h-7 w-24" linked={false} />
             </Link>
-            <p className="mt-4 max-w-xs text-[14px] leading-relaxed text-[var(--marketing-muted)]">
-              {siteConfig.description}
+            <p className="mt-4 max-w-xs text-[14px] leading-relaxed text-marketing-muted">
+              {siteConfig.tagline}
             </p>
           </div>
 

@@ -9,6 +9,7 @@ export type BlogPost = {
   title: string;
   excerpt: string;
   category: string;
+  coverImage: string;
   author: BlogAuthor;
   publishedAt: string;
   readingTime: string;
@@ -29,6 +30,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "Screen recordings with motion design outperform static screenshots by 3x. Here's the data and how to ship them fast.",
     category: "Growth",
+    coverImage: "/marketing/blog-growth.jpg",
     author: { name: "Alex Rivera", role: "CEO, Arco" },
     publishedAt: "June 12, 2026",
     readingTime: "6 min read",
@@ -78,6 +80,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "Paste your website and Arco extracts colors, fonts, and logo to style every demo automatically.",
     category: "Product",
+    coverImage: "/marketing/blog-product.jpg",
     author: { name: "Jordan Lee", role: "Engineering, Arco" },
     publishedAt: "May 30, 2026",
     readingTime: "4 min read",
@@ -108,6 +111,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "Chat with your project to rewrite titles, adjust timing, and refine scenes without touching a timeline.",
     category: "Product",
+    coverImage: "/marketing/blog-demos.jpg",
     author: { name: "Sam Okonkwo", role: "Product, Arco" },
     publishedAt: "May 22, 2026",
     readingTime: "5 min read",

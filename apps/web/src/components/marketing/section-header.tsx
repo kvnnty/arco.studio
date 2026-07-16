@@ -13,19 +13,15 @@ type SectionHeaderProps = {
 };
 
 export function SectionHeader({
-  eyebrow,
   title,
   description,
   align = "center",
   className,
 }: SectionHeaderProps) {
   return (
-    <MotionReveal className={cn("max-w-2xl", align === "center" && "mx-auto text-center", className)}>
-      {eyebrow ? (
-        <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-primary">
-          {eyebrow}
-        </p>
-      ) : null}
+    <MotionReveal
+      className={cn("max-w-2xl", align === "center" && "mx-auto text-center", className)}
+    >
       <MotionText
         as="h2"
         text={title}

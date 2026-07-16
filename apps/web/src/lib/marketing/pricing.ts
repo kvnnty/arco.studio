@@ -16,7 +16,7 @@ export const pricingPlans: PricingPlan[] = [
     id: "trial",
     name: "Intro",
     description:
-      "Try Arco at a lower price — built for product owners validating a launch without hiring video help.",
+      "For exploring ideas and trying Arco out.",
     monthlyPrice: 9,
     annualPrice: 9,
     features: [
@@ -27,7 +27,7 @@ export const pricingPlans: PricingPlan[] = [
       "Full editor access",
       "Community support",
     ],
-    cta: "Get started",
+    cta: "Get Intro",
     href: "/signup?plan=trial",
     priceNote: "Top up anytime — 200 credits per pack",
   },
@@ -35,7 +35,7 @@ export const pricingPlans: PricingPlan[] = [
     id: "pro",
     name: "Pro",
     description:
-      "Ship polished launch videos every week — without hiring a motion designer each time.",
+      "For makers and small teams shipping every week.",
     monthlyPrice: 29,
     annualPrice: 24,
     features: [
@@ -47,7 +47,7 @@ export const pricingPlans: PricingPlan[] = [
       "AI assistant + voiceover",
       "Priority support",
     ],
-    cta: "Start Pro — $29/mo",
+    cta: "Get Pro",
     href: "/signup?plan=pro",
     popular: true,
   },
@@ -55,7 +55,7 @@ export const pricingPlans: PricingPlan[] = [
     id: "studio",
     name: "Studio",
     description:
-      "For founders shipping at the highest quality — 4K export and high monthly volume.",
+      "For founders shipping at the highest quality — 4K and high volume.",
     monthlyPrice: 59,
     annualPrice: 49,
     features: [
@@ -66,7 +66,7 @@ export const pricingPlans: PricingPlan[] = [
       "Everything in Pro",
       "Priority render queue",
     ],
-    cta: "Start Studio — $59/mo",
+    cta: "Get Studio",
     href: "/signup?plan=studio",
   },
 ];

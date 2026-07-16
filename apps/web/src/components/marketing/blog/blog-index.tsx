@@ -44,10 +44,10 @@ export function BlogIndex({ posts }: BlogIndexProps) {
           <MotionText
             as="h1"
             text="Blog"
-            className="marketing-heading text-[2.5rem] sm:text-[3.5rem]"
+            className="marketing-heading text-[2.5rem] sm:text-[3.25rem]"
           />
           <p className="mt-4 text-[17px] leading-relaxed text-marketing-muted">
-            Product updates, growth insights, and engineering notes from the Arco team.
+            How product owners ship launch videos faster — without hiring motion design.
           </p>
         </MotionReveal>
 

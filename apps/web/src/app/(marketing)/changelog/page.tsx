@@ -17,9 +17,8 @@ export default function ChangelogPage() {
       <div className="marketing-container">
         <SectionHeader
           align="left"
-          eyebrow="Changelog"
           title="What's new in Arco"
-          description="Follow along as we ship new features and improvements."
+          description="New features, improvements, and fixes as we ship."
         />
 
         <div className="relative mt-16">

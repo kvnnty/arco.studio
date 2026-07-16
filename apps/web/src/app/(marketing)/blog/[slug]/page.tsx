@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
@@ -111,7 +112,7 @@ export default async function BlogArticlePage({ params }: Props) {
           Back to blog
         </Link>
 
-        <header className="mt-8 border-b border-marketing-border pb-8">
+        <header className="mt-8 max-w-3xl">
           <Badge variant="outline" className="mb-4 border-marketing-border">
             {post.category}
           </Badge>
@@ -133,6 +134,17 @@ export default async function BlogArticlePage({ params }: Props) {
             </span>
           </div>
         </header>
+
+        <div className="marketing-media relative mt-10 aspect-video max-h-[480px] border border-marketing-border">
+          <Image
+            src={post.coverImage}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="(max-width: 1120px) 100vw, 1120px"
+            priority
+          />
+        </div>
       </div>
 
       <div className="marketing-container mt-12">
