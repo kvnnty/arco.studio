@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
+import { SessionsListSkeleton } from "@/components/dashboard/page-skeletons";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -113,7 +114,7 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {sessionsLoading ? (
-                <p className="text-sm text-muted-foreground">Loading sessions…</p>
+                <SessionsListSkeleton />
               ) : sessions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No active sessions.</p>
               ) : (

@@ -48,7 +48,7 @@ export function BgmPickerModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Background music</DialogTitle>
           <DialogDescription>
@@ -65,8 +65,12 @@ export function BgmPickerModal({
             <TabsTrigger value="custom">Your upload</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="library" className="mt-4">
+          <TabsContent
+            value="library"
+            className="mt-4 max-h-[min(28rem,60vh)] overflow-y-auto pr-1"
+          >
             <BgmTrackGrid
+              active={open}
               selectedId={customMusic ? null : selectedId}
               onSelect={(id) => {
                 onSelectCustom(null);

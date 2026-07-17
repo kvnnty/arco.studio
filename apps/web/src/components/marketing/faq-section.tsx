@@ -35,7 +35,7 @@ export function FaqSection({
     <section className={cn("py-24 sm:py-32", className)}>
       <div className="marketing-container-faq">
         <MotionReveal className="mx-auto max-w-xl text-center">
-          <h2 className="marketing-heading text-[2rem] sm:text-[2.5rem]">{title}</h2>
+          <h2 className="marketing-heading text-[2.5rem] sm:text-[3.25rem]">{title}</h2>
           {description ? (
             <p className="mt-4 text-[16px] text-marketing-muted">{description}</p>
           ) : null}

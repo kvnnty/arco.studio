@@ -1,6 +1,6 @@
 import { jwtVerify, type JWTPayload } from "jose";
 
-import { createApiClient } from "@/lib/api/axios";
+import { ApiError, createApiClient } from "@/lib/api/axios";
 import {
   getAccessTokenFromCookies,
   getRefreshTokenFromCookies,
@@ -38,42 +38,42 @@ export async function verifyAccessToken(
   }
 }
 
+/**
+ * Live API check is the source of truth. A JWT can still verify after the
+ * server session was revoked (refresh rotation) — never invent a session
+ * from claims alone or clients keep calling the API with a dead token.
+ */
 async function fetchCurrentUser(accessToken: string): Promise<AuthUser | null> {
   try {
     const client = createApiClient(accessToken);
     const { data } = await client.get<AuthUser>("/users/me");
     return data;
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      return null;
+    }
+    // Transient network errors: still reject so callers can refresh rather
+    // than serving a stale/unverified session.
     return null;
   }
-}
-
-function userFromAccessPayload(payload: AccessPayload): AuthUser {
-  return {
-    id: payload.sub!,
-    email: String(payload.email),
-    name: null,
-    emailVerified: true,
-    onboardingCompleted: false,
-    onboardingStep: "profile",
-  };
 }
 
 export async function buildSessionFromAccessToken(
   accessToken: string,
 ): Promise<AuthSession | null> {
-  const payload = await verifyAccessToken(accessToken);
-  if (!payload?.sub || !payload.email) {
+  const user = await fetchCurrentUser(accessToken);
+  if (!user) {
     return null;
   }
 
-  const user =
-    (await fetchCurrentUser(accessToken)) ?? userFromAccessPayload(payload);
+  const payload = await verifyAccessToken(accessToken);
 
   return {
     user,
     accessToken,
-    expiresAt: payload.exp ? payload.exp * 1000 : Date.now() + 15 * 60 * 1000,
+    expiresAt: payload?.exp
+      ? payload.exp * 1000
+      : Date.now() + 15 * 60 * 1000,
   };
 }
 

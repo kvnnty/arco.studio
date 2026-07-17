@@ -6,6 +6,7 @@ import { ArrowLeft, Clock, MoreHorizontal, Trash2 } from "lucide-react";
 import { DeleteProjectTrigger } from "@/components/dashboard/delete-project-dialog";
 import { ProjectDetailActions } from "@/components/dashboard/project-detail-actions";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { ProjectDetailSkeleton } from "@/components/dashboard/page-skeletons";
 import { ProjectPoster } from "@/components/dashboard/project-poster";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -39,11 +40,7 @@ export function ProjectDetailClient({ id }: { id: string }) {
   const { data: project, isLoading, isError } = useProject(id);
 
   if (isLoading) {
-    return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <p className="text-sm text-muted-foreground">Loading project…</p>
-      </div>
-    );
+    return <ProjectDetailSkeleton />;
   }
 
   if (isError || !project) {

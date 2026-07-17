@@ -32,7 +32,7 @@ export function CtaBand({
             <MotionText
               as="h2"
               text={title}
-              className="marketing-heading text-[2rem] sm:text-[2.75rem]"
+              className="marketing-heading text-[2.5rem] sm:text-[3.5rem]"
             />
             <p className="mx-auto mt-4 max-w-md text-[16px] leading-relaxed text-marketing-muted">
               {description}

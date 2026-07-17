@@ -38,10 +38,16 @@ export async function GET() {
       tokens,
     );
   } catch (error) {
+    // Only clear cookies on definitive auth failure. Transient API errors
+    // should not log the user out.
     if (error instanceof ApiError && error.status === 401) {
       return clearAuthCookiesOnResponse(NextResponse.json({ session: null }));
     }
 
-    return NextResponse.json({ session: null });
+    if (error instanceof ApiError && error.status === 403) {
+      return clearAuthCookiesOnResponse(NextResponse.json({ session: null }));
+    }
+
+    return NextResponse.json({ session: null }, { status: 503 });
   }
 }

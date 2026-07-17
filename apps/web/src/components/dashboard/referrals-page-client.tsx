@@ -6,6 +6,7 @@ import { Check, Copy, Gift, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/dashboard/page-header";
+import { ReferralsPageSkeleton } from "@/components/dashboard/page-skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,15 +24,7 @@ export function ReferralsPageClient() {
   const [copied, setCopied] = useState(false);
 
   if (isLoading || !data) {
-    return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <PageHeader
-          title="Invite & earn"
-          description="Share Arco with friends and earn bonus credits."
-        />
-        <p className="text-sm text-muted-foreground">Loading referrals…</p>
-      </div>
-    );
+    return <ReferralsPageSkeleton />;
   }
 
   const inviteLink = data.link;

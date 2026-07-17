@@ -32,7 +32,6 @@ export function AppError({ error, reset, context = "root" }: AppErrorProps) {
     <ErrorPage
       variant={variant}
       code="500"
-      icon={AlertTriangle}
       title="Something went wrong"
       description="An unexpected error occurred. Try again, or head back home if the problem persists."
       primaryAction={{
@@ -52,7 +51,6 @@ export function NotFoundContent({ context = "root" }: { context?: ErrorContext }
     <ErrorPage
       variant={variant}
       code="404"
-      icon={FileQuestion}
       title="Page not found"
       description="The page you're looking for doesn't exist or may have been moved."
       primaryAction={home}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Figtree } from "next/font/google";
+import { Figtree, Geist_Mono, Instrument_Serif, Inter } from "next/font/google";
 
 import { ConsentProvider } from "@/components/consent/consent-provider";
 import { GoogleConsentDefaultScript } from "@/components/consent/google-consent-default";
@@ -14,7 +14,14 @@ import { rootMetadata } from "@/lib/marketing/metadata";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
+const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-serif",
+  display: "swap",
+});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -37,7 +44,10 @@ export default async function RootLayout({
   const session = await getServerSession();
 
   return (
-    <html lang="en" className={cn("font-sans", figtree.variable)}>
+    <html
+      lang="en"
+      className={cn("font-sans", figtree.variable, instrumentSerif.variable)}
+    >
       <head>
         <GoogleConsentDefaultScript />
       </head>

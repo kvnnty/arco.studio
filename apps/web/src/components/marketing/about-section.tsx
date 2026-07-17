@@ -10,7 +10,7 @@ export function AboutSection() {
           <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-primary">
             About Arco
           </p>
-          <h2 className="marketing-heading text-[2rem] leading-tight sm:text-[2.5rem]">
+          <h2 className="marketing-heading text-[2.5rem] leading-tight sm:text-[3.25rem]">
             Built for product owners who don&apos;t want to hire again
           </h2>
           <p className="mt-4 text-pretty text-[16px] leading-relaxed text-marketing-muted">

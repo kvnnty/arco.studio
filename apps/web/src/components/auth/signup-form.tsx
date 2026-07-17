@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { LastUsedBadge } from "@/components/auth/last-used-badge";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -24,20 +25,23 @@ import {
   useMagicLinkMutation,
   useRegisterMutation,
 } from "@/lib/api/hooks/auth";
-import type { OAuthProviderId } from "@/lib/auth/oauth";
+import { useLastUsedAuthMethod } from "@/lib/auth/last-used-method";
 
 type SignupMode = "magic" | "password";
 
-type SignupFormProps = {
-  oauthProviders?: OAuthProviderId[];
-};
-
-export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
+export function SignupForm() {
   const [mode, setMode] = useState<SignupMode>("magic");
   const [sent, setSent] = useState<{ message?: string } | null>(null);
+  const { lastUsed, remember } = useLastUsedAuthMethod();
 
   const magicLink = useMagicLinkMutation();
   const register = useRegisterMutation();
+
+  useEffect(() => {
+    if (lastUsed === "magic" || lastUsed === "password") {
+      setMode(lastUsed);
+    }
+  }, [lastUsed]);
 
   const pending = mode === "magic" ? magicLink.isPending : register.isPending;
   const error =
@@ -79,12 +83,13 @@ export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <OAuthButtons providers={oauthProviders} />
+        <OAuthButtons />
         {mode === "magic" ? (
           <form
             className="mt-6"
             onSubmit={(event) => {
               event.preventDefault();
+              remember("magic");
               const formData = new FormData(event.currentTarget);
               magicLink.mutate(String(formData.get("email") ?? ""), {
                 onSuccess: () => {
@@ -112,7 +117,8 @@ export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               ) : null}
-              <Button type="submit" className="w-full" disabled={pending}>
+              <Button type="submit" className="relative w-full" disabled={pending}>
+                <LastUsedBadge show={lastUsed === "magic"} />
                 {pending ? "Sending link…" : "Continue with email"}
               </Button>
             </FieldGroup>
@@ -122,6 +128,7 @@ export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
             className="mt-6"
             onSubmit={(event) => {
               event.preventDefault();
+              remember("password");
               const formData = new FormData(event.currentTarget);
               register.mutate(
                 {
@@ -169,7 +176,8 @@ export function SignupForm({ oauthProviders = [] }: SignupFormProps) {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               ) : null}
-              <Button type="submit" className="w-full" disabled={pending}>
+              <Button type="submit" className="relative w-full" disabled={pending}>
+                <LastUsedBadge show={lastUsed === "password"} />
                 {pending ? "Creating account…" : "Create account"}
               </Button>
             </FieldGroup>

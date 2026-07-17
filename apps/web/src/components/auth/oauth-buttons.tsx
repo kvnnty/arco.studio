@@ -1,29 +1,24 @@
 "use client";
 
+import { LastUsedBadge } from "@/components/auth/last-used-badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useLastUsedAuthMethod } from "@/lib/auth/last-used-method";
 import {
   getOAuthStartUrl,
   type OAuthProviderId,
 } from "@/lib/auth/oauth";
-import { useOAuthProviders } from "@/lib/auth/use-oauth-providers";
 import { readReferralCode } from "@/lib/referral";
 
 const ALL_PROVIDERS: OAuthProviderId[] = ["google", "github"];
 
-type OAuthButtonsProps = {
-  providers?: OAuthProviderId[];
-};
-
-export function OAuthButtons({ providers: initialProviders = [] }: OAuthButtonsProps) {
-  const providers = useOAuthProviders(initialProviders);
-  const enabled = new Set(providers);
+export function OAuthButtons() {
+  const { lastUsed, remember } = useLastUsedAuthMethod();
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         {ALL_PROVIDERS.map((provider) => {
-          const isEnabled = enabled.has(provider);
           const label = provider === "google" ? "Google" : "GitHub";
 
           return (
@@ -31,20 +26,16 @@ export function OAuthButtons({ providers: initialProviders = [] }: OAuthButtonsP
               key={provider}
               variant="outline"
               type="button"
-              className="w-full"
-              disabled={!isEnabled}
-              nativeButton={!isEnabled}
-              title={
-                isEnabled
-                  ? `Continue with ${label}`
-                  : `${label} sign-in is not configured yet`
-              }
+              className="relative w-full"
+              title={`Continue with ${label}`}
+              onClick={() => {
+                remember(provider);
+              }}
               render={
-                isEnabled ? (
-                  <a href={getOAuthStartUrl(provider, readReferralCode())} />
-                ) : undefined
+                <a href={getOAuthStartUrl(provider, readReferralCode())} />
               }
             >
+              <LastUsedBadge show={lastUsed === provider} />
               {provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
               {label}
             </Button>

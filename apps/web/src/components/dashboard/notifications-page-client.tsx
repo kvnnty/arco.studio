@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Bell, CreditCard, Film } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
+import { NotificationsPageSkeleton } from "@/components/dashboard/page-skeletons";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -30,7 +31,7 @@ export function NotificationsPageClient() {
   const unread = notifications.filter((n) => !n.read);
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading notifications…</p>;
+    return <NotificationsPageSkeleton />;
   }
 
   return (

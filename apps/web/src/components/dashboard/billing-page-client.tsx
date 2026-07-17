@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/dashboard/page-header";
+import { BillingPageSkeleton } from "@/components/dashboard/page-skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,8 @@ import {
   useCheckoutMutation,
   useTopUpCheckoutMutation,
 } from "@/lib/api/hooks/billing";
-import type { BillingInterval, CheckoutPlan } from "@/lib/api/client";
+import { useApiClient } from "@/lib/api/hooks/use-api-client";
+import { ApiError, type BillingInterval, type CheckoutPlan } from "@/lib/api/client";
 import { pricingPlans } from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
@@ -57,21 +59,69 @@ export function BillingPageClient() {
   const checkout = searchParams.get("checkout");
   const [annual, setAnnual] = useState(false);
 
-  const { data: status, isLoading } = useBillingStatus();
+  const { token, loading: authLoading } = useApiClient();
+  const { data: status, isLoading, isError, error, refetch } = useBillingStatus();
   const checkoutMutation = useCheckoutMutation();
   const portalMutation = useBillingPortalMutation();
   const topUpMutation = useTopUpCheckoutMutation();
 
   const billingInterval: BillingInterval = annual ? "annual" : "monthly";
 
-  if (isLoading || !status) {
+  if (authLoading || isLoading) {
+    return <BillingPageSkeleton />;
+  }
+
+  if (!token) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <PageHeader
           title="Billing"
           description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
         />
-        <p className="text-sm text-muted-foreground">Loading billing…</p>
+        <p className="text-sm text-muted-foreground">
+          Your session expired. Sign in again to manage billing.
+        </p>
+      </div>
+    );
+  }
+
+  if (isError || !status) {
+    const unauthorized =
+      error instanceof ApiError &&
+      (error.status === 401 || /unauthorized/i.test(error.message));
+
+    return (
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+        <PageHeader
+          title="Billing"
+          description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
+        />
+        <Card className="rounded-2xl">
+          <CardContent className="flex flex-col gap-4 pt-6">
+            <p className="text-sm text-destructive">
+              {unauthorized
+                ? "Your session expired. Sign in again to manage billing."
+                : error instanceof Error
+                  ? error.message
+                  : "Could not load billing details."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => void refetch()}>
+                Try again
+              </Button>
+              {unauthorized ? (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    window.location.href = "/login";
+                  }}
+                >
+                  Sign in
+                </Button>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

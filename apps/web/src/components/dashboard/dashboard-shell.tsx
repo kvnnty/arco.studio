@@ -17,7 +17,11 @@ type DashboardShellProps = {
 
 export function DashboardShell({ children, user }: DashboardShellProps) {
   const { consent } = useConsent();
-  const { data: billing } = useBillingStatus();
+  const {
+    data: billing,
+    isLoading: billingLoading,
+    isError: billingError,
+  } = useBillingStatus();
 
   const planActive = billing?.canUseProduct ?? false;
   const availableCredits = billing?.credits.available ?? 0;
@@ -32,7 +36,13 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
           planActive={planActive}
         />
         <div className="flex-1 overflow-y-auto p-6">
-          <DashboardPaywall canUseProduct={planActive}>{children}</DashboardPaywall>
+          <DashboardPaywall
+            canUseProduct={planActive}
+            billingLoading={billingLoading}
+            billingError={billingError}
+          >
+            {children}
+          </DashboardPaywall>
         </div>
       </SidebarInset>
     </SidebarProvider>
