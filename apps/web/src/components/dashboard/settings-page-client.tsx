@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SessionsListSkeleton } from "@/components/dashboard/page-skeletons";
+import { useDashboardTheme } from "@/components/providers/dashboard-theme-provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,6 +35,7 @@ type SettingsPageClientProps = {
 export function SettingsPageClient({ user }: SettingsPageClientProps) {
   const [name, setName] = useState(user.name ?? "");
   const [message, setMessage] = useState<string | null>(null);
+  const { theme, setTheme } = useDashboardTheme();
 
   const { data: sessions = [], isLoading: sessionsLoading } = useSessions();
   const updateProfile = useUpdateProfileMutation();
@@ -68,6 +70,7 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
       <Tabs defaultValue="profile">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
@@ -100,6 +103,35 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
               <Button onClick={saveProfile} disabled={pending}>
                 Save changes
               </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="appearance" className="mt-6">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-base">Theme</CardTitle>
+              <CardDescription>
+                Choose light or dark for the dashboard. Marketing pages stay in
+                light mode.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium">Dark mode</p>
+                  <p className="text-xs text-muted-foreground">
+                    Currently using {theme === "dark" ? "dark" : "light"} theme
+                  </p>
+                </div>
+                <Switch
+                  checked={theme === "dark"}
+                  onCheckedChange={(checked) =>
+                    setTheme(checked ? "dark" : "light")
+                  }
+                  aria-label="Toggle dark mode"
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
