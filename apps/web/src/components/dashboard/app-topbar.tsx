@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { Bell, HelpCircle } from "lucide-react";
 
+import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { ExportsBadge, WorkspaceSwitcher } from "@/components/dashboard/workspace-switcher";
+import { useConsent } from "@/components/consent/consent-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +19,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useLogoutMutation } from "@/lib/api/hooks/auth";
-import { useConsent } from "@/components/consent/consent-provider";
 import { LogOut, Settings, User } from "lucide-react";
 
 type AppTopbarProps = {
@@ -54,6 +55,7 @@ export function AppTopbar({
         availableCredits={availableCredits}
         planActive={planActive}
       />
+      <ThemeToggle />
       <Button
         variant="ghost"
         size="icon-sm"

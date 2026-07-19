@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { fetchEditorProject } from "@/lib/api/projects";
 import { useCreateProjectMutation } from "@/lib/api/hooks/projects";
+import { FullPageSkeleton } from "@/components/dashboard/page-skeletons";
 import { CreateProjectScreen } from "@/components/editor/create-project-screen";
 import { EditorShell } from "@/components/editor/editor-shell";
 import { UploadScreen } from "@/components/editor/upload-screen";
@@ -146,11 +147,7 @@ export function EditorPage() {
   );
 
   if (!ready || authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        Loading…
-      </div>
-    );
+    return <FullPageSkeleton />;
   }
 
   if (loadError) {

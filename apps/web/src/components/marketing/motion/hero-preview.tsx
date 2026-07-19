@@ -30,7 +30,7 @@ export function HeroPreview({
     <section className="pb-20 sm:pb-28">
       <div className="marketing-container">
         <MotionReveal className="mx-auto mb-10 max-w-xl text-center">
-          <h2 className="marketing-heading text-[1.75rem] sm:text-[2.25rem]">{title}</h2>
+          <h2 className="marketing-heading text-[2.25rem] sm:text-[3rem]">{title}</h2>
           <p className="mt-3 text-[16px] leading-relaxed text-marketing-muted">
             {description}
           </p>

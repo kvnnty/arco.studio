@@ -116,7 +116,7 @@ export default async function BlogArticlePage({ params }: Props) {
           <Badge variant="outline" className="mb-4 border-marketing-border">
             {post.category}
           </Badge>
-          <h1 className="marketing-heading text-[2rem] leading-tight sm:text-[2.75rem]">
+          <h1 className="marketing-heading text-[2.5rem] leading-tight sm:text-[3.5rem]">
             {post.title}
           </h1>
           <p className="mt-4 text-[17px] leading-relaxed text-marketing-muted">

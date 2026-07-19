@@ -18,7 +18,7 @@ export function LegalPageLayout({ document }: LegalPageLayoutProps) {
       <div className="marketing-container">
         <MotionReveal>
           <header className="border-b border-marketing-border pb-8">
-            <h1 className="marketing-heading text-[2.5rem] sm:text-[3rem]">
+            <h1 className="marketing-heading text-[3rem] sm:text-[3.75rem]">
               {document.title}
             </h1>
             <p className="mt-3 text-[14px] text-marketing-muted">

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { LastUsedBadge } from "@/components/auth/last-used-badge";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -24,26 +25,31 @@ import {
   useLoginMutation,
   useMagicLinkMutation,
 } from "@/lib/api/hooks/auth";
-import type { OAuthProviderId } from "@/lib/auth/oauth";
+import { useLastUsedAuthMethod } from "@/lib/auth/last-used-method";
 
 type LoginMode = "magic" | "password";
 
 type LoginFormProps = {
   oauthError?: string;
   resetSuccess?: boolean;
-  oauthProviders?: OAuthProviderId[];
 };
 
 export function LoginForm({
   oauthError,
   resetSuccess,
-  oauthProviders = [],
 }: LoginFormProps) {
   const [mode, setMode] = useState<LoginMode>("magic");
   const [magicSent, setMagicSent] = useState(false);
+  const { lastUsed, remember } = useLastUsedAuthMethod();
 
   const magicLink = useMagicLinkMutation();
   const login = useLoginMutation();
+
+  useEffect(() => {
+    if (lastUsed === "magic" || lastUsed === "password") {
+      setMode(lastUsed);
+    }
+  }, [lastUsed]);
 
   const pending = mode === "magic" ? magicLink.isPending : login.isPending;
   const error =
@@ -96,12 +102,13 @@ export function LoginForm({
             <AlertDescription>{oauthError}</AlertDescription>
           </Alert>
         ) : null}
-        <OAuthButtons providers={oauthProviders} />
+        <OAuthButtons />
         {mode === "magic" ? (
           <form
             className="mt-6"
             onSubmit={(event) => {
               event.preventDefault();
+              remember("magic");
               const formData = new FormData(event.currentTarget);
               const email = String(formData.get("email") ?? "");
               magicLink.mutate(email, {
@@ -130,7 +137,8 @@ export function LoginForm({
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               ) : null}
-              <Button type="submit" className="w-full" disabled={pending}>
+              <Button type="submit" className="relative w-full" disabled={pending}>
+                <LastUsedBadge show={lastUsed === "magic"} />
                 {pending ? "Sending link…" : "Email me a magic link"}
               </Button>
             </FieldGroup>
@@ -140,6 +148,7 @@ export function LoginForm({
             className="mt-6"
             onSubmit={(event) => {
               event.preventDefault();
+              remember("password");
               const formData = new FormData(event.currentTarget);
               login.mutate({
                 email: String(formData.get("email") ?? ""),
@@ -180,7 +189,8 @@ export function LoginForm({
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               ) : null}
-              <Button type="submit" className="w-full" disabled={pending}>
+              <Button type="submit" className="relative w-full" disabled={pending}>
+                <LastUsedBadge show={lastUsed === "password"} />
                 {pending ? "Signing in…" : "Sign in with password"}
               </Button>
             </FieldGroup>

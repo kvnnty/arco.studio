@@ -1,6 +1,6 @@
 import axios, { isAxiosError, type AxiosInstance } from "axios";
 
-import { getApiUrl } from "@/lib/api/config";
+import { getRequestApiUrl } from "@/lib/api/config";
 
 const API_TIMEOUT_MS = 8_000;
 
@@ -31,7 +31,7 @@ function extractErrorMessage(error: unknown): string {
 
 export function createApiClient(token?: string): AxiosInstance {
   const client = axios.create({
-    baseURL: getApiUrl(),
+    baseURL: getRequestApiUrl(),
     timeout: API_TIMEOUT_MS,
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

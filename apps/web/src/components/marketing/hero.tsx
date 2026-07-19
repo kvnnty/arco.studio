@@ -10,7 +10,6 @@ import { fadeUp, staggerContainer, transitionMedium } from "@/lib/motion/presets
 import { cn } from "@/lib/utils";
 
 type HeroProps = {
-  brand?: string;
   title: string;
   titleAccent?: string;
   description: string;
@@ -19,7 +18,6 @@ type HeroProps = {
 };
 
 export function Hero({
-  brand = "Arco",
   title,
   titleAccent,
   description,
@@ -41,15 +39,7 @@ export function Hero({
         animate="visible"
         variants={staggerContainer(0.1, 0.05)}
       >
-        <motion.p
-          className="mb-5 text-[13px] font-semibold tracking-[0.04em] text-marketing-muted"
-          variants={fadeUp}
-          transition={transitionMedium}
-        >
-          {brand}
-        </motion.p>
-
-        <h1 className="marketing-heading mx-auto max-w-3xl text-[2.5rem] leading-[1.08] sm:text-[3.5rem] lg:text-[4rem]">
+        <h1 className="marketing-heading mx-auto max-w-4xl text-[3.25rem] leading-[1.05] sm:text-[4.5rem] lg:text-[5.5rem]">
           <MotionText as="span" text={title} delay={0.08} className="inline" />
           {titleAccent ? (
             <>

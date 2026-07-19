@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 
@@ -16,11 +15,40 @@ import { createWebApiClient } from "@/lib/api/axios";
 type AuthContextValue = {
   session: AuthSession | null;
   loading: boolean;
-  refresh: () => Promise<void>;
+  refresh: (options?: { silent?: boolean }) => Promise<AuthSession | null>;
   setSessionUser: (user: AuthSession["user"]) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+/**
+ * Module-level mutex so React Strict Mode remounts (and any concurrent callers)
+ * share one in-flight /api/auth/session request. Parallel refresh-token rotations
+ * trigger reuse detection and wipe the session.
+ */
+let sharedSessionRequest: Promise<AuthSession | null> | null = null;
+
+async function fetchSessionFromApi(): Promise<AuthSession | null> {
+  if (sharedSessionRequest) {
+    return sharedSessionRequest;
+  }
+
+  sharedSessionRequest = (async () => {
+    try {
+      const client = createWebApiClient();
+      const { data } = await client.get<{ session: AuthSession | null }>(
+        "/api/auth/session",
+      );
+      return data.session;
+    } catch {
+      throw new Error("SESSION_FETCH_FAILED");
+    } finally {
+      sharedSessionRequest = null;
+    }
+  })();
+
+  return sharedSessionRequest;
+}
 
 export function AuthProvider({
   initialSession,
@@ -31,31 +59,26 @@ export function AuthProvider({
 }) {
   const [session, setSession] = useState<AuthSession | null>(initialSession);
   const [loading, setLoading] = useState(!initialSession);
-  const refreshPromiseRef = useRef<Promise<void> | null>(null);
 
-  const refresh = useCallback(async () => {
-    if (refreshPromiseRef.current) {
-      return refreshPromiseRef.current;
-    }
-
-    const promise = (async () => {
+  const refresh = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) {
       setLoading(true);
-      try {
-        const client = createWebApiClient();
-        const { data } = await client.get<{ session: AuthSession | null }>(
-          "/api/auth/session",
-        );
-        setSession(data.session);
-      } catch {
+    }
+    try {
+      const next = await fetchSessionFromApi();
+      setSession(next);
+      return next;
+    } catch {
+      // Network failure: do not wipe an existing session on silent recovery.
+      if (!options?.silent) {
         setSession(null);
-      } finally {
-        setLoading(false);
-        refreshPromiseRef.current = null;
       }
-    })();
-
-    refreshPromiseRef.current = promise;
-    return promise;
+      return null;
+    } finally {
+      if (!options?.silent) {
+        setLoading(false);
+      }
+    }
   }, []);
 
   const setSessionUser = useCallback((user: AuthUser) => {

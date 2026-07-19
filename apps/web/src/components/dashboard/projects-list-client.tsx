@@ -2,12 +2,23 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Download, Film, MoreHorizontal, Search, Trash2 } from "lucide-react";
+import {
+  Download,
+  Film,
+  FolderOpen,
+  MoreHorizontal,
+  Search,
+  Trash2,
+  Video,
+  Zap,
+} from "lucide-react";
 
 import { DeleteProjectTrigger } from "@/components/dashboard/delete-project-dialog";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { ProjectsListSkeleton } from "@/components/dashboard/page-skeletons";
 import { ProjectPoster } from "@/components/dashboard/project-poster";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
+import { StatsCard } from "@/components/dashboard/stats-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,8 +49,21 @@ export function ProjectsListClient() {
     );
   }, [projects, query]);
 
+  const stats = useMemo(
+    () => ({
+      total: projects.length,
+      generated: projects.filter((p) => p.status === "completed").length,
+      ready: projects.filter((p) => p.status === "draft" && p.markerCount > 0)
+        .length,
+      inProgress: projects.filter((p) =>
+        ["analyzing", "processing"].includes(p.status),
+      ).length,
+    }),
+    [projects],
+  );
+
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading projects…</p>;
+    return <ProjectsListSkeleton />;
   }
 
   if (projects.length === 0) {
@@ -57,7 +81,38 @@ export function ProjectsListClient() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title="Total projects"
+          value={stats.total}
+          icon={FolderOpen}
+          description="in workspace"
+          className="rounded-2xl p-4"
+        />
+        <StatsCard
+          title="Videos generated"
+          value={stats.generated}
+          icon={Video}
+          description="all time"
+          className="rounded-2xl p-4"
+        />
+        <StatsCard
+          title="Ready to export"
+          value={stats.ready}
+          icon={Film}
+          description="with scenes"
+          className="rounded-2xl p-4"
+        />
+        <StatsCard
+          title="In progress"
+          value={stats.inProgress}
+          icon={Zap}
+          description="analyzing or exporting"
+          className="rounded-2xl p-4"
+        />
+      </div>
+
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -146,7 +201,10 @@ export function ProjectsListClient() {
                         }
                       />
                       <DropdownMenuContent align="start">
-                        <DropdownMenuItem variant="destructive" onClick={onClick}>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={onClick}
+                        >
                           <Trash2 className="size-4" />
                           Delete project
                         </DropdownMenuItem>

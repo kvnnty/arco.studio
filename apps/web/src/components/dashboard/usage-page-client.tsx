@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { UsagePageSkeleton } from "@/components/dashboard/page-skeletons";
 import { UsageChart } from "@/components/dashboard/usage-chart";
 import {
   useBillingStatus,
@@ -49,14 +50,18 @@ export function UsagePageClient() {
   const { data: usage, isLoading: usageLoading } = useBillingUsage();
   const topUpMutation = useTopUpCheckoutMutation();
 
-  if (statusLoading || usageLoading || !status || !usage) {
+  if (statusLoading || usageLoading) {
+    return <UsagePageSkeleton />;
+  }
+
+  if (!status || !usage) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <PageHeader
           title="Usage"
           description="Credit balance and activity for your workspace."
         />
-        <p className="text-sm text-muted-foreground">Loading usage…</p>
+        <p className="text-sm text-destructive">Could not load usage details.</p>
       </div>
     );
   }

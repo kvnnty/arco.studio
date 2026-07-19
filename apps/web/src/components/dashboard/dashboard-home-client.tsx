@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Film, FolderOpen, Video, Zap } from "lucide-react";
+import { Film } from "lucide-react";
 
 import { BgmPickerModal } from "@/components/dashboard/bgm-picker-modal";
 import type { CustomMusicSelection } from "@/components/dashboard/custom-music-upload";
 import { DashboardCreateHero } from "@/components/dashboard/dashboard-create-hero";
 import { VoicePickerModal } from "@/components/dashboard/voice-picker-modal";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { DashboardHomeSkeleton } from "@/components/dashboard/page-skeletons";
 import { ProjectPoster } from "@/components/dashboard/project-poster";
 import { ProjectStatusBadge } from "@/components/dashboard/project-status-badge";
-import { StatsCard } from "@/components/dashboard/stats-card";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -55,15 +55,11 @@ export function DashboardHomeClient({
   const activity = buildProjectActivity(projects, 8);
 
   if (isLoading) {
-    return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <p className="text-sm text-muted-foreground">Loading dashboard…</p>
-      </div>
-    );
+    return <DashboardHomeSkeleton />;
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
           Welcome back{userName ? `, ${userName.split(" ")[0]}` : ""}
@@ -106,37 +102,6 @@ export function DashboardHomeClient({
         onToggleEnabled={setVoiceEnabled}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total projects"
-          value={projects.length}
-          icon={FolderOpen}
-          description="in workspace"
-        />
-        <StatsCard
-          title="Videos generated"
-          value={projects.filter((p) => p.status === "completed").length}
-          icon={Video}
-          description="all time"
-        />
-        <StatsCard
-          title="Ready to export"
-          value={projects.filter((p) => p.status === "draft" && p.markerCount > 0).length}
-          icon={Film}
-          description="with scenes"
-        />
-        <StatsCard
-          title="In progress"
-          value={
-            projects.filter((p) =>
-              ["analyzing", "processing"].includes(p.status),
-            ).length
-          }
-          icon={Zap}
-          description="analyzing or exporting"
-        />
-      </div>
-
       <Card className="rounded-2xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -156,7 +121,7 @@ export function DashboardHomeClient({
             <EmptyState
               icon={Film}
               title="No projects yet"
-              description="Use the form above to create your first launch video."
+              description="Use the composer above to create your first launch video."
               className="border-none shadow-none"
             />
           ) : (

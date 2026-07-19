@@ -7,6 +7,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { OnboardingOptionGrid } from "@/components/onboarding/onboarding-option-grid";
 import { OnboardingPricingStep } from "@/components/onboarding/onboarding-pricing-step";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import { InlineContentSkeleton } from "@/components/dashboard/page-skeletons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -76,9 +77,13 @@ export function OnboardingClient({ user: initialUser }: OnboardingClientProps) {
   if (!user) {
     return (
       <OnboardingShell>
-        <p className="text-sm text-muted-foreground">
-          {loading ? "Loading your account…" : "Redirecting to sign in…"}
-        </p>
+        {loading ? (
+          <InlineContentSkeleton className="w-full max-w-sm" lines={4} />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Redirecting to sign in…
+          </p>
+        )}
       </OnboardingShell>
     );
   }

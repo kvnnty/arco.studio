@@ -6,6 +6,7 @@ import { FileVideo, Film, Search } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AssetsPageSkeleton } from "@/components/dashboard/page-skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,7 +38,7 @@ export function AssetsPageClient() {
   }, [assets, search, tab]);
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading assets…</p>;
+    return <AssetsPageSkeleton />;
   }
 
   return (
