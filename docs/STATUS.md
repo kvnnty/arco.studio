@@ -2,16 +2,16 @@
 
 Current snapshot, feature matrix, and engineering checklist.
 
-**See also:** [ROADMAP.md](./ROADMAP.md) (what's next) · [TECHNICAL.md](./TECHNICAL.md) (how to run/deploy)
+**See also:** [WEEK-SHIP.md](./WEEK-SHIP.md) (**active — one-week finish**) · [ROADMAP.md](./ROADMAP.md) · [TECHNICAL.md](./TECHNICAL.md)
 
 ---
 
 # Snapshot (July 2026)
 
 
-**Updated:** July 2026 — Motion.so-cost pipeline: screenshot-first create, real Analyze→Draft→Voice→Layout, device frames + transitions, scene chat refine + re-TTS. Recording demoted. CV cut from active plan.
+**Updated:** 19 July 2026 — **One-week ship** in progress ([WEEK-SHIP.md](./WEEK-SHIP.md)). Screenshot-first Motion pipeline; close M1–M4 by 26 July. Recording secondary. CV out of scope.
 
-**North star:** [DECISIONS.md](./DECISIONS.md) · Active delivery: [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active)
+**North star:** [DECISIONS.md](./DECISIONS.md) · **This week:** [WEEK-SHIP.md](./WEEK-SHIP.md) · Phases: [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active)
 
 ---
 
@@ -22,10 +22,11 @@ Current snapshot, feature matrix, and engineering checklist.
 | **Billing tiers** | Intro $9 · Pro $29 · **Studio $59** |
 | **Project slots** | 5 / 15 / unlimited — delete to free a slot (dashboard UI shipped) |
 | **Exports** | Unlimited re-exports per project |
-| **Studio export** | 4K + batch social format pack *(QA pending)* |
+| **Studio export** | 4K + batch social format pack *(QA this week)* |
 | Screenshot storyboard + ElevenLabs VO + custom music (Pro+) | Done |
 | Export MP4 | Render worker + screenshot + recording compositions |
 | Core loop | Sign up → create → upload → AI draft → editor → export → download |
+| Pipeline + Remotion quality (code) | `runScreenshotPipeline`, DeviceFrame, timed duck, scene refine — **harden via WEEK-SHIP** |
 | Templates + dashboard quick-create | Shipped June 2026 |
 | BGM picker + custom upload | UI + render wired; **6 distinct library tracks shipped** |
 
@@ -35,12 +36,10 @@ Current snapshot, feature matrix, and engineering checklist.
 
 | Gap | Doc |
 |-----|-----|
-| Screenshot pipeline UX (Analyze→Draft→Voice→Layout) incomplete | [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) |
-| Screenshot export = basic Ken Burns (no device frames / rich transitions) | [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) |
-| Chat refine is marker-centric (not screenshot scenes) | [ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active) |
-| BGM library sounds identical (placeholder files) | ~~Resolved — see [AUDIO.md](./AUDIO.md)~~ |
-| Duplicate project | [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) |
-| Render queue in-memory | Backlog — not active |
+| M1–M4 not formally closed (harden golden path) | **[WEEK-SHIP.md](./WEEK-SHIP.md)** |
+| Format / landing / staging trust layer | [WEEK-SHIP.md](./WEEK-SHIP.md) (after M1–M3) |
+| Duplicate project | Deferred — [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) |
+| Render queue in-memory | Deferred unless beta blocked |
 
 ---
 
@@ -69,13 +68,17 @@ Add Polar product IDs in `apps/api/.env` for all plan checkouts (see `.env.examp
 
 ---
 
-## Next work (recommended order)
+## Next work (this week only)
 
-1. **Format QA** — 9:16 / 1:1 / Studio 4K match preview
-2. **Landing MP4 demos** — real Arco screenshot exports
-3. **Staging ops** — auth/env/deploy checklist
+Follow **[WEEK-SHIP.md](./WEEK-SHIP.md)** day plan:
 
-Licensed/distinct BGM: **shipped** ([AUDIO.md](./AUDIO.md)). CV / click detection is **not** next work.
+1. **M1** — Pipeline UX golden path  
+2. **M2** — Export visual quality  
+3. **M3** — Chat refine + re-TTS  
+4. **M4** — Trust + staging &lt; 10 min  
+5. Format QA → landing MP4s → 5 betas  
+
+CV / click detection is **not** next work. BGM library: **shipped** ([AUDIO.md](./AUDIO.md)).
 
 ---
 
@@ -383,17 +386,13 @@ All must be checked before MVP launch:
 
 ## Priority order (what to ship next)
 
-See **[ROADMAP.md](./ROADMAP.md#part-1--polish-plan-active)** for phased execution. Summary:
+**This week:** **[WEEK-SHIP.md](./WEEK-SHIP.md)** (M1→M2→M3→M4 → format/landing/staging → 5 betas).
 
-1. **Screenshot Motion pipeline** — Analyze→Draft→Voice→Layout theater + brand into project
-2. **Screenshot Remotion quality** — device frames, real transitions, preset motion, timed ducking
-3. **Chat refine + re-TTS** for scenes
-4. **Licensed BGM** ([AUDIO.md](./AUDIO.md))
-5. **Backlog** — format QA, assets page, hybrid mode, free tier — not CV/click detection
+After 26 July: [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets). Not CV/click detection.
 
 ---
 
-*Last updated: July 2026*
+*Last updated: 19 July 2026*
 
 ---
 

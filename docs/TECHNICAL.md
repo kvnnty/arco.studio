@@ -591,6 +591,8 @@ Tune per template; total frames must match `durationInFrames`.
 
 ### Motion pipeline golden path (manual)
 
+**Week ship:** run this daily — [WEEK-SHIP.md](./WEEK-SHIP.md).
+
 Run on local stack (Postgres + MinIO + FFmpeg + API + web):
 
 1. **Screenshots (primary)** — Sign in → dashboard **Product demo** tab → paste URL + brief → upload 5 screenshots → pick voice + BGM → Make video → watch Analyze→Draft→Voice→Layout→Ready → preview framed scenes → chat “Make headlines shorter” → export 16:9 → download. Target: under 10 minutes.

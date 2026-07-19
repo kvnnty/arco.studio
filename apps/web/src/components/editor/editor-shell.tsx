@@ -97,6 +97,9 @@ export function EditorShell({
     createInitialPipelineState(),
   );
   const [pipelineMarkers, setPipelineMarkers] = useState<Marker[]>([]);
+  const [pipelineFailureMessage, setPipelineFailureMessage] = useState<
+    string | null
+  >(null);
   const brandKitRef = useRef<BrandKit | null>(null);
   const playerRef = useRef<PlayerRef>(null);
   const syncProject = useSyncProjectMutation();
@@ -108,10 +111,15 @@ export function EditorShell({
   const project = session.project;
   const screenshotMode = isScreenshotProject(project);
   const scenes = project.scenes ?? [];
+  const pipelineFailed =
+    screenshotMode && project.pipelineStatus === "failed";
   const isAnalyzing =
-    session.journeyStep === "analyzing" ||
-    (screenshotMode && isScreenshotPipelinePending(project));
-  const chatReady = session.journeyStep === "edit" && !isAnalyzing;
+    !pipelineFailed &&
+    (session.journeyStep === "analyzing" ||
+      (screenshotMode && isScreenshotPipelinePending(project)));
+  /** Theater UI while generating, or after screenshot pipeline failure (retry). */
+  const showPipelineTheater = isAnalyzing || pipelineFailed;
+  const chatReady = session.journeyStep === "edit" && !isAnalyzing && !pipelineFailed;
   const productHostname = project.brief?.productUrl
     ? getUrlHostname(project.brief.productUrl)
     : undefined;
@@ -256,22 +264,47 @@ export function EditorShell({
     persist({ ...session, project: withBrand });
   }, [persist, session]);
 
+  const handleScreenshotPipelinePatch = useCallback(
+    (patched: ArcoProject) => {
+      persist({
+        ...session,
+        project: patched,
+        journeyStep: "analyzing",
+      });
+    },
+    [persist, session],
+  );
+
+  const handleRetryScreenshotPipeline = useCallback(() => {
+    setPipelineFailureMessage(null);
+    setPipeline(createInitialPipelineState());
+    setPipelineMarkers([]);
+    const nextProject: ArcoProject = {
+      ...session.project,
+      pipelineStatus: "pending",
+    };
+    const nextSession: EditorSession = {
+      ...session,
+      project: nextProject,
+      journeyStep: "analyzing",
+    };
+    persist(nextSession);
+    syncProject.mutate({
+      projectId: session.projectId,
+      project: nextProject,
+      platform: session.platform,
+      recordingSrc: session.recordingUrl || "placeholder",
+    });
+  }, [persist, session, syncProject]);
+
   const handleScreenshotPipelineComplete = useCallback(
     (nextProject: ArcoProject) => {
+      const failed = nextProject.pipelineStatus === "failed";
       const nextSession: EditorSession = {
         ...session,
         project: nextProject,
-        journeyStep:
-          nextProject.pipelineStatus === "failed" ? "analyzing" : "edit",
+        journeyStep: failed ? "analyzing" : "edit",
       };
-
-      if (nextProject.pipelineStatus === "failed") {
-        toast.error(
-          "Video generation failed. Check the chat for details, then try creating again.",
-        );
-        persist(nextSession);
-        return;
-      }
 
       syncProject.mutate({
         projectId: session.projectId,
@@ -279,6 +312,19 @@ export function EditorShell({
         platform: session.platform,
         recordingSrc: session.recordingUrl || "placeholder",
       });
+
+      if (failed) {
+        setPipelineFailureMessage(
+          "Video generation failed. Retry the pipeline — you do not need to create a new project.",
+        );
+        toast.error(
+          "Video generation failed. Use Retry pipeline to try again.",
+        );
+        persist(nextSession);
+        return;
+      }
+
+      setPipelineFailureMessage(null);
       setSelectedId(nextProject.scenes?.[0]?.id ?? null);
       persist(nextSession);
     },
@@ -795,9 +841,14 @@ export function EditorShell({
             selectedMarker={selectedMarker}
             selectedSceneId={selectedScene?.id ?? null}
             pipelineMarkers={pipelineMarkers}
+            pipelineFailed={pipelineFailed}
             onBrandAnalyzed={handleBrandAnalyzed}
             onAnalysisComplete={handleAnalysisComplete}
             onScreenshotPipelineComplete={handleScreenshotPipelineComplete}
+            onScreenshotPipelinePatch={handleScreenshotPipelinePatch}
+            onRetryScreenshotPipeline={
+              screenshotMode ? handleRetryScreenshotPipeline : undefined
+            }
             onPipelineChange={handlePipelineChange}
             onSendMessage={handleSendMessage}
             onRegenerateScene={handleRegenerateScene}
@@ -806,10 +857,15 @@ export function EditorShell({
 
         <main className="flex min-h-0 flex-col overflow-y-auto p-4 sm:p-6">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
-            {isAnalyzing ? (
+            {showPipelineTheater ? (
               <PipelinePanel
                 pipeline={pipeline}
-                isGenerating={!chatReady}
+                isGenerating={isAnalyzing}
+                failed={pipelineFailed}
+                failureMessage={pipelineFailureMessage}
+                onRetry={
+                  pipelineFailed ? handleRetryScreenshotPipeline : undefined
+                }
                 markers={pipelineMarkers}
                 productHostname={productHostname}
               />

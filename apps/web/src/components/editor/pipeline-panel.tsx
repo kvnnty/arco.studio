@@ -1,9 +1,10 @@
 "use client";
 
 import type { Marker } from "@arco/project-schema";
-import { Check, Circle, Loader2 } from "lucide-react";
+import { Check, Circle, Loader2, RotateCcw } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { formatMs } from "@/lib/editor/format-time";
@@ -16,6 +17,9 @@ import { cn } from "@/lib/utils";
 type PipelinePanelProps = {
   pipeline: PipelineState;
   isGenerating: boolean;
+  failed?: boolean;
+  failureMessage?: string | null;
+  onRetry?: () => void;
   markers: Marker[];
   productHostname?: string;
 };
@@ -23,6 +27,9 @@ type PipelinePanelProps = {
 export function PipelinePanel({
   pipeline,
   isGenerating,
+  failed = false,
+  failureMessage,
+  onRetry,
   markers,
   productHostname,
 }: PipelinePanelProps) {
@@ -60,7 +67,11 @@ export function PipelinePanel({
             </p>
           ) : null}
         </div>
-        {isGenerating ? (
+        {failed ? (
+          <Badge variant="outline" className="shrink-0 text-destructive">
+            Failed
+          </Badge>
+        ) : isGenerating ? (
           <Badge variant="outline" className="shrink-0 gap-1.5">
             <Loader2 className="size-3 animate-spin" />
             Working
@@ -72,6 +83,23 @@ export function PipelinePanel({
         ) : null}
       </div>
 
+      {failed ? (
+        <Card className="border-destructive/30 py-0">
+          <CardContent className="space-y-3 p-4">
+            <p className="text-sm text-destructive">
+              {failureMessage?.trim() ||
+                "Video generation failed. You can retry without creating a new project."}
+            </p>
+            {onRetry ? (
+              <Button type="button" size="sm" onClick={onRetry}>
+                <RotateCcw data-icon="inline-start" />
+                Retry pipeline
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card className="py-0">
         <CardHeader className="border-b border-border px-4 py-3">
           <CardTitle className="text-sm font-medium">Pipeline</CardTitle>
@@ -80,9 +108,11 @@ export function PipelinePanel({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>
-                {GENERATION_PIPELINE_STEPS[activeIndex]?.label ?? "Starting"}
+                {failed
+                  ? "Stopped"
+                  : (GENERATION_PIPELINE_STEPS[activeIndex]?.label ?? "Starting")}
               </span>
-              <span>{Math.round(progress)}%</span>
+              <span>{failed ? "—" : `${Math.round(progress)}%`}</span>
             </div>
             <Progress value={progress} />
           </div>

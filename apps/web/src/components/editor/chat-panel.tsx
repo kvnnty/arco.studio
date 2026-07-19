@@ -2,7 +2,7 @@
 
 import type { ArcoProject, Marker } from "@arco/project-schema";
 import { isScreenshotProject } from "@arco/project-schema";
-import { Send, Sparkles } from "lucide-react";
+import { RotateCcw, Send, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/components/providers/auth-provider";
@@ -74,6 +74,9 @@ type ChatPanelProps = {
   onBrandAnalyzed: (kit: BrandKit) => void;
   onAnalysisComplete: (result: DraftAnalysisResult) => void;
   onScreenshotPipelineComplete: (project: ArcoProject) => void;
+  onScreenshotPipelinePatch?: (project: ArcoProject) => void;
+  onRetryScreenshotPipeline?: () => void;
+  pipelineFailed?: boolean;
   onPipelineChange: (pipeline: PipelineState, markers: Marker[]) => void;
   onSendMessage: (
     message: string,
@@ -97,6 +100,9 @@ export function ChatPanel({
   onBrandAnalyzed,
   onAnalysisComplete,
   onScreenshotPipelineComplete,
+  onScreenshotPipelinePatch,
+  onRetryScreenshotPipeline,
+  pipelineFailed = false,
   onPipelineChange,
   onSendMessage,
   onRegenerateScene,
@@ -105,7 +111,11 @@ export function ChatPanel({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [analysisStarted, setAnalysisStarted] = useState(false);
+  const [lastPipelineError, setLastPipelineError] = useState<string | null>(
+    null,
+  );
   const bottomRef = useRef<HTMLDivElement>(null);
+  const wasPipelineFailedRef = useRef(false);
   const { session } = useAuth();
   const analyzeBrand = useAnalyzeBrandMutation();
   const { data: billing } = useBillingStatus();
@@ -128,14 +138,43 @@ export function ChatPanel({
     [],
   );
 
+  const handleRetryPipeline = useCallback(() => {
+    setAnalysisStarted(false);
+    setLastPipelineError(null);
+    setMessages([]);
+    onRetryScreenshotPipeline?.();
+  }, [onRetryScreenshotPipeline]);
+
+  // Reset local run state when parent clears failure (e.g. Retry from PipelinePanel).
+  useEffect(() => {
+    if (pipelineFailed) {
+      wasPipelineFailedRef.current = true;
+      return;
+    }
+    if (
+      wasPipelineFailedRef.current &&
+      project.pipelineStatus === "pending"
+    ) {
+      wasPipelineFailedRef.current = false;
+      setAnalysisStarted(false);
+      setLastPipelineError(null);
+      setMessages([]);
+    }
+  }, [pipelineFailed, project.pipelineStatus]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    if (!isAnalyzing || analysisStarted) return;
+    if (!isAnalyzing || analysisStarted || pipelineFailed) return;
+
+    const accessToken = session?.accessToken;
+    // Wait for auth — do not mark started or we stall forever on this mount.
+    if (!accessToken) return;
 
     setAnalysisStarted(true);
+    setLastPipelineError(null);
 
     const prompt = screenshotMode
       ? hostname != null
@@ -154,9 +193,6 @@ export function ChatPanel({
     });
 
     void (async () => {
-      const accessToken = session?.accessToken;
-      if (!accessToken) return;
-
       if (screenshotMode) {
         const analyzeStatusId = createChatId();
         const statusIds: Partial<Record<PipelineStepId, string>> = {
@@ -216,6 +252,9 @@ export function ChatPanel({
               }
               onPipelineChange(pipeline, markers);
             },
+            onProjectPatch: (patched) => {
+              onScreenshotPipelinePatch?.(patched);
+            },
             onBrandAnalyzed: (kit) => {
               onBrandAnalyzed(kit);
               appendMessage({
@@ -256,13 +295,15 @@ export function ChatPanel({
           onScreenshotPipelineComplete(result.project);
         } catch (error) {
           completeStatus(lastStep);
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Screenshot pipeline failed.";
+          setLastPipelineError(message);
           appendMessage({
             id: createChatId(),
             role: "error",
-            content:
-              error instanceof Error
-                ? error.message
-                : "Screenshot pipeline failed.",
+            content: message,
             createdAt: Date.now(),
           });
           onScreenshotPipelineComplete({
@@ -476,6 +517,8 @@ export function ChatPanel({
     onBrandAnalyzed,
     onPipelineChange,
     onScreenshotPipelineComplete,
+    onScreenshotPipelinePatch,
+    pipelineFailed,
     platform,
     productUrl,
     project,
@@ -559,6 +602,23 @@ export function ChatPanel({
           {messages.map((message) => (
             <ChatMessageBubble key={message.id} message={message} />
           ))}
+          {pipelineFailed && onRetryScreenshotPipeline ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <p className="text-sm text-destructive">
+                {lastPipelineError ??
+                  "Generation stopped. Retry the pipeline without creating a new project."}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-3"
+                onClick={handleRetryPipeline}
+              >
+                <RotateCcw data-icon="inline-start" />
+                Retry pipeline
+              </Button>
+            </div>
+          ) : null}
           <div ref={bottomRef} />
         </div>
       </ScrollArea>

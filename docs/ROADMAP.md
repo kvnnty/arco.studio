@@ -11,40 +11,43 @@ Execution plan, backlog, excellence targets, and initiative history.
 
 **Purpose (July 2026):** Deliver a **cost-effective Motion.so** product — screenshot + URL → Analyze→Draft→Voice→Layout → Remotion motion design → chat refine → export. Recording is secondary. **CV / click detection is not active work.**
 
+**🚨 Active execution (19–26 July 2026):** **[WEEK-SHIP.md](./WEEK-SHIP.md)** — one-week finish push. Follow that doc before any other roadmap work.
+
 **North star:** [DECISIONS.md](./DECISIONS.md) · UX reference: [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md) (Motion.so quality via Motionflare-cost pipeline)
 
-**Related:** [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) (not built) · [STATUS.md](./STATUS.md#feature-checklist) · [AUDIO.md](./AUDIO.md)
+**Related:** [WEEK-SHIP.md](./WEEK-SHIP.md) · [ROADMAP.md](./ROADMAP.md#part-2--backlog--excellence-targets) (deferred) · [STATUS.md](./STATUS.md#feature-checklist) · [AUDIO.md](./AUDIO.md)
 
 ---
 
 ## Active delivery — Motion pipeline
 
-| Phase | Goal | Exit |
-|-------|------|------|
-| **M0** Docs lock | Decisions / Status / Roadmap match north star | Done when contributors stop optimizing CV markers |
-| **M1** Pipeline UX | Screenshot create runs real Analyze→Draft→Voice→Layout | User sees theater then preview |
-| **M2** Visual quality | Device frames, real transitions, preset motion, timed ducking, licensed BGM | Export ≠ captioned slideshow |
-| **M3** Chat refine | Scene copy + re-TTS without full rebuild | “Stronger CTA” updates last scene + VO |
-| **M4** Trust | Errors surfaced, brand always applied, screenshot-first messaging | Soft-launch golden path < 10 min |
+| Phase | Goal | Exit | Week status |
+|-------|------|------|-------------|
+| **M0** Docs lock | Decisions / Status / Roadmap match north star | Contributors stop optimizing CV | Done |
+| **M1** Pipeline UX | Screenshot create runs real Analyze→Draft→Voice→Layout | User sees theater then preview | **Close this week** — code exists; harden golden path |
+| **M2** Visual quality | Device frames, real transitions, preset motion, timed ducking, BGM | Export ≠ captioned slideshow | **Close this week** — mostly in code; QA export bar |
+| **M3** Chat refine | Scene copy + re-TTS without full rebuild | “Stronger CTA” updates last scene + VO | **Close this week** — wire/verify end-to-end |
+| **M4** Trust | Errors surfaced, brand always applied, screenshot-first messaging | Soft-launch golden path &lt; 10 min | **Close this week** — staging + messaging |
+
+Day-by-day plan and checkboxes: **[WEEK-SHIP.md](./WEEK-SHIP.md)**.
 
 ---
 
-## Partial inventory
+## Partial inventory (19 July 2026)
 
-Current gaps — shipped in code but not production-grade.
+Code is ahead of older notes — treat gaps as **harden / verify**, not greenfield.
 
-| Area | Feature | Current state | Target state |
-|------|---------|---------------|--------------|
-| **Workflow** | Screenshot Motion pipeline | Create jumps to edit; pipeline recording-only | Real Analyze→Draft→Voice→Layout for screenshots |
-| **Visual** | Screenshot Remotion | Ken Burns + fade + Inter titles | Device frames + rich transitions + preset type |
-| **AI** | Chat refine | Marker-centric | Scene headlines / VO / tone |
-| **Audio** | BGM library | **6 distinct tracks shipped** | Keep IDs stable; document licenses in [AUDIO.md](./AUDIO.md) |
-| **Audio** | VO ducking | Flat volume when any VO | Timed duck around VO segments |
-| **Brand** | Brand kit | Per-project; not always applied on screenshot create | Analyze URL → brand on every screenshot project |
-| **Export** | 9:16 / 1:1 / Studio 4K | Picker + preview | Confirm render crop matches preview (backlog) |
-| **Dashboard** | Assets / usage / notifications | Partial / mock-shaped | Backlog after Motion path |
-| **Infra** | Render queue | In-memory | Backlog unless beta blocked |
-| **AI (recording)** | Heuristic markers | Honest UI labels | Leave as-is — **no CV roadmap** |
+| Area | Feature | Current state | This week target |
+|------|---------|---------------|------------------|
+| **Workflow** | Screenshot Motion pipeline | `runScreenshotPipeline` + editor theater | M1 exit — always from create, reliable retry |
+| **Visual** | Screenshot Remotion | DeviceFrame + transitions + timed duck in code | M2 exit — export quality checklist pass |
+| **AI** | Chat refine | Scene refine + re-TTS paths exist | M3 exit — one chat turn updates copy + VO |
+| **Audio** | BGM library | **6 distinct tracks shipped** | Keep IDs stable ([AUDIO.md](./AUDIO.md)) |
+| **Brand** | Brand kit | URL analyze on pipeline; fail-soft | M4 — brand applied when URL present |
+| **Export** | 9:16 / 1:1 / Studio 4K | Picker + preview | Format QA after M1–M3 |
+| **Dashboard** | Assets / usage / notifications | Partial / mock-shaped | **Deferred** |
+| **Infra** | Render queue | In-memory | **Deferred** unless beta blocked |
+| **AI (recording)** | Heuristic markers | Honest UI labels | Leave as-is — **no CV** |
 
 ---
 
@@ -539,13 +542,14 @@ Document mix decisions in [AUDIO.md](./AUDIO.md) when implemented in Remotion.
 
 ## Priority order (backlog)
 
-What to build **after** Motion pipeline (M1–M4) ships:
+**Until 26 July:** only [WEEK-SHIP.md](./WEEK-SHIP.md).
 
-1. **Licensed BGM assets** — if not done in M2 (legal + perceived quality)
-2. **Landing MP4 demos** — real Arco screenshot exports
-3. **Format fidelity QA** — 9:16 / 1:1 / Studio 4K
-4. **Hybrid mode** — recording + screenshot B-roll (low priority)
-5. **Free tier** — funnel (if GTM requires)
+After M1–M4 ship:
+
+1. Landing MP4 demos / PH kit (if not done in week)
+2. Format fidelity QA leftovers
+3. Hybrid mode — recording + screenshot B-roll (low priority)
+4. Free tier — funnel (if GTM requires)
 
 **Not prioritized:** Vision / click detection on recordings.
 
