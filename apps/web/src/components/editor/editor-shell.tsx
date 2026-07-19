@@ -110,7 +110,7 @@ export function EditorShell({
 
   const project = session.project;
   const screenshotMode = isScreenshotProject(project);
-  const scenes = project.scenes ?? [];
+  const scenes = useMemo(() => project.scenes ?? [], [project.scenes]);
   const pipelineFailed =
     screenshotMode && project.pipelineStatus === "failed";
   const isAnalyzing =

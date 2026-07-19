@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle, FileQuestion } from "lucide-react";
-
 import { ErrorPage } from "@/components/errors/error-page";
 
 export type ErrorContext = "root" | "marketing" | "dashboard" | "auth";
