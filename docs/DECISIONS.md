@@ -1,119 +1,107 @@
-# Product & technical decisions
+# Product And Technical Decisions
 
-## Category (locked)
+These decisions define Arco's product. Change them deliberately, not as a side
+effect of implementing a feature.
 
-| Decision | Choice |
-|----------|--------|
-| What we are | **Cost-effective Motion.so** — brief + real UI assets → studio-feeling motion video |
-| What we're not | Generative video (Runway/Sora), CapCut clone, AI-invented UI, physical product ads |
-| Product center | **Arco Project** (editable), not one-shot MP4 |
-| Scope | **Web + mobile tech** product demos only |
-| Quality bar | Framed UI + paced VO + branded type + real music — not a captioned slideshow |
+## Category
 
-## Input (locked)
+| Decision | Locked choice |
+|----------|---------------|
+| Product | AI motion-design studio for product owners |
+| Promise | Agency-grade product videos through a guided, editable workflow |
+| Primary input | Brief, URL, 3-10 real screens, brand assets, and references |
+| Secondary input | Screen recording for guided product walkthroughs |
+| Primary output | Editable Arco Project plus mastered video deliverables |
+| Not the product | Prompt-only generative video, stock-footage ads, or a general video editor |
+| Quality bar | Designed, legible, brand-faithful, and launch-ready |
 
-| Decision | Choice |
-|----------|--------|
-| **Primary input** | **Screenshots (3–10) + URL and/or brief** |
-| Secondary | Screen recording (advanced tab — kept, not hero) |
-| Brand / templates | URL scrape → colors, logo, tone; style presets |
-| Not primary | Prompt-only video, stock footage, text-to-video |
+## User And App Handoff
 
-## AI (locked)
+The user gives Arco:
 
-| AI does | AI does NOT |
-|---------|-------------|
-| Analyze URL / brand | Invent product UI |
-| Draft storyboard scenes (copy, VO scripts, timing) | Click / cursor / pause CV detection (out of active roadmap) |
-| Refine copy via chat | Replace Remotion preset motion system |
-| Drive TTS (ElevenLabs) per scene | Generate motion from scratch with generative video models |
+- Objective, audience, channel, format, deadline, and call to action.
+- Product URL, real screenshots or recording, and feature priorities.
+- Logo, colors, typography, tone, approved copy, and legal constraints.
+- Examples to emulate, examples to avoid, and feedback during review.
+- Voice, music, caption, language, and delivery requirements.
 
-**Motion:** Remotion presets — device frames, Ken Burns, transitions, title treatments (`ken-burns-*`, fade/push/scale/blur/slide, etc.).
+Arco gives the user:
 
-## Workflow (locked)
+- A normalized creative brief and a list of missing inputs.
+- Creative direction: message, tone, visual system, pace, and quality notes.
+- Story beats with purpose, timing, copy, visual source, layout, and motion.
+- A live draft that can be reviewed by scene and revised without regeneration.
+- A quality report that blocks broken or generic work.
+- Final MP4 variants, poster frame, approved copy/transcript, and editable project.
 
-| Step | Owner |
-|------|--------|
-| Analyze → Draft → Voice → Layout → Ready | Pipeline UX (Motionflare-cost theater, real work per step) |
-| Preview + hand edit | Editor (scene strip, inspector) |
-| Chat refine | Scene copy / VO / tone — no full rebuild required |
-| Export | Remotion → MP4 |
+## AI
 
-## Audio (locked)
+AI may:
 
-| Decision | Choice |
-|----------|--------|
-| BGM | Curated licensed library (placeholders are launch blockers) |
-| VO / TTS | ElevenLabs on screenshot path (shipped) |
-| Custom music | Pro+ upload with rights checkbox |
-| Out of scope | AI-generated music, avatar presenters |
+- Analyze the product, audience, brand, references, and supplied screens.
+- Propose the narrative, scene roles, copy, motion intent, and camera intent.
+- Refine a selected scene or direction from explicit user feedback.
+- Produce voice scripts and drive approved voice generation.
 
-## Editor (locked)
+AI may not:
 
-| Primary (screenshot) | Secondary (recording) | Later |
-|----------------------|----------------------|--------|
-| Scene strip + inspector | Marker list + effects | Full timeline |
-| Motion + transition per scene | Zoom, ripple, callout | Freeform keyframes |
-| Canva-depth | Same | After Effects-depth |
+- Invent product UI or replace supplied screenshots with imaginary interfaces.
+- Write arbitrary production HTML, CSS, or JavaScript.
+- bypass schema validation, quality gates, or user-approved constraints.
+- Decide that a render succeeded when media, fonts, or audio failed to load.
 
-## Buyers (locked)
+The model returns structured creative intent. Arco's compiler converts that
+intent into tested motion systems.
 
-| Tier | Segment |
-|------|---------|
-| Revenue | Indie hackers, solo product owners |
-| Funnel | Hackathons, students |
-| Avoid | Agencies/teams as ICP; general B2C video |
+## Rendering
 
-## Business (locked)
+| Concern | Choice |
+|---------|--------|
+| Composition engine | HyperFrames 0.7.64, pinned |
+| Ownership | `@arco/video` owns composition and quality logic |
+| Preview | Official `@hyperframes/player` custom element |
+| Export | Strict HyperFrames preflight and high-quality MP4 render |
+| Typography | Bundled Figtree variable font, never machine-dependent |
+| Assets | Referenced local assets are staged beside each composition |
+| Failure policy | No best-effort customer exports |
+| Motion model | Curated scene systems plus bounded parameters |
 
-| Decision | Choice |
-|----------|--------|
-| Quality bar | **95%** launch-ready or users leave for CapCut / agency |
-| Billing model | **Subscription + project slots** — not credit packs |
-| What counts | Successful MP4 export only (unlimited re-exports per project) |
-| Iteration | Unlimited draft/regen/preview within subscription |
-| Plans | Intro ($9) · Pro ($29) · Studio ($59) |
-| No team tier | No seats, shared workspaces, or enterprise SSO |
+Quality outranks developer convenience. Engine changes are justified only by a
+measurable improvement in output, control, reliability, or iteration speed.
 
-See [BUSINESS.md](./BUSINESS.md) · [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md#part-2--what-to-borrow-and-avoid).
+## Visual Direction
 
-## Active roadmap vs backlog
+- Real product UI remains the visual evidence.
+- One clear communication job per beat.
+- Typography hierarchy is authored by the system, not improvised per prompt.
+- Camera movement supports attention and depth; it is never constant decoration.
+- Transitions connect ideas and preserve continuity.
+- Presets are coherent art directions, not color swaps.
+- Brand application must survive preview and export identically.
 
-| Priority | Work |
-|----------|------|
-| **Now** | Screenshot Motion pipeline UX, Remotion visual quality, chat refine + re-TTS, licensed BGM |
-| **Secondary** | Recording path polish (heuristic draft only) |
-| **Backlog / cut** | CV click detection, vision screen labels, hybrid B-roll, generative UI |
-| **Later** | Figma / AE plugins, GitHub release hook, Redis render queue if beta needs it |
+## Audio
 
-## Integrations timeline
+- Voice and music are separate tracks.
+- Music ducks under voice by default.
+- Library music must have documented commercial rights.
+- Custom uploads require the user to confirm usage rights.
+- Missing audio must fail clearly rather than silently changing the deliverable.
 
-| Tool | When |
-|------|------|
-| Remotion render | Shipped |
-| Screenshot storyboard + TTS | Shipped |
-| Motion pipeline UX (screenshot) | Active |
-| Device frames + real transitions | Active |
-| Figma / AE | Month 3+ |
-| GitHub release hook | Month 6+ |
+## Scope
 
-## Open questions
+Current:
 
-- [x] SQLite vs Postgres for projects — **Postgres + Prisma**
-- [ ] Render local vs Lambda first
-- [ ] Sample screenshot set bundled for demo
+- SaaS, web-app, developer-tool, and mobile-product launch videos.
+- Screenshot-first story films and recording-based walkthroughs.
+- 16:9, 1:1, and 9:16 delivery.
 
-## Under review
+Deferred:
 
-| Topic | Status |
-|-------|--------|
-| ElevenLabs VO | ✅ Shipped (screenshot mode) |
-| Custom music upload | ✅ Shipped (Pro+) |
-| Hybrid recording + screenshots | Backlog — not active |
-| CV / click detection | **Cut from active plan** |
+- Freeform keyframes, a full nonlinear editor, avatar presenters, generative
+  B-roll, collaboration seats, and physical-product advertising.
 
-## Related
+## Business
 
-- [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md) — UX reference; target = Motion.so result quality via Motionflare-cost pipeline
-- [ROADMAP.md](./ROADMAP.md) — active Motion pipeline delivery
-- [STATUS.md](./STATUS.md) — shipped vs gaps
+Arco sells completed outcomes, not cheap tokens. Internal AI and rendering cost
+should be optimized only after quality is protected by evaluation and golden
+renders. A lower-cost result that looks generic damages the core product.

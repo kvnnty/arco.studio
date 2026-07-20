@@ -1,7 +1,6 @@
 "use client";
 
 import type { Marker } from "@arco/project-schema";
-import type { PlayerRef } from "@remotion/player";
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { captureVideoFrame } from "@/lib/editor/capture-frame";
 import { formatMs } from "@/lib/editor/format-time";
+import type { VideoPlayerHandle } from "@/lib/editor/video-player";
 import { cn } from "@/lib/utils";
 
 type SceneThumbnailStripProps = {
@@ -16,7 +16,7 @@ type SceneThumbnailStripProps = {
   selectedId: string | null;
   recordingUrl: string;
   fps: number;
-  playerRef: React.RefObject<PlayerRef | null>;
+  playerRef: React.RefObject<VideoPlayerHandle | null>;
   onSelect: (id: string) => void;
   onAdd: () => void;
   onDelete: (id: string) => void;

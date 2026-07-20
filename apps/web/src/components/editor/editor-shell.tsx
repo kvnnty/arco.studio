@@ -4,9 +4,9 @@ import type { ArcoProject, FocusRegion, Marker, StylePreset } from "@arco/projec
 import { isScreenshotPipelinePending, isScreenshotProject } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 import { getTemplate } from "@arco/project-schema/templates";
-import type { PlayerRef } from "@remotion/player";
 import Image from "next/image";
 import { useAuth } from "@/components/providers/auth-provider";
+import type { VideoPlayerHandle } from "@/lib/editor/video-player";
 import Link from "next/link";
 import { Settings2, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
@@ -101,7 +101,7 @@ export function EditorShell({
     string | null
   >(null);
   const brandKitRef = useRef<BrandKit | null>(null);
-  const playerRef = useRef<PlayerRef>(null);
+  const playerRef = useRef<VideoPlayerHandle>(null);
   const syncProject = useSyncProjectMutation();
   const refineProject = useRefineProjectMutation();
   const regenerateMarker = useRegenerateMarkerMutation();

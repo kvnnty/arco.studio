@@ -13,6 +13,10 @@
       "types": "./dist/style-presets.d.ts",
       "default": "./dist/style-presets.js"
     },
+    "./music": {
+      "types": "./dist/music.d.ts",
+      "default": "./dist/music.js"
+    },
     "./templates": {
       "types": "./dist/templates.d.ts",
       "default": "./dist/templates.js"

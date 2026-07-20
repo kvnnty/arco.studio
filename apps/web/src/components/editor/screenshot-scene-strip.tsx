@@ -10,7 +10,6 @@ import {
   isOverDurationLimit,
 } from "@/lib/billing/duration-limits";
 import { msToFrames } from "@arco/project-schema";
-import type { PlayerRef } from "@remotion/player";
 import { GripVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -19,13 +18,14 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { formatMs } from "@/lib/editor/format-time";
 import { generateVoiceForScreenshotProject } from "@/lib/editor/generate-voice-for-project";
+import type { VideoPlayerHandle } from "@/lib/editor/video-player";
 import { cn } from "@/lib/utils";
 
 type ScreenshotSceneStripProps = {
   scenes: ScreenshotScene[];
   selectedId: string | null;
   fps: number;
-  playerRef: React.RefObject<PlayerRef | null>;
+  playerRef: React.RefObject<VideoPlayerHandle | null>;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onReorder?: (orderedIds: string[]) => void;

@@ -1,5 +1,3 @@
-import { MUSIC_FILE_BY_ID } from "@arco/project-schema/music";
-
 export const MUSIC_TRACKS = [
   {
     id: "warm-launch",
@@ -8,7 +6,7 @@ export const MUSIC_TRACKS = [
     mood: "WARM",
     durationSec: 76,
     volume: 0.25,
-    previewUrl: "/music/warm-launch.mp3",
+    file: "music/warm-launch.mp3",
   },
   {
     id: "bright-pulse",
@@ -17,7 +15,7 @@ export const MUSIC_TRACKS = [
     mood: "BRIGHT",
     durationSec: 65,
     volume: 0.25,
-    previewUrl: "/music/bright-pulse.mp3",
+    file: "music/bright-pulse.mp3",
   },
   {
     id: "launch-drive",
@@ -26,7 +24,7 @@ export const MUSIC_TRACKS = [
     mood: "DRIVING",
     durationSec: 71,
     volume: 0.25,
-    previewUrl: "/music/launch-drive.mp3",
+    file: "music/launch-drive.mp3",
   },
   {
     id: "calm-focus",
@@ -35,7 +33,7 @@ export const MUSIC_TRACKS = [
     mood: "STEADY",
     durationSec: 117,
     volume: 0.25,
-    previewUrl: "/music/calm-focus.mp3",
+    file: "music/calm-focus.mp3",
   },
   {
     id: "mountain-rise",
@@ -44,7 +42,7 @@ export const MUSIC_TRACKS = [
     mood: "CINEMATIC",
     durationSec: 86,
     volume: 0.25,
-    previewUrl: "/music/mountain-rise.mp3",
+    file: "music/mountain-rise.mp3",
   },
   {
     id: "up-bit",
@@ -53,7 +51,7 @@ export const MUSIC_TRACKS = [
     mood: "UPBEAT",
     durationSec: 67,
     volume: 0.25,
-    previewUrl: "/music/up-bit.mp3",
+    file: "music/up-bit.mp3",
   },
 ] as const;
 
@@ -61,9 +59,11 @@ export type MusicTrackId = (typeof MUSIC_TRACKS)[number]["id"];
 
 export const DEFAULT_MUSIC_TRACK_ID: MusicTrackId = "warm-launch";
 
+export const MUSIC_FILE_BY_ID: Record<MusicTrackId, string> = Object.fromEntries(
+  MUSIC_TRACKS.map((track) => [track.id, track.file]),
+) as Record<MusicTrackId, string>;
+
 export function getMusicTrack(id: string | null | undefined) {
   if (!id) return null;
   return MUSIC_TRACKS.find((track) => track.id === id) ?? null;
 }
-
-export { MUSIC_FILE_BY_ID };

@@ -4,7 +4,7 @@ Strategy, BGM library, voice (ElevenLabs), and mix standards.
 
 **See also:** [ROADMAP.md](./ROADMAP.md) · [DECISIONS.md](./DECISIONS.md)
 
-> **July 2026:** Curated library replaced with six distinct Motionflare-sourced beds. Files live in `apps/web/public/music/` and `packages/remotion/public/music/`.
+> **July 2026:** Curated library replaced with six distinct Motionflare-sourced beds. Canonical files live in `apps/web/public/music/` and are consumed by both preview and export.
 
 ---
 
@@ -42,7 +42,7 @@ Draft scenes → motion template → render → mix music (+ VO with timed duck)
 | `mountain-rise` | Mountain Rise | CINEMATIC | ~86s | Bigger cinematic finishes |
 | `up-bit` | Up Bit | UPBEAT | ~67s | Playful / light launches |
 
-**Source files:** originally hosted at `storage.motionflare.ai/assets/bgm/*.mp3` — vendored locally for preview + Remotion render parity.
+**Source files:** originally hosted at `storage.motionflare.ai/assets/bgm/*.mp3` - vendored locally for deterministic preview and HyperFrames export parity.
 
 ### Style preset → track
 

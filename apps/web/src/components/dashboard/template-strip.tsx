@@ -23,7 +23,7 @@ export function TemplateStrip({
         <div>
           <p className="text-sm font-medium">Start from a template</p>
           <p className="text-xs text-muted-foreground">
-            Pick a motion style — Arco adapts it to your recording
+            Pick a creative direction - Arco adapts it to your product screens
           </p>
         </div>
         <Button variant="ghost" size="sm" render={<Link href="/dashboard/templates" />}>

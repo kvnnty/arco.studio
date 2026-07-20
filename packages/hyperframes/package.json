@@ -1,0 +1,27 @@
+{
+  "name": "@arco/video",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "tsx --test src/*.test.ts",
+    "preview:sample": "tsx src/write-sample.ts && hyperframes preview sample",
+    "render:sample": "tsx src/render-file.ts --props=src/sample/golden-props.json --output=out/sample.mp4",
+    "render:file": "tsx src/render-file.ts"
+  },
+  "dependencies": {
+    "@arco/project-schema": "workspace:*",
+    "hyperframes": "0.7.64"
+  },
+  "devDependencies": {
+    "@arco/typescript-config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.2"
+  }
+}

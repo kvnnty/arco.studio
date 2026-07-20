@@ -20,7 +20,7 @@ import { normalizeExportQuality } from '../billing/plans';
 @Injectable()
 export class RenderProcessorService implements OnModuleInit {
   private readonly logger = new Logger(RenderProcessorService.name);
-  private readonly remotionRoot: string;
+  private readonly videoRoot: string;
   private readonly monorepoRoot: string;
   private readonly queue: string[] = [];
   private running = false;
@@ -31,7 +31,7 @@ export class RenderProcessorService implements OnModuleInit {
     private readonly billing: BillingService,
   ) {
     this.monorepoRoot = path.resolve(process.cwd(), '../..');
-    this.remotionRoot = path.join(this.monorepoRoot, 'packages/remotion');
+    this.videoRoot = path.join(this.monorepoRoot, 'packages/hyperframes');
   }
 
   onModuleInit() {
@@ -100,7 +100,7 @@ export class RenderProcessorService implements OnModuleInit {
       );
       await writeFile(propsPath, JSON.stringify({ project }), 'utf8');
 
-      await this.runRemotionRender(propsPath, outputPath);
+      await this.runHyperframesRender(propsPath, outputPath);
 
       await this.prisma.renderJob.update({
         where: { id: jobId },
@@ -242,12 +242,7 @@ export class RenderProcessorService implements OnModuleInit {
     return src;
   }
 
-  /** @deprecated use resolveAssetUrl */
-  private resolveRecordingUrl(src: string): string {
-    return this.resolveAssetUrl(src);
-  }
-
-  private runRemotionRender(
+  private runHyperframesRender(
     propsPath: string,
     outputPath: string,
   ): Promise<void> {
@@ -260,10 +255,11 @@ export class RenderProcessorService implements OnModuleInit {
         'src/render-file.ts',
         `--props=${propsPath}`,
         `--output=${outputPath}`,
+        `--public=${path.join(this.monorepoRoot, 'apps/web/public')}`,
       ];
 
       const child = spawn(command, args, {
-        cwd: this.remotionRoot,
+        cwd: this.videoRoot,
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: isWindows,
       });
@@ -287,7 +283,7 @@ export class RenderProcessorService implements OnModuleInit {
         reject(
           new Error(
             stderr.trim() ||
-              `Remotion render exited with code ${code ?? 'unknown'}`,
+              `HyperFrames render exited with code ${code ?? 'unknown'}`,
           ),
         );
       });

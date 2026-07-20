@@ -2,12 +2,10 @@
   "name": "arco",
   "private": true,
   "packageManager": "pnpm@10.6.5",
-  "pnpm": {
-    "onlyBuiltDependencies": ["@nestjs/core", "sharp", "unrs-resolver"]
-  },
   "scripts": {
     "dev": "turbo dev",
-    "studio": "pnpm --filter @arco/remotion studio",
+    "video:preview": "pnpm --filter @arco/video preview:sample",
+    "video:render": "pnpm --filter @arco/video render:sample",
     "build": "turbo build",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""

@@ -50,7 +50,7 @@ export const changelog: ChangelogEntry[] = [
     date: "April 22, 2026",
     features: [
       "Initial editor with upload, analyze, and export",
-      "1080p MP4 rendering via Remotion",
+      "Deterministic 1080p MP4 rendering via HyperFrames",
       "Email/password signup and login",
     ],
   },
