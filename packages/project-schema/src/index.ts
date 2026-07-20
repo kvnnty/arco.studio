@@ -50,6 +50,35 @@ export const screenshotMotionSchema = z.enum([
   "static",
 ]);
 
+export const beatRoleSchema = z.enum([
+  "hook",
+  "problem",
+  "proof",
+  "feature",
+  "benefit",
+  "cta",
+]);
+
+export const sceneLayoutSchema = z.enum([
+  "kinetic-hook",
+  "product-focus",
+  "split-left",
+  "split-right",
+  "proof-stage",
+  "cta-lockup",
+]);
+
+export const cameraMoveSchema = z.enum([
+  "dolly-in",
+  "dolly-out",
+  "truck-left",
+  "truck-right",
+  "orbit",
+  "locked",
+]);
+
+export const sceneDepthSchema = z.enum(["flat", "layered", "dimensional"]);
+
 export const screenshotSceneSchema = z.object({
   id: z.string().min(1),
   imageSrc: z.string().min(1),
@@ -61,6 +90,11 @@ export const screenshotSceneSchema = z.object({
   voDurationMs: z.number().int().positive().optional(),
   motion: screenshotMotionSchema.default("ken-burns-in"),
   transition: z.object({ type: transitionTypeSchema }).optional(),
+  beatRole: beatRoleSchema.optional(),
+  motionIntent: z.string().max(240).optional(),
+  layout: sceneLayoutSchema.optional(),
+  camera: cameraMoveSchema.optional(),
+  depth: sceneDepthSchema.optional(),
 });
 
 export const focusRegionSchema = z.object({
@@ -135,6 +169,15 @@ export const arcoProjectSchema = z.object({
       productUrl: z.string().max(500).optional(),
     })
     .optional(),
+  creativeDirection: z
+    .object({
+      audience: z.string().max(240).optional(),
+      channel: z.string().max(120).optional(),
+      tone: z.string().max(240).optional(),
+      coreMessage: z.string().max(500).optional(),
+      qualityNotes: z.array(z.string().max(240)).max(12).optional(),
+    })
+    .optional(),
   template: z
     .object({
       id: z.string().min(1),
@@ -157,6 +200,10 @@ export type ExportFormat = z.infer<typeof exportFormatSchema>;
 export type ExportQuality = z.infer<typeof exportQualitySchema>;
 export type ProjectMode = z.infer<typeof projectModeSchema>;
 export type ScreenshotMotion = z.infer<typeof screenshotMotionSchema>;
+export type BeatRole = z.infer<typeof beatRoleSchema>;
+export type SceneLayout = z.infer<typeof sceneLayoutSchema>;
+export type CameraMove = z.infer<typeof cameraMoveSchema>;
+export type SceneDepth = z.infer<typeof sceneDepthSchema>;
 export type ScreenshotScene = z.infer<typeof screenshotSceneSchema>;
 export type FocusRegion = z.infer<typeof focusRegionSchema>;
 export type MarkerEffect = z.infer<typeof markerEffectSchema>;

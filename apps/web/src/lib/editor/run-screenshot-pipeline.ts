@@ -166,6 +166,7 @@ export async function runScreenshotPipeline(
     template: project.template,
     exportFormat: project.exportFormat,
     audio: project.audio,
+    creativeDirection: storyboard.creativeDirection,
     stylePreset: suggestedPreset,
     pipelineStatus: "pending",
   };

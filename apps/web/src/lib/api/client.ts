@@ -323,6 +323,7 @@ export async function uploadMusic(
 export type GenerateStoryboardResponse = {
   scenes: import("@arco/project-schema").ScreenshotScene[];
   stylePreset: import("@arco/project-schema").StylePreset;
+  creativeDirection?: import("@arco/project-schema").ArcoProject["creativeDirection"];
   source: "llm" | "heuristic";
 };
 

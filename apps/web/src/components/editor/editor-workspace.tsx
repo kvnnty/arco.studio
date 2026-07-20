@@ -2,7 +2,6 @@
 
 import type { ArcoProject, FocusRegion, Marker } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
-import type { PlayerRef } from "@remotion/player";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -18,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import type { VideoPlayerHandle } from "@/lib/editor/video-player";
 import {
   clearEditorSession,
   createDefaultMarker,
@@ -44,7 +44,7 @@ export function EditorWorkspace({
   );
   const [cameraMode, setCameraMode] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-  const playerRef = useRef<PlayerRef>(null);
+  const playerRef = useRef<VideoPlayerHandle>(null);
   const syncProject = useSyncProjectMutation();
 
   const project = session.project;

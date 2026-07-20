@@ -262,11 +262,11 @@ export function DashboardCreateHero({
     <div className="space-y-4">
       <div className="space-y-1">
         <h2 className="text-lg font-semibold tracking-tight">
-          What would you like to create?
+          Brief your AI motion designer
         </h2>
         <p className="text-sm text-muted-foreground">
-          Paste a product URL or describe the video — then attach screenshots
-          or a recording.
+          Paste a product URL, describe the launch, then attach screenshots.
+          Recording is optional for deeper demos.
         </p>
       </div>
 
@@ -295,7 +295,7 @@ export function DashboardCreateHero({
             }
           }}
           disabled={submitting}
-          placeholder="https://yourproduct.com — or describe a Product Hunt launch, onboarding demo, feature announcement…"
+          placeholder="https://yourproduct.com - 25s Product Hunt launch for founders. Premium, clear, CTA: Join the waitlist."
           rows={3}
           className="min-h-[96px] rounded-[28px] border-0 bg-transparent px-4 pb-2 pt-4 text-base shadow-none focus-visible:border-transparent focus-visible:ring-0 md:text-sm"
         />
@@ -403,7 +403,7 @@ export function DashboardCreateHero({
               }
             />
             <DropdownMenuContent align="start" className="min-w-56">
-              <DropdownMenuLabel>Attach</DropdownMenuLabel>
+              <DropdownMenuLabel>Product truth</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
@@ -442,7 +442,7 @@ export function DashboardCreateHero({
               }
             />
             <DropdownMenuContent align="start" className="min-w-52">
-              <DropdownMenuLabel>Motion template</DropdownMenuLabel>
+              <DropdownMenuLabel>Creative direction</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuRadioGroup
                 value={selectedTemplateId ?? "blank"}

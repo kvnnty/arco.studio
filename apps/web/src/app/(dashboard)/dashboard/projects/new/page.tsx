@@ -1,10 +1,10 @@
-import { CreateProjectForm } from "@/components/dashboard/create-project-form";
+import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "New project — Arco",
-  description: "Create a launch video from your screen recording.",
+  title: "New project - Arco",
+  description: "Brief your AI motion designer from a URL and product screens.",
 };
 
 export default function NewProjectPage() {
-  return <CreateProjectForm />;
+  redirect("/dashboard");
 }

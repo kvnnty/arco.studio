@@ -1,10 +1,10 @@
-﻿# Motionflare.ai — reference & combined Arco MVP
+# Motionflare.ai — reference & combined Arco MVP
 
 **Source:** [motionflare.ai/features](https://motionflare.ai/features) (June 2026).
 
 **Formerly:** [LaunchVideo.app](https://launchvideo.app) — same product, rebranded to Motionflare.
 
-**Purpose:** Document Motionflare’s full flow and user journey as the **cost model** for Arco. **Target result quality = Motion.so** (studio motion design). **Cost path = Motionflare-style pipeline** (URL/screenshots → storyboard → TTS → Remotion presets — not generative video). Recording is secondary; real UI screenshots are the visual source of truth. See [DECISIONS.md](./DECISIONS.md).
+**Purpose:** Document Motionflare's full flow and user journey as the **cost model** for Arco. **Target result quality = Motion.so** (studio motion design). **Cost path = Motionflare-style pipeline** (URL/screenshots -> storyboard -> TTS -> Arco's deterministic motion compiler). Recording is secondary; real UI screenshots are the visual source of truth. See [DECISIONS.md](./DECISIONS.md).
 
 ---
 
@@ -261,7 +261,7 @@ flowchart TD
     G1 --> H[Draft scenes as Arco markers]
     G2 --> H
     H --> I[Apply motion presets — not AI video gen]
-    I --> J[Preview in Remotion Player]
+    I --> J[Preview in HyperFrames Player]
   end
 
   subgraph edit [Edit — Arco + Motionflare]
@@ -326,7 +326,7 @@ Motionflare drafts 11 scenes with visual prompt + VO. Arco drafts **markers** on
 
 | Feature | Arco MVP |
 |---------|----------|
-| Inline Remotion player | ✅ Already built |
+| Inline HyperFrames player | Already built |
 | Scene strip / timeline | Add thumbnail strip like Motionflare |
 | VO track | Phase 2 — Arco MVP uses text callouts only |
 | BGM track | Wire `audio.musicId` |
@@ -384,7 +384,7 @@ Use this as the **product** checklist — supersedes siloed Arco-only flow.
 
 - [ ] Real recording as video source (never AI fake UI)
 - [ ] Presets: zoom, ripple, title, spotlight, transitions
-- [ ] Remotion live preview
+- [x] HyperFrames live preview
 - [ ] Scene timeline strip
 - [ ] Scene inspector for manual tweaks
 
@@ -537,8 +537,8 @@ Sources: [Motionflare Privacy](https://motionflare.ai/privacy) · [Motionflare T
 | **Voice** | Vertex AI TTS | None → **ElevenLabs** (planned) |
 | **URL / brand** | Firecrawl (scrape + screenshots) | Cheerio + fetch (OG, logo, colors) |
 | **Visual source** | AI / scraped scenes | **User screen recording** (+ screenshots planned) |
-| **Motion** | AI per-scene animation | **Remotion presets** + templates |
-| **Render** | AWS Remotion Lambda | Local Remotion + FFmpeg in API |
+| **Motion** | AI per-scene animation | Structured direction + Arco scene blocks |
+| **Render** | Hosted render workers | HyperFrames + FFmpeg in API |
 | **Storage** | Cloudflare R2 | S3 / MinIO |
 | **Auth** | OAuth + email | OAuth + email + magic link |
 | **Billing** | Stripe + **credit ledger** | Stripe + **exports/month** |
@@ -551,7 +551,7 @@ Sources: [Motionflare Privacy](https://motionflare.ai/privacy) · [Motionflare T
 | Vendor | Add when |
 |--------|----------|
 | Firecrawl | URL-only create is a priority; optional — user screenshot upload first |
-| Remotion Lambda | Export queue latency or scale pain |
+| HyperFrames workers | Export queue latency or scale pain |
 | ElevenLabs | Phase 3 voice (quality wedge vs Vertex TTS) |
 
 ---
@@ -573,7 +573,7 @@ Sources: [Motionflare Privacy](https://motionflare.ai/privacy) · [Motionflare T
 | Create project, upload recording/screenshots | |
 | AI analyze, draft, storyboard, chat | |
 | Regenerate copy / scenes | |
-| In-browser preview (`@remotion/player`) | |
+| In-browser preview (`@hyperframes/player`) | |
 | Failed export renders | |
 | | **Successful completed MP4 export only** |
 

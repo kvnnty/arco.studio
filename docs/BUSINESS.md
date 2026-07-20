@@ -68,7 +68,7 @@ Category: **product marketing production** — motion-design productivity for we
 | Marketing video SaaS | InVideo, Pictory | Generic; VO feel |
 | Motion precision | AE, Rive | Manual |
 | Easy templates | Canva | Not agency taste |
-| Code render | Remotion | Arco builds on top |
+| Deterministic video render | HyperFrames | Arco owns the creative compiler and quality system |
 
 **Moat to build:** Template taste · SaaS story structure · real UI pipeline · retention loops · scene JSON escape hatch
 
@@ -92,7 +92,7 @@ Ship demo → landing + Polar → 20 personalized DMs with **their** product vid
 
 ### Phase 2 — PMF (months 1–6)
 
-**Goal:** $2K → $5K MRR — Twitter before/after, Product Hunt when self-serve works, Indie Hackers, SEO, Remotion community
+**Goal:** $2K -> $5K MRR - before/after launches, Product Hunt when self-serve works, Indie Hackers, SEO, and product-owner communities
 
 ### Activation / retention
 

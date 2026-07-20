@@ -2,7 +2,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@arco/remotion", "@arco/project-schema"],
+  transpilePackages: ["@arco/video", "@arco/project-schema"],
   webpack: (config) => {
     // The workspace packages use NodeNext-style ".js" extensions on relative
     // imports that actually resolve to ".ts" sources. Turbopack (dev) maps these

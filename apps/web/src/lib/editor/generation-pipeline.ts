@@ -15,33 +15,33 @@ export type PipelineStep = {
 export const GENERATION_PIPELINE_STEPS: PipelineStep[] = [
   {
     id: "analyze",
-    label: "Analyze",
-    description: "Fetch page, read content, extract brand",
+    label: "Analyze brief",
+    description: "Read product URL, screenshots, brand, and goal",
   },
   {
     id: "draft",
-    label: "Draft",
-    description: "Scene list with VO script and timing",
+    label: "Write beat sheet",
+    description: "Plan scenes, hierarchy, timing, and CTA",
   },
   {
     id: "voice",
-    label: "Voice",
-    description: "Record narration for each scene",
+    label: "Record voice",
+    description: "Generate narration for the approved beats",
   },
   {
     id: "layout",
-    label: "Layout",
-    description: "Typography, colors, composition",
+    label: "Design frames",
+    description: "Apply typography, colors, and composition",
   },
   {
     id: "scenes",
-    label: "Scenes",
-    description: "Animate motion and titles per scene",
+    label: "Animate scenes",
+    description: "Add easing, transitions, callouts, and titles",
   },
   {
     id: "stitch",
-    label: "Stitch",
-    description: "Combine scenes into final video",
+    label: "Prepare delivery",
+    description: "Combine scenes into an export-ready video",
   },
 ];
 

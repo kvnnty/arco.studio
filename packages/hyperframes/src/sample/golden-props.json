@@ -1,0 +1,81 @@
+{
+  "project": {
+    "version": "1",
+    "meta": {
+      "title": "Arco Premium Product Story",
+      "fps": 30,
+      "width": 1280,
+      "height": 720
+    },
+    "recording": {
+      "src": "placeholder",
+      "durationMs": 9000
+    },
+    "markers": [],
+    "brand": {
+      "primary": "#e5ff00",
+      "background": "#0b0c0d",
+      "logoSrc": "arcologo-white.svg"
+    },
+    "audio": {
+      "musicId": "calm-focus",
+      "volume": 0.22,
+      "voiceEnabled": false
+    },
+    "brief": {
+      "intent": "Launch Arco to product owners who need a premium product video.",
+      "productUrl": "https://arco.studio"
+    },
+    "creativeDirection": {
+      "audience": "Product owners and SaaS founders",
+      "channel": "Website launch",
+      "tone": "Precise, cinematic, assured",
+      "coreMessage": "A polished product story without a production team.",
+      "qualityNotes": [
+        "Keep the real UI legible",
+        "Use one visual idea per beat",
+        "End on a restrained CTA"
+      ]
+    },
+    "stylePreset": "linear",
+    "exportFormat": "16:9",
+    "projectMode": "screenshots",
+    "pipelineStatus": "ready",
+    "scenes": [
+      {
+        "id": "hook",
+        "imageSrc": "marketing/blog-demos.jpg",
+        "durationMs": 3000,
+        "headline": "Your product, in motion",
+        "subheadline": "A launch film shaped around the real interface.",
+        "motion": "ken-burns-in",
+        "transition": { "type": "scale" },
+        "beatRole": "hook",
+        "camera": "orbit",
+        "depth": "dimensional"
+      },
+      {
+        "id": "feature",
+        "imageSrc": "marketing/hero-product.jpg",
+        "durationMs": 3000,
+        "headline": "Every beat has a job",
+        "subheadline": "Story, hierarchy, camera, type, and sound move together.",
+        "motion": "pan-left",
+        "transition": { "type": "push" },
+        "beatRole": "feature",
+        "layout": "split-left"
+      },
+      {
+        "id": "cta",
+        "imageSrc": "marketing/blog-engineering.jpg",
+        "durationMs": 3000,
+        "headline": "Make the launch feel inevitable",
+        "subheadline": "Brief Arco with your URL and product screens.",
+        "motion": "ken-burns-out",
+        "transition": { "type": "blur" },
+        "beatRole": "cta",
+        "camera": "dolly-out"
+      }
+    ]
+  }
+}

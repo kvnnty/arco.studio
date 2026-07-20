@@ -1,32 +1,37 @@
-# Arco documentation
+# Arco Documentation
 
-Product demo & motion design workflow — upload recordings or screenshots, enhance with motion presets, edit, export.
+Arco automates the working relationship between a product owner and a senior
+motion designer. The documentation is organized around that outcome.
 
-## Docs
+| Document | Purpose |
+|----------|---------|
+| [DECISIONS.md](./DECISIONS.md) | Locked product, quality, AI, and rendering decisions |
+| [ROADMAP.md](./ROADMAP.md) | Delivery phases for the automated motion-design workflow |
+| [STATUS.md](./STATUS.md) | Current implementation, verified behavior, and open risks |
+| [TECHNICAL.md](./TECHNICAL.md) | Architecture, project contract, compiler, preview, and export |
+| [PRODUCT.md](./PRODUCT.md) | Positioning, audience, workflow, and product experience |
+| [BUSINESS.md](./BUSINESS.md) | Pricing, market, competition, and go-to-market |
+| [AUDIO.md](./AUDIO.md) | Music, voice, licensing, and mix standards |
+| [WEEK-SHIP.md](./WEEK-SHIP.md) | Short-horizon execution checklist |
+| [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md) | Competitor workflow reference |
+| [`apps/web/DESIGN.md`](../apps/web/DESIGN.md) | Web product design system |
 
-| Doc | Contents |
-|-----|----------|
-| **[WEEK-SHIP.md](./WEEK-SHIP.md)** | **Active (19–26 July)** — one-week finish: M1–M4 + soft launch |
-| [PRODUCT.md](./PRODUCT.md) | Vision, positioning, workflow, ICP, landing copy |
-| [BUSINESS.md](./BUSINESS.md) | Pricing, market, competition, GTM |
-| [STATUS.md](./STATUS.md) | **What's shipped** — snapshot + feature matrix + eng checklist |
-| [ROADMAP.md](./ROADMAP.md) | Polish phases, backlog, screenshot/voice initiative |
-| [TECHNICAL.md](./TECHNICAL.md) | Auth, deploy, schema, output spec, prompts, integrations |
-| [AUDIO.md](./AUDIO.md) | BGM licensing, voice, mix standards |
-| [DECISIONS.md](./DECISIONS.md) | Locked product & technical choices |
-| [REFERENCE-MOTIONFLARE.md](./REFERENCE-MOTIONFLARE.md) | Motionflare competitor reference + what to borrow |
-| [`apps/web/DESIGN.md`](../apps/web/DESIGN.md) | Visual design system |
+## Product Test
 
-Agent rule: `.cursor/rules/week-ship.mdc` (always apply) → follow WEEK-SHIP.md.
+Every feature should answer one of these questions:
 
-## Quick start
+1. Does it collect material a strong motion designer would need?
+2. Does it make a deliberate creative decision from that material?
+3. Does it let the user review and revise that decision without starting over?
+4. Does it improve the final video's craft, fidelity, or delivery reliability?
 
-```bash
-pnpm install
-pnpm --filter @arco/api exec prisma db push
-pnpm --filter @arco/api dev
-pnpm --filter @arco/web dev
-pnpm --filter @arco/remotion dev   # Remotion Studio
+Work that answers none of these questions is outside the current product goal.
+
+## Code Map
+
+```text
+apps/web                 client workflow and live preview
+apps/api                 durable projects, AI, voice, uploads, and renders
+packages/project-schema  shared creative and production contract
+packages/hyperframes     deterministic motion compiler and renderer
 ```
-
-Code: `packages/project-schema` · `packages/remotion` · `apps/web` · `apps/api`

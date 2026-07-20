@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type {
+  ArcoProject,
   ClickEffect,
   Marker,
   ScreenshotScene,
@@ -647,6 +648,7 @@ export class AiService {
   async generateStoryboard(dto: GenerateStoryboardDto): Promise<{
     scenes: ScreenshotScene[];
     stylePreset: StylePreset;
+    creativeDirection?: ArcoProject['creativeDirection'];
     source: 'llm' | 'heuristic';
   }> {
     const targetDurationMs = dto.targetDurationMs ?? 45000;
@@ -676,6 +678,7 @@ export class AiService {
   ): {
     scenes: ScreenshotScene[];
     stylePreset: StylePreset;
+    creativeDirection?: ArcoProject['creativeDirection'];
     source: 'heuristic';
   } {
     if (dto.templateId) {
@@ -727,12 +730,35 @@ export class AiService {
         }),
         motion: index % 2 === 0 ? 'ken-burns-in' : 'ken-burns-out',
         transition: { type: 'fade' as const },
+        beatRole:
+          index === 0
+            ? ('hook' as const)
+            : index === dto.imageUrls.length - 1
+              ? ('cta' as const)
+              : index % 2 === 0
+                ? ('benefit' as const)
+                : ('feature' as const),
+        motionIntent:
+          index === 0
+            ? 'Establish the product promise before revealing detail.'
+            : 'Keep the product UI legible while advancing one message.',
       };
     });
 
     return {
       scenes,
       stylePreset: 'startup',
+      creativeDirection: {
+        audience: 'Product evaluators',
+        channel: 'Website and social launch',
+        tone: 'Clear, assured, product-led',
+        coreMessage: intent ?? dto.title,
+        qualityNotes: [
+          'Keep the real interface legible.',
+          'Use one visual idea per beat.',
+          'End on a concrete CTA.',
+        ],
+      },
       source: 'heuristic',
     };
   }
@@ -740,7 +766,11 @@ export class AiService {
   private async generateStoryboardWithLlm(
     dto: GenerateStoryboardDto,
     targetDurationMs: number,
-  ): Promise<{ scenes: ScreenshotScene[]; stylePreset: StylePreset }> {
+  ): Promise<{
+    scenes: ScreenshotScene[];
+    stylePreset: StylePreset;
+    creativeDirection?: ArcoProject['creativeDirection'];
+  }> {
     const intent = dto.intent ?? dto.brief?.intent;
     const productUrl = dto.productUrl ?? dto.brief?.productUrl;
     const template = dto.templateId ? getTemplate(dto.templateId) : undefined;
@@ -749,10 +779,18 @@ export class AiService {
       `Product title: ${dto.title}`,
       intent ? `Video intent: ${intent}` : null,
       productUrl ? `Product URL: ${productUrl}` : null,
-      template ? `Template: ${template.name} — ${template.copyTone}` : null,
+      template ? `Template: ${template.name} - ${template.copyTone}` : null,
       `Screenshot count: ${dto.imageUrls.length}`,
       `Target total durationMs: ${targetDurationMs}`,
-      `voScript: spoken narration (1-2 sentences). Can differ from on-screen headline.`,
+      'Act like a motion designer receiving a client kickoff pack.',
+      'Infer audience, channel, tone, core message, and quality notes before writing scenes.',
+      'Each screenshot is product truth. Do not invent UI states, features, numbers, customers, or claims that are not implied by the brief/title/URL.',
+      'Every scene must have one clear beatRole and one visual job. Avoid two competing ideas in the same scene.',
+      'Headlines: 3-7 words, specific, no generic hype. Avoid: seamless, revolutionary, game-changing, unlock, supercharge, beautiful, amazing.',
+      'Subheadlines: optional, concrete, <= 12 words.',
+      'voScript: speakable narration, 1 sentence unless a CTA needs 2. It can differ from on-screen copy.',
+      'motionIntent: explain what the viewer should notice first and why.',
+      'Choose motion and transition intentionally; avoid fade for every scene.',
       `Generate exactly ${dto.imageUrls.length} scenes, one per screenshot in order.`,
     ]
       .filter(Boolean)
@@ -765,11 +803,11 @@ export class AiService {
         {
           role: 'system',
           content:
-            'You write headlines for SaaS launch videos from app screenshots. Confident, minimal copy.',
+            'You are a senior motion designer for SaaS and product-owner websites. Build premium product videos from real screenshots. Your job is story, hierarchy, timing, motion restraint, and clean delivery. No AI slop, no vague hype, no hallucinated product claims.',
         },
         { role: 'user', content: userPrompt },
       ],
-      { temperature: 0.4 },
+      { temperature: 0.3 },
     );
 
     const motions: ScreenshotScene['motion'][] = [
@@ -797,14 +835,27 @@ export class AiService {
           [llmScene?.headline, llmScene?.subheadline]
             .filter(Boolean)
             .join('. '),
-        motion: motions[index % motions.length],
-        transition: { type: 'fade' },
+        motion: llmScene?.motion ?? motions[index % motions.length],
+        transition: {
+          type:
+            llmScene?.transition ??
+            (index === 0
+              ? 'fade'
+              : index % 3 === 0
+                ? 'push'
+                : index % 2 === 0
+                  ? 'scale'
+                  : 'slide'),
+        },
+        beatRole: llmScene?.beatRole,
+        motionIntent: llmScene?.motionIntent,
       };
     });
 
     return {
       scenes,
       stylePreset: normalizeStylePreset(parsed.stylePreset),
+      creativeDirection: parsed.creativeDirection,
     };
   }
 }
