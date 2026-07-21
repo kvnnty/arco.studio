@@ -8,10 +8,10 @@ effect of implementing a feature.
 | Decision | Locked choice |
 |----------|---------------|
 | Product | AI motion-design studio for product owners |
-| Promise | Agency-grade product videos through a guided, editable workflow |
+| Promise | Launch-ready motion asset packages through a guided, editable workflow |
 | Primary input | Brief, URL, 3-10 real screens, brand assets, and references |
 | Secondary input | Screen recording for guided product walkthroughs |
-| Primary output | Editable Arco Project plus mastered video deliverables |
+| Primary output | Editable Arco Project plus mastered video deliverables and handoff assets |
 | Not the product | Prompt-only generative video, stock-footage ads, or a general video editor |
 | Quality bar | Designed, legible, brand-faithful, and launch-ready |
 
@@ -32,7 +32,8 @@ Arco gives the user:
 - Story beats with purpose, timing, copy, visual source, layout, and motion.
 - A live draft that can be reviewed by scene and revised without regeneration.
 - A quality report that blocks broken or generic work.
-- Final MP4 variants, poster frame, approved copy/transcript, and editable project.
+- Final MP4 variants, poster frame, subtitles, transcript, copy sheet, usage
+  notes, source manifest, and editable project.
 
 ## AI
 
@@ -46,6 +47,8 @@ AI may:
 AI may not:
 
 - Invent product UI or replace supplied screenshots with imaginary interfaces.
+- Invent customers, metrics, integrations, certifications, screenshots, or
+  product claims that are not supported by the supplied proof pack.
 - Write arbitrary production HTML, CSS, or JavaScript.
 - bypass schema validation, quality gates, or user-approved constraints.
 - Decide that a render succeeded when media, fonts, or audio failed to load.
@@ -73,11 +76,22 @@ measurable improvement in output, control, reliability, or iteration speed.
 
 - Real product UI remains the visual evidence.
 - One clear communication job per beat.
+- Every claim must be supported by supplied product material or approved copy.
 - Typography hierarchy is authored by the system, not improvised per prompt.
 - Camera movement supports attention and depth; it is never constant decoration.
 - Transitions connect ideas and preserve continuity.
 - Presets are coherent art directions, not color swaps.
 - Brand application must survive preview and export identically.
+
+## Delivery Quality
+
+- Customer exports must be named and organized by use case, such as hero, feed,
+  story, square, poster, transcript, and source manifest.
+- Each approved project should be rerenderable from deterministic source data.
+- Handoff assets must include usage-rights notes for music, voice, fonts, logos,
+  screenshots, and custom uploads.
+- A failed, incomplete, or rights-unclear asset package is not a professional
+  deliverable.
 
 ## Audio
 
@@ -102,6 +116,8 @@ Deferred:
 
 ## Business
 
-Arco sells completed outcomes, not cheap tokens. Internal AI and rendering cost
+Arco sells completed outcomes, not cheap tokens. Pricing should map to
+production value: approved projects, export formats, campaign packs, brand
+systems, team review, and priority rendering. Internal AI and rendering cost
 should be optimized only after quality is protected by evaluation and golden
 renders. A lower-cost result that looks generic damages the core product.
