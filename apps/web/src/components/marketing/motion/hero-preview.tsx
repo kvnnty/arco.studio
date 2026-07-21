@@ -1,59 +1,102 @@
 "use client";
 
-import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
 
 import { MotionReveal } from "@/components/marketing/motion/motion-reveal";
+import {
+  MotionStagger,
+  MotionStaggerItem,
+} from "@/components/marketing/motion/motion-stagger";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { transitionMedium } from "@/lib/motion/presets";
+import { cn } from "@/lib/utils";
 
-type HeroPreviewProps = {
-  title?: string;
-  description?: string;
-};
+const examples = [
+  {
+    name: "Ornadyne",
+    type: "Product launch",
+    src: "https://storage.googleapis.com/motion-studio-assets/studio/Ornadyne-O1.mp4",
+    featured: true,
+  },
+  {
+    name: "GitHits",
+    type: "Feature announcement",
+    src: "https://storage.googleapis.com/motion-studio-assets/studio/githits.mp4",
+  },
+  {
+    name: "Perch",
+    type: "App showcase",
+    src: "https://storage.googleapis.com/motion-studio-assets/studio/perch-by-candlefish-1080p.mp4",
+  },
+];
 
-export function HeroPreview({
-  title = "See Arco in action",
-  description = "From a short brief and a few screenshots to a launch-ready video in under a minute.",
-}: HeroPreviewProps) {
-  const ref = useRef<HTMLDivElement>(null);
+export function HeroPreview() {
   const reduced = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], [16, -16]);
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.985, 1, 0.985]);
 
   return (
-    <section className="pb-20 sm:pb-28">
+    <section id="examples" className="scroll-mt-24 py-20 sm:py-28">
       <div className="marketing-container">
-        <MotionReveal className="mx-auto mb-10 max-w-xl text-center">
-          <h2 className="marketing-heading text-[2.25rem] sm:text-[3rem]">{title}</h2>
-          <p className="mt-3 text-[16px] leading-relaxed text-marketing-muted">
-            {description}
-          </p>
-        </MotionReveal>
+        <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
+          <MotionReveal>
+            <p className="text-[12px] font-semibold uppercase text-marketing-subtle">
+              Selected work
+            </p>
+            <h2 className="marketing-heading mt-3 max-w-lg text-[2.75rem] leading-[1.02] sm:text-[3.5rem]">
+              The output is the pitch.
+            </h2>
+          </MotionReveal>
+          <MotionReveal delay={0.1}>
+            <p className="max-w-xl text-[16px] leading-relaxed text-marketing-muted lg:ml-auto">
+              These are finished product videos made for launches, feature
+              drops, and landing pages. Arco keeps the real interface intact,
+              then adds the pacing, framing, and motion that make it feel
+              authored.
+            </p>
+          </MotionReveal>
+        </div>
 
-        <MotionReveal variant="scale-in">
-          <motion.div
-            ref={ref}
-            className="marketing-media relative aspect-video border border-marketing-border bg-marketing-surface shadow-[0_24px_80px_-40px_rgba(0,0,0,0.35)]"
-            style={reduced ? undefined : { y, scale }}
-            transition={transitionMedium}
-          >
-            <Image
-              src="/marketing/hero-product.jpg"
-              alt="Product UI on a laptop — the kind of screen Arco turns into a launch video"
-              fill
-              className="object-cover"
-              sizes="(max-width: 1120px) 100vw, 1120px"
-              priority
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-black/25 via-transparent to-transparent" />
-          </motion.div>
-        </MotionReveal>
+        <MotionStagger
+          className="mt-12 grid gap-4 lg:grid-cols-12"
+          stagger={0.08}
+        >
+          {examples.map((example) => (
+            <MotionStaggerItem
+              key={example.name}
+              className={cn(
+                example.featured && "lg:col-span-7 lg:row-span-2",
+                !example.featured && "lg:col-span-5",
+              )}
+            >
+              <motion.figure
+                className="group relative h-full overflow-hidden bg-[#0c0c0d]"
+                whileHover={reduced ? undefined : { y: -3 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+              >
+                <video
+                  className={cn(
+                    "w-full bg-black object-cover",
+                    example.featured ? "h-full min-h-[320px]" : "aspect-video",
+                  )}
+                  src={example.src}
+                  autoPlay={!reduced}
+                  muted
+                  loop
+                  playsInline
+                  preload={example.featured ? "auto" : "metadata"}
+                  aria-label={`${example.name} ${example.type} made with Arco`}
+                />
+                <figcaption className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-black/75 px-4 py-3 text-white backdrop-blur-sm">
+                  <div>
+                    <p className="text-[14px] font-semibold">{example.name}</p>
+                    <p className="text-[11px] text-white/60">{example.type}</p>
+                  </div>
+                  <span className="text-[10px] font-medium uppercase text-primary">
+                    Made in Arco
+                  </span>
+                </figcaption>
+              </motion.figure>
+            </MotionStaggerItem>
+          ))}
+        </MotionStagger>
       </div>
     </section>
   );

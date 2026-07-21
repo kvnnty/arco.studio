@@ -260,7 +260,11 @@
     linear-gradient(to right, var(--marketing-grid-line) 1px, transparent 1px),
     linear-gradient(to bottom, var(--marketing-grid-line) 1px, transparent 1px);
   background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 70%);
+  mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    black 20%,
+    transparent 70%
+  );
 }
 
 .marketing-glow {

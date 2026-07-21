@@ -1,21 +1,19 @@
 import type { Metadata } from "next";
 
-import { JsonLd } from "@/components/marketing/json-ld";
 import { CtaBand } from "@/components/marketing/cta-band";
-import { FeatureGrid } from "@/components/marketing/feature-grid";
 import { FaqSection } from "@/components/marketing/faq-section";
 import { Hero } from "@/components/marketing/hero";
+import { JsonLd } from "@/components/marketing/json-ld";
 import { HeroPreview } from "@/components/marketing/motion/hero-preview";
 import { PricingCards } from "@/components/marketing/pricing-cards";
+import { ProductWorkflow } from "@/components/marketing/product-workflow";
 import { SectionHeader } from "@/components/marketing/section-header";
-import { StarterPrompts } from "@/components/marketing/starter-prompts";
-import { coreFeatures, starterPrompts } from "@/lib/marketing/features";
 import { createPageMetadata } from "@/lib/marketing/metadata";
-import { pricingFaqs, pricingPlans } from "@/lib/marketing/pricing";
+import { pricingPlans } from "@/lib/marketing/pricing";
 import { siteConfig } from "@/lib/marketing/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: `${siteConfig.name} — ${siteConfig.tagline}`,
+  title: `${siteConfig.name} - ${siteConfig.tagline}`,
   description: siteConfig.description,
   path: "/",
 });
@@ -38,59 +36,81 @@ const homeJsonLd = [
   },
 ];
 
+const homeFaqs = [
+  {
+    question: "Do I need motion design or editing experience?",
+    answer:
+      "No. Add your product URL, screenshots, and a short launch brief. Arco builds the scenes, pacing, copy, voice-over, and motion into a first cut you can refine.",
+  },
+  {
+    question: "Does Arco generate fake product interfaces?",
+    answer:
+      "No. Arco works from your real screenshots and product assets, so the finished video shows the interface customers will actually use.",
+  },
+  {
+    question: "Can I match my brand?",
+    answer:
+      "Yes. Arco can pull colors and logo assets from your website, and you can refine copy and creative direction before export.",
+  },
+  {
+    question: "Which formats can I export?",
+    answer:
+      "Export landscape, square, and vertical video for landing pages, launch posts, paid social, and product announcements.",
+  },
+  {
+    question: "Can an agency use Arco for client work?",
+    answer:
+      "Yes. Arco is designed for repeatable product-video production, making it useful for agencies and teams that ship across multiple brands.",
+  },
+  {
+    question: "How quickly can I make a first cut?",
+    answer:
+      "Most briefs can move from screenshots to a structured first cut in minutes. Final timing depends on the number of scenes and export resolution.",
+  },
+];
+
 export default function HomePage() {
   return (
     <>
       <JsonLd data={homeJsonLd} />
 
       <Hero
-        title="The fastest way to"
-        titleAccent="ship launch videos"
-        description="Record your product once. Tell Arco what you're shipping — and export polished motion in minutes. No freelancer. No After Effects."
-        primaryCta={{ label: "Start a video", href: "/signup" }}
+        title="Studio-quality product motion."
+        titleAccent="No motion designer required."
+        description="Turn real product UI into polished launch videos, feature announcements, and app showcases."
+        primaryCta={{ label: "Create your first video", href: "/signup" }}
       />
-
-      <StarterPrompts prompts={starterPrompts} />
 
       <HeroPreview />
 
-      <section className="pb-24 sm:pb-32">
-        <div className="marketing-container">
-          <SectionHeader
-            title="Everything you need to go from brief to export"
-            description="Arco takes you from screenshots and a short brief to a launch-ready video."
-          />
-          <div className="mt-14">
-            <FeatureGrid features={coreFeatures} />
-          </div>
-        </div>
-      </section>
+      <ProductWorkflow />
 
-      <section className="border-y border-marketing-border bg-marketing-surface py-24 sm:py-32">
+      <section id="pricing" className="scroll-mt-24 py-20 sm:py-28">
         <div className="marketing-container">
           <SectionHeader
-            title="Simple, transparent pricing"
-            description="Pick a plan that fits how often you ship."
+            eyebrow="Pricing"
+            title="A studio line item you can actually predict."
+            description="Start small, then scale the plan with how often your team ships."
           />
           <div className="mt-14">
             <PricingCards
               plans={pricingPlans}
               showBillingToggle
-              featureLimit={5}
+              featureLimit={3}
             />
           </div>
         </div>
       </section>
 
       <FaqSection
-        description="Everything you need to know about pricing and plans."
-        items={pricingFaqs.slice(0, 6)}
+        description="The practical details before you make your first video."
+        items={homeFaqs.slice(0, 4)}
       />
 
       <CtaBand
-        title="Your next launch video is one recording away"
-        description="Stop briefing freelancers. Start exporting."
-        primaryCta={{ label: "Start a video", href: "/signup" }}
+        title="Make the product the protagonist."
+        description="Your interface is already the story. Give it the motion it deserves."
+        primaryCta={{ label: "Create your first video", href: "/signup" }}
       />
     </>
   );

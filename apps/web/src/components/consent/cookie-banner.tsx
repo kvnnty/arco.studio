@@ -25,47 +25,55 @@ export function CookieBanner() {
           key="cookie-banner"
           role="dialog"
           aria-label="Cookie consent"
-          className="fixed inset-x-0 bottom-0 z-[100] border-t border-border bg-background/95 p-4 shadow-lg backdrop-blur-sm sm:p-6"
+          className="fixed inset-x-3 bottom-3 z-[100] border border-border bg-background/95 p-4 shadow-lg backdrop-blur-sm sm:inset-x-0 sm:bottom-0 sm:border-x-0 sm:border-b-0 sm:p-6"
           initial={reduced ? false : "hidden"}
           animate="visible"
           exit={reduced ? undefined : "hidden"}
           variants={bannerMotion}
           transition={transitionMedium}
         >
-          <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium text-foreground">
                 We use cookies
               </p>
               <p className="text-[13px] leading-relaxed text-muted-foreground">
-                We use essential cookies for authentication and security. With
-                your consent, we also use cookies for analytics and error
-                monitoring to improve Arco. See our{" "}
-                <Link
-                  href="/cookies"
-                  className="underline hover:text-foreground"
-                >
-                  Cookie Policy
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href="/privacy"
-                  className="underline hover:text-foreground"
-                >
-                  Privacy Policy
-                </Link>
-                .
+                Essential cookies keep Arco secure.{" "}
+                <span className="sm:hidden">
+                  Optional analytics stay off unless you accept.
+                </span>
+                <span className="hidden sm:inline">
+                  With your consent, analytics and error monitoring help us
+                  improve the product. See our{" "}
+                  <Link
+                    href="/cookies"
+                    className="underline hover:text-foreground"
+                  >
+                    Cookie Policy
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy"
+                    className="underline hover:text-foreground"
+                  >
+                    Privacy Policy
+                  </Link>
+                  .
+                </span>
               </p>
             </div>
-            <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="grid shrink-0 grid-cols-3 gap-2 sm:flex sm:items-center">
               <Button variant="outline" size="sm" onClick={openPreferences}>
-                Customize
+                <span className="sm:hidden">Settings</span>
+                <span className="hidden sm:inline">Customize</span>
               </Button>
               <Button variant="outline" size="sm" onClick={rejectNonEssential}>
-                Reject non-essential
+                <span className="sm:hidden">Reject</span>
+                <span className="hidden sm:inline">Reject non-essential</span>
               </Button>
               <Button size="sm" onClick={acceptAll}>
-                Accept all
+                <span className="sm:hidden">Accept</span>
+                <span className="hidden sm:inline">Accept all</span>
               </Button>
             </div>
           </div>

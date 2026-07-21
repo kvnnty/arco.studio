@@ -1,8 +1,8 @@
 export const siteConfig = {
   name: "Arco",
-  tagline: "The fastest way to ship launch videos",
+  tagline: "Studio-quality product motion",
   description:
-    "Record your product once. Tell Arco what you're shipping — a social ad, launch reel, or feature drop — and export polished motion in minutes.",
+    "Create studio-quality product launch videos, feature announcements, and app showcases without hiring a motion designer.",
   url: "https://arco.app",
   links: {
     twitter: "https://twitter.com/arco",
@@ -17,10 +17,10 @@ export type NavItem = {
 };
 
 export const mainNav: NavItem[] = [
-  { label: "Features", href: "/features" },
+  { label: "Examples", href: "/#examples" },
+  { label: "How it works", href: "/#how-it-works" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Docs", href: "/docs" },
-  { label: "Blog", href: "/blog" },
+  { label: "Features", href: "/features" },
 ];
 
 export type FooterColumn = {
@@ -32,6 +32,7 @@ export const footerColumns: FooterColumn[] = [
   {
     title: "Product",
     links: [
+      { label: "Examples", href: "/#examples" },
       { label: "Features", href: "/features" },
       { label: "Pricing", href: "/pricing" },
       { label: "Changelog", href: "/changelog" },
@@ -61,9 +62,9 @@ export const footerColumns: FooterColumn[] = [
 ];
 
 export const announcement = {
-  enabled: true,
-  badge: "New",
-  message: "Pro is $9 for your first month.",
+  enabled: false,
+  badge: "Launch offer",
+  message: "Make your first Pro video for $9.",
   href: "/pricing",
-  linkLabel: "View pricing",
+  linkLabel: "See plans",
 };
