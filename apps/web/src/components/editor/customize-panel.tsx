@@ -24,6 +24,7 @@ import {
 import { uploadThumbnail } from "@/lib/api/client";
 import { useBillingStatus } from "@/lib/api/hooks/billing";
 import type { MusicTrackId } from "@/lib/editor/music-tracks";
+import { SoundDesignPanel } from "@/components/editor/sound-design-panel";
 
 type CustomizePanelProps = {
   project: ArcoProject;
@@ -59,13 +60,12 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
     });
   };
 
-  const customMusicSelection: CustomMusicSelection | null =
-    audio.customMusicSrc
-      ? {
-          url: audio.customMusicSrc,
-          filename: audio.customMusicSrc.split("/").pop() ?? "Custom track",
-        }
-      : null;
+  const customMusicSelection: CustomMusicSelection | null = audio.customMusicSrc
+    ? {
+        url: audio.customMusicSrc,
+        filename: audio.customMusicSrc.split("/").pop() ?? "Custom track",
+      }
+    : null;
 
   const handleCustomMusicSelect = (selection: CustomMusicSelection | null) => {
     if (selection) {
@@ -201,7 +201,9 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
                 })
               }
             >
-              {audio.voiceEnabled === false ? "Enable voiceover" : "Mute voiceover"}
+              {audio.voiceEnabled === false
+                ? "Enable voiceover"
+                : "Mute voiceover"}
             </Button>
           </FieldContent>
         </Field>
@@ -223,6 +225,13 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
           <FieldDescription>
             {Math.round((audio.volume ?? 0.85) * 100)}%
           </FieldDescription>
+        </FieldContent>
+      </Field>
+
+      <Field>
+        <FieldLabel>Sound direction</FieldLabel>
+        <FieldContent>
+          <SoundDesignPanel project={project} onChange={onChange} />
         </FieldContent>
       </Field>
     </FieldGroup>

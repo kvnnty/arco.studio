@@ -18,13 +18,7 @@ async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
-  const {
-    token,
-    method = "GET",
-    body,
-    formData,
-    onUploadProgress,
-  } = options;
+  const { token, method = "GET", body, formData, onUploadProgress } = options;
 
   const client = createApiClient(token);
   const config: AxiosRequestConfig = {
@@ -66,17 +60,17 @@ export type AuthTokensResponse = {
   };
 };
 
-export async function apiRequestMagicLink(email: string, referralCode?: string) {
-  return apiRequest<{ sent: boolean }>(
-    "/auth/magic-link",
-    {
-      method: "POST",
-      body: {
-        email: email.trim().toLowerCase(),
-        ...(referralCode ? { referralCode } : {}),
-      },
+export async function apiRequestMagicLink(
+  email: string,
+  referralCode?: string,
+) {
+  return apiRequest<{ sent: boolean }>("/auth/magic-link", {
+    method: "POST",
+    body: {
+      email: email.trim().toLowerCase(),
+      ...(referralCode ? { referralCode } : {}),
     },
-  );
+  });
 }
 
 export async function apiVerifyMagicLink(
@@ -324,6 +318,7 @@ export type GenerateStoryboardResponse = {
   scenes: import("@arco/project-schema").ScreenshotScene[];
   stylePreset: import("@arco/project-schema").StylePreset;
   creativeDirection?: import("@arco/project-schema").ArcoProject["creativeDirection"];
+  soundDesign: import("@arco/project-schema").SoundDesign;
   source: "llm" | "heuristic";
 };
 
@@ -404,7 +399,11 @@ export type GenerateDraftResponse = {
 
 export async function apiCreateRender(
   token: string,
-  input: { projectId: string; quality?: "720p" | "1080p" | "4k"; format?: string },
+  input: {
+    projectId: string;
+    quality?: "720p" | "1080p" | "4k";
+    format?: string;
+  },
 ): Promise<RenderJobRecord> {
   return apiRequest<RenderJobRecord>("/renders", {
     token,
@@ -435,6 +434,7 @@ export async function apiGenerateDraft(
       sceneCount: number;
       sceneHints: string[];
       stylePreset: string;
+      soundProfile: import("@arco/project-schema").SoundDesignProfile;
     };
     brandContext?: {
       title?: string;
@@ -556,6 +556,11 @@ export async function apiChat(
       selectedMarkerIndex?: number;
       selectedSceneIndex?: number;
       playheadMs?: number;
+      soundDesign?: {
+        decision: "include" | "silence";
+        profile: string;
+        cueCount: number;
+      };
     };
   },
 ): Promise<ChatResponse> {
@@ -648,7 +653,9 @@ export type BillingUsage = {
   ledger: CreditLedgerItem[];
 };
 
-export async function apiGetBillingStatus(token: string): Promise<BillingStatus> {
+export async function apiGetBillingStatus(
+  token: string,
+): Promise<BillingStatus> {
   return apiRequest<BillingStatus>("/billing/status", { token });
 }
 

@@ -4,6 +4,57 @@ export const EDITOR_CHAT_TOOLS: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'edit_sound_design',
+      description:
+        'Change or regenerate motion sound effects. Use this for subtle/energetic/cinematic sound, removing sound categories, softer transitions, tighter clicks, or no sound effects.',
+      parameters: {
+        type: 'object',
+        properties: {
+          profile: {
+            type: 'string',
+            enum: [
+              'minimal',
+              'balanced',
+              'energetic',
+              'cinematic',
+              'playful',
+              'futuristic',
+              'off',
+            ],
+          },
+          intensity: {
+            type: 'string',
+            enum: ['softer', 'balanced', 'stronger'],
+          },
+          removeCategories: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: [
+                'pop',
+                'whoosh',
+                'click',
+                'impact',
+                'riser',
+                'glitch',
+                'transition',
+                'texture',
+              ],
+            },
+          },
+          instruction: {
+            type: 'string',
+            description: 'The user request in their own words.',
+          },
+        },
+        required: ['instruction'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'refine_all_copy',
       description: 'Refine on-screen copy across all scenes in the project.',
       parameters: {
@@ -11,7 +62,8 @@ export const EDITOR_CHAT_TOOLS: ChatCompletionTool[] = [
         properties: {
           instruction: {
             type: 'string',
-            description: 'What to change about the copy, e.g. make shorter or more technical.',
+            description:
+              'What to change about the copy, e.g. make shorter or more technical.',
           },
         },
         required: ['instruction'],
@@ -93,13 +145,11 @@ export const EDITOR_CHAT_TOOLS: ChatCompletionTool[] = [
   },
 ];
 
-export function buildChatMessages(
-  dto: {
-    message: string;
-    history?: Array<{ role: 'user' | 'assistant'; content: string }>;
-    project: unknown;
-  },
-): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
+export function buildChatMessages(dto: {
+  message: string;
+  history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  project: unknown;
+}): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
   const history = (dto.history ?? [])
     .slice(-8)
     .map((item) => ({ role: item.role, content: item.content }));
@@ -120,7 +170,7 @@ export function buildChatMessages(
         'Respond with a short, helpful user-facing message in plain text.',
         'When the user wants to edit the project, call the appropriate tool.',
         'If no edit is needed, reply conversationally without calling a tool.',
-        'Available edits: refine_all_copy (headlines + VO scripts), regenerate_marker (one scene by index), update_style_preset, delete_marker.',
+        'Available edits: refine_all_copy (headlines + VO scripts), regenerate_marker (one scene by index), update_style_preset, edit_sound_design, delete_marker.',
         'Do not use add_marker_at_ms for screenshot projects.',
         `Project: ${JSON.stringify(dto.project)}`,
       ].join('\n')
@@ -129,7 +179,7 @@ export function buildChatMessages(
         'Respond with a short, helpful user-facing message in plain text.',
         'When the user wants to edit the project, call the appropriate tool.',
         'If no edit is needed, reply conversationally without calling a tool.',
-        'Available edits: refine_all_copy, regenerate_marker, update_style_preset, add_marker_at_ms, delete_marker.',
+        'Available edits: refine_all_copy, regenerate_marker, update_style_preset, edit_sound_design, add_marker_at_ms, delete_marker.',
         `Project: ${JSON.stringify(dto.project)}`,
       ].join('\n');
 

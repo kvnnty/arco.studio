@@ -3,11 +3,14 @@ import type {
   ArcoProject,
   ClickEffect,
   Marker,
+  SoundDesign,
   ScreenshotScene,
   StylePreset,
 } from '@arco/project-schema';
 import {
+  createHeuristicSoundDesign,
   createScreenshotPendingProject,
+  getMotionSound,
   spokenScriptFromScene,
 } from '@arco/project-schema';
 import {
@@ -111,6 +114,7 @@ export class AiService {
           `Video template: ${dto.templateContext.name}`,
           `Template copy tone: ${dto.templateContext.copyTone}`,
           `Template style preset: ${dto.templateContext.stylePreset}`,
+          `Template sound direction: ${dto.templateContext.soundProfile}`,
           `Scene copy hints: ${dto.templateContext.sceneHints.join(' | ')}`,
           `Generate exactly ${sceneCount} markers matching this template structure.`,
         ]
@@ -210,7 +214,7 @@ export class AiService {
       { text: 'Launch with confidence', subtext: 'Polished from day one' },
       { text: 'Workflows that scale', subtext: 'From startup to enterprise' },
     ];
-    const pick = alternatives[dto.markerIndex % alternatives.length]!;
+    const pick = alternatives[dto.markerIndex % alternatives.length];
 
     return {
       callout: pick,
@@ -309,9 +313,7 @@ export class AiService {
     };
   }
 
-  private heuristicRefineScenes(
-    dto: RefineProjectDto,
-  ): Array<{
+  private heuristicRefineScenes(dto: RefineProjectDto): Array<{
     headline?: string;
     subheadline?: string;
     voScript?: string;
@@ -352,9 +354,7 @@ export class AiService {
     });
   }
 
-  private async refineScenesWithLlm(
-    dto: RefineProjectDto,
-  ): Promise<{
+  private async refineScenesWithLlm(dto: RefineProjectDto): Promise<{
     scenes: Array<{
       headline?: string;
       subheadline?: string;
@@ -446,9 +446,7 @@ export class AiService {
     });
   }
 
-  private async refineProjectWithLlm(
-    dto: RefineProjectDto,
-  ): Promise<{
+  private async refineProjectWithLlm(dto: RefineProjectDto): Promise<{
     markers: Array<{
       callout: { text: string; subtext?: string };
       label?: string;
@@ -538,6 +536,54 @@ export class AiService {
     const lower = dto.message.toLowerCase();
 
     if (
+      lower.includes('sound') ||
+      lower.includes('click') ||
+      lower.includes('whoosh') ||
+      lower.includes('glitch') ||
+      lower.includes('impact') ||
+      lower.includes('transition') ||
+      lower.includes('subtle') ||
+      lower.includes('energetic') ||
+      lower.includes('cinematic')
+    ) {
+      const profile =
+        lower.includes('no sound') || lower.includes('remove all')
+          ? 'off'
+          : lower.includes('cinematic')
+            ? 'cinematic'
+            : lower.includes('energetic')
+              ? 'energetic'
+              : lower.includes('playful')
+                ? 'playful'
+                : lower.includes('futur')
+                  ? 'futuristic'
+                  : lower.includes('subtle') || lower.includes('soft')
+                    ? 'minimal'
+                    : 'balanced';
+      const removeCategories = ['glitch', 'click', 'whoosh', 'impact'].filter(
+        (category) => lower.includes(`remove ${category}`),
+      );
+      return {
+        action: {
+          type: 'edit_sound_design',
+          profile,
+          intensity:
+            lower.includes('subtle') || lower.includes('soft')
+              ? 'softer'
+              : lower.includes('more impact') || lower.includes('strong')
+                ? 'stronger'
+                : 'balanced',
+          removeCategories,
+          instruction: dto.message,
+        },
+        message:
+          profile === 'off'
+            ? 'Removing motion sound effects.'
+            : 'Redesigning the motion sound with more restraint.',
+      };
+    }
+
+    if (
       lower.includes('shorter') ||
       lower.includes('technical') ||
       lower.includes('bold')
@@ -611,7 +657,7 @@ export class AiService {
     }) => void,
   ): Promise<void> {
     if (!this.openAi.isConfigured()) {
-      const result = await this.heuristicChat(dto);
+      const result = this.heuristicChat(dto);
       if (result.message) {
         onChunk({ token: result.message });
       }
@@ -649,6 +695,7 @@ export class AiService {
     scenes: ScreenshotScene[];
     stylePreset: StylePreset;
     creativeDirection?: ArcoProject['creativeDirection'];
+    soundDesign: SoundDesign;
     source: 'llm' | 'heuristic';
   }> {
     const targetDurationMs = dto.targetDurationMs ?? 45000;
@@ -679,6 +726,7 @@ export class AiService {
     scenes: ScreenshotScene[];
     stylePreset: StylePreset;
     creativeDirection?: ArcoProject['creativeDirection'];
+    soundDesign: SoundDesign;
     source: 'heuristic';
   } {
     if (dto.templateId) {
@@ -695,6 +743,7 @@ export class AiService {
         return {
           scenes: withTemplate.scenes ?? [],
           stylePreset: template.stylePreset,
+          soundDesign: createHeuristicSoundDesign(withTemplate),
           source: 'heuristic',
         };
       }
@@ -745,20 +794,28 @@ export class AiService {
       };
     });
 
+    const creativeDirection: ArcoProject['creativeDirection'] = {
+      audience: 'Product evaluators',
+      channel: 'Website and social launch',
+      tone: 'Clear, assured, product-led',
+      coreMessage: intent ?? dto.title,
+      qualityNotes: [
+        'Keep the real interface legible.',
+        'Use one visual idea per beat.',
+        'End on a concrete CTA.',
+      ],
+    };
+    const soundProject = {
+      ...createScreenshotPendingProject(dto.title, scenes),
+      creativeDirection,
+      stylePreset: 'startup' as const,
+    };
+
     return {
       scenes,
       stylePreset: 'startup',
-      creativeDirection: {
-        audience: 'Product evaluators',
-        channel: 'Website and social launch',
-        tone: 'Clear, assured, product-led',
-        coreMessage: intent ?? dto.title,
-        qualityNotes: [
-          'Keep the real interface legible.',
-          'Use one visual idea per beat.',
-          'End on a concrete CTA.',
-        ],
-      },
+      creativeDirection,
+      soundDesign: createHeuristicSoundDesign(soundProject),
       source: 'heuristic',
     };
   }
@@ -770,6 +827,7 @@ export class AiService {
     scenes: ScreenshotScene[];
     stylePreset: StylePreset;
     creativeDirection?: ArcoProject['creativeDirection'];
+    soundDesign: SoundDesign;
   }> {
     const intent = dto.intent ?? dto.brief?.intent;
     const productUrl = dto.productUrl ?? dto.brief?.productUrl;
@@ -791,6 +849,9 @@ export class AiService {
       'voScript: speakable narration, 1 sentence unless a CTA needs 2. It can differ from on-screen copy.',
       'motionIntent: explain what the viewer should notice first and why.',
       'Choose motion and transition intentionally; avoid fade for every scene.',
+      'Make an explicit soundDesign decision: include effects only when they materially reinforce hierarchy, rhythm, an interaction, or a story turn. Silence is a valid and often premium choice.',
+      'If including sound, use no more than one cue on a scene and leave most motion silent. Account for voiceover and background music; avoid loud or decorative effects.',
+      'Anchor every cue to the scene where the audible moment belongs. Explain why each cue earns its place.',
       `Generate exactly ${dto.imageUrls.length} scenes, one per screenshot in order.`,
     ]
       .filter(Boolean)
@@ -852,10 +913,81 @@ export class AiService {
       };
     });
 
+    const stylePreset = normalizeStylePreset(parsed.stylePreset);
+    const soundProject: ArcoProject = {
+      ...createScreenshotPendingProject(dto.title, scenes),
+      stylePreset,
+      creativeDirection: parsed.creativeDirection,
+    };
+    const llmSound = parsed.soundDesign;
+    const soundDesign: SoundDesign =
+      llmSound?.decision === 'silence'
+        ? {
+            version: '1',
+            decision: 'silence',
+            rationale: llmSound.rationale,
+            profile: llmSound.profile ?? 'balanced',
+            masterVolume: llmSound.masterVolume ?? 0.65,
+            cues: [],
+          }
+        : llmSound?.decision === 'include'
+          ? {
+              version: '1',
+              decision: 'include',
+              rationale: llmSound.rationale,
+              profile: llmSound.profile ?? 'balanced',
+              masterVolume: llmSound.masterVolume ?? 0.65,
+              cues: (llmSound.cues ?? [])
+                .filter(
+                  (cue, cueIndex, cues) =>
+                    cues.findIndex(
+                      (candidate) => candidate.sceneIndex === cue.sceneIndex,
+                    ) === cueIndex,
+                )
+                .slice(
+                  0,
+                  Math.max(1, Math.min(6, Math.floor(targetDurationMs / 5000))),
+                )
+                .flatMap((cue, cueIndex) => {
+                  const scene = scenes[cue.sceneIndex];
+                  const sound = getMotionSound(cue.soundId);
+                  if (!scene || !sound) return [];
+                  const startMs = scenes
+                    .slice(0, cue.sceneIndex)
+                    .reduce((sum, item) => sum + item.durationMs, 0);
+                  return [
+                    {
+                      id: `sound-${scene.id}-${cueIndex}`,
+                      soundId: sound.id,
+                      category: sound.category,
+                      startMs,
+                      anchor: {
+                        type: 'scene' as const,
+                        targetId: scene.id,
+                        offsetMs: cue.offsetMs ?? 80,
+                        followTiming: true,
+                      },
+                      volume: cue.volume ?? 0.42,
+                      intensity: cue.intensity ?? 0.5,
+                      enabled: true,
+                      source: 'ai' as const,
+                      rationale: cue.rationale,
+                    },
+                  ];
+                }),
+            }
+          : createHeuristicSoundDesign(soundProject);
+
+    const normalizedSoundDesign =
+      soundDesign.decision === 'include' && soundDesign.cues.length === 0
+        ? createHeuristicSoundDesign(soundProject, soundDesign.profile)
+        : soundDesign;
+
     return {
       scenes,
-      stylePreset: normalizeStylePreset(parsed.stylePreset),
+      stylePreset,
       creativeDirection: parsed.creativeDirection,
+      soundDesign: normalizedSoundDesign,
     };
   }
 }

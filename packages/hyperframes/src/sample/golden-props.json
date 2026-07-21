@@ -20,7 +20,67 @@
     "audio": {
       "musicId": "calm-focus",
       "volume": 0.22,
-      "voiceEnabled": false
+      "voiceEnabled": false,
+      "soundDesign": {
+        "version": "1",
+        "decision": "include",
+        "rationale": "Three restrained accents clarify the hook, story turn, and final decision while the remaining motion stays silent.",
+        "profile": "cinematic",
+        "masterVolume": 0.62,
+        "cues": [
+          {
+            "id": "hook-land",
+            "soundId": "impact-soft",
+            "category": "impact",
+            "startMs": 0,
+            "anchor": {
+              "type": "scene",
+              "targetId": "hook",
+              "offsetMs": 140,
+              "followTiming": true
+            },
+            "volume": 0.4,
+            "intensity": 0.48,
+            "enabled": true,
+            "source": "ai",
+            "rationale": "Gives the opening promise a quiet, controlled landing."
+          },
+          {
+            "id": "feature-shift",
+            "soundId": "air-soft",
+            "category": "whoosh",
+            "startMs": 3000,
+            "anchor": {
+              "type": "scene",
+              "targetId": "feature",
+              "offsetMs": 60,
+              "followTiming": true
+            },
+            "volume": 0.34,
+            "intensity": 0.38,
+            "enabled": true,
+            "source": "ai",
+            "rationale": "Supports the directional scene change without competing with the music."
+          },
+          {
+            "id": "cta-land",
+            "soundId": "impact-deep",
+            "category": "impact",
+            "startMs": 6000,
+            "anchor": {
+              "type": "scene",
+              "targetId": "cta",
+              "offsetMs": 160,
+              "followTiming": true
+            },
+            "volume": 0.42,
+            "intensity": 0.58,
+            "enabled": true,
+            "source": "ai",
+            "rationale": "Marks the final decision, then leaves the CTA room to breathe."
+          }
+        ]
+      }
     },
     "brief": {
       "intent": "Launch Arco to product owners who need a premium product video.",

@@ -1,10 +1,9 @@
 import {
+  getMotionSound,
   parseArcoProject,
   type ArcoProject,
 } from "@arco/project-schema";
-import {
-  getMusicTrack,
-} from "@arco/project-schema/music";
+import { getMusicTrack } from "@arco/project-schema/music";
 import { createHash } from "node:crypto";
 import { copyFile, mkdir, stat } from "node:fs/promises";
 import path from "node:path";
@@ -26,9 +25,7 @@ function assertInside(root: string, target: string): void {
 
 function normalizedPublicPath(src: string): string {
   const withoutQuery = src.split(/[?#]/, 1)[0] ?? src;
-  const normalized = withoutQuery
-    .replace(/^[/\\]+/, "")
-    .replaceAll("\\", "/");
+  const normalized = withoutQuery.replace(/^[/\\]+/, "").replaceAll("\\", "/");
   const segments = normalized.split("/");
 
   if (
@@ -78,18 +75,12 @@ async function stageOneAsset(
     stagedPath = `external/${digest}${extension}`;
   } else {
     stagedPath = normalizedPublicPath(src);
-    sourcePath = path.resolve(
-      publicRoot,
-      ...stagedPath.split("/"),
-    );
+    sourcePath = path.resolve(publicRoot, ...stagedPath.split("/"));
     assertInside(publicRoot, sourcePath);
   }
 
   await ensureFile(sourcePath);
-  const destinationPath = path.resolve(
-    assetRoot,
-    ...stagedPath.split("/"),
-  );
+  const destinationPath = path.resolve(assetRoot, ...stagedPath.split("/"));
   assertInside(assetRoot, destinationPath);
   await mkdir(path.dirname(destinationPath), { recursive: true });
   await copyFile(sourcePath, destinationPath);
@@ -136,6 +127,18 @@ export async function stageProjectAssets(
     const musicTrack = getMusicTrack(staged.audio?.musicId);
     if (musicTrack) {
       await stageOneAsset(musicTrack.file, publicRoot, assetRoot);
+    }
+  }
+
+  if (staged.audio?.soundDesign?.decision === "include") {
+    const soundFiles = new Set(
+      staged.audio.soundDesign.cues
+        .filter((cue) => cue.enabled)
+        .map((cue) => getMotionSound(cue.soundId)?.file)
+        .filter((file): file is string => Boolean(file)),
+    );
+    for (const file of soundFiles) {
+      await stageOneAsset(file, publicRoot, assetRoot);
     }
   }
 

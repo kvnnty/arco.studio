@@ -1,7 +1,18 @@
 "use client";
 
-import type { ArcoProject, FocusRegion, Marker, StylePreset } from "@arco/project-schema";
-import { isScreenshotPipelinePending, isScreenshotProject } from "@arco/project-schema";
+import type {
+  ArcoProject,
+  FocusRegion,
+  Marker,
+  SoundCategory,
+  SoundDesignProfile,
+  StylePreset,
+} from "@arco/project-schema";
+import {
+  createHeuristicSoundDesign,
+  isScreenshotPipelinePending,
+  isScreenshotProject,
+} from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 import { getTemplate } from "@arco/project-schema/templates";
 import Image from "next/image";
@@ -49,7 +60,10 @@ import {
   mergeRefinedScenes,
   type ChatAction,
 } from "@/lib/editor/apply-chat-action";
-import { buildDraftProject, type DraftAnalysisResult } from "@/lib/editor/analyze-recording";
+import {
+  buildDraftProject,
+  type DraftAnalysisResult,
+} from "@/lib/editor/analyze-recording";
 import {
   mergeBrandIntoProject,
   toneToStylePreset,
@@ -111,15 +125,15 @@ export function EditorShell({
   const project = session.project;
   const screenshotMode = isScreenshotProject(project);
   const scenes = useMemo(() => project.scenes ?? [], [project.scenes]);
-  const pipelineFailed =
-    screenshotMode && project.pipelineStatus === "failed";
+  const pipelineFailed = screenshotMode && project.pipelineStatus === "failed";
   const isAnalyzing =
     !pipelineFailed &&
     (session.journeyStep === "analyzing" ||
       (screenshotMode && isScreenshotPipelinePending(project)));
   /** Theater UI while generating, or after screenshot pipeline failure (retry). */
   const showPipelineTheater = isAnalyzing || pipelineFailed;
-  const chatReady = session.journeyStep === "edit" && !isAnalyzing && !pipelineFailed;
+  const chatReady =
+    session.journeyStep === "edit" && !isAnalyzing && !pipelineFailed;
   const productHostname = project.brief?.productUrl
     ? getUrlHostname(project.brief.productUrl)
     : undefined;
@@ -185,7 +199,9 @@ export function EditorShell({
           onSuccess: () => setSaveStatus("saved"),
           onError: () => {
             setSaveStatus("error");
-            toast.error("Could not save project. Check your connection and try again.");
+            toast.error(
+              "Could not save project. Check your connection and try again.",
+            );
           },
         },
       );
@@ -258,11 +274,14 @@ export function EditorShell({
     [project, updateProject],
   );
 
-  const handleBrandAnalyzed = useCallback((kit: BrandKit) => {
-    brandKitRef.current = kit;
-    const withBrand = mergeBrandIntoProject(session.project, kit);
-    persist({ ...session, project: withBrand });
-  }, [persist, session]);
+  const handleBrandAnalyzed = useCallback(
+    (kit: BrandKit) => {
+      brandKitRef.current = kit;
+      const withBrand = mergeBrandIntoProject(session.project, kit);
+      persist({ ...session, project: withBrand });
+    },
+    [persist, session],
+  );
 
   const handleScreenshotPipelinePatch = useCallback(
     (patched: ArcoProject) => {
@@ -410,7 +429,9 @@ export function EditorShell({
           };
         }
 
-        const sorted = [...project.markers].sort((a, b) => a.startMs - b.startMs);
+        const sorted = [...project.markers].sort(
+          (a, b) => a.startMs - b.startMs,
+        );
         const refined = await refineProject.mutateAsync({
           title: project.meta.title,
           instruction,
@@ -464,8 +485,12 @@ export function EditorShell({
         }
 
         const markerIndex =
-          (action.markerIndex as number | undefined) ?? selectedMarkerIndex ?? 0;
-        const sorted = [...project.markers].sort((a, b) => a.startMs - b.startMs);
+          (action.markerIndex as number | undefined) ??
+          selectedMarkerIndex ??
+          0;
+        const sorted = [...project.markers].sort(
+          (a, b) => a.startMs - b.startMs,
+        );
         const marker = sorted[markerIndex];
         if (!marker) {
           return { type: "reply", message: "Could not find that scene." };
@@ -495,6 +520,62 @@ export function EditorShell({
         return {
           type: "update_style_preset",
           stylePreset: (action.stylePreset as StylePreset) ?? "startup",
+        };
+      }
+
+      if (type === "edit_sound_design") {
+        const requestedProfile = action.profile as
+          | SoundDesignProfile
+          | "off"
+          | undefined;
+        if (requestedProfile === "off") {
+          return {
+            type: "update_sound_design",
+            soundDesign: {
+              version: "1",
+              decision: "silence",
+              rationale:
+                "Sound effects were removed at the user's direction; the visual rhythm now carries the sequence.",
+              profile: project.audio?.soundDesign?.profile ?? "minimal",
+              masterVolume: project.audio?.soundDesign?.masterVolume ?? 0.6,
+              cues: [],
+            },
+          };
+        }
+
+        const plan = createHeuristicSoundDesign(
+          project,
+          requestedProfile ?? project.audio?.soundDesign?.profile ?? "balanced",
+          1,
+        );
+        const removeCategories = new Set(
+          (action.removeCategories as SoundCategory[] | undefined) ?? [],
+        );
+        const intensity = action.intensity as
+          | "softer"
+          | "balanced"
+          | "stronger"
+          | undefined;
+        const multiplier =
+          intensity === "softer" ? 0.68 : intensity === "stronger" ? 1.18 : 1;
+        const cues = plan.cues
+          .filter((cue) => !removeCategories.has(cue.category))
+          .map((cue) => ({
+            ...cue,
+            volume: Math.min(0.7, cue.volume * multiplier),
+            intensity: Math.min(1, cue.intensity * multiplier),
+          }));
+        return {
+          type: "update_sound_design",
+          soundDesign: {
+            ...plan,
+            decision: cues.length > 0 ? "include" : "silence",
+            rationale:
+              cues.length > 0
+                ? `${plan.rationale} Adjusted from: ${String(action.instruction ?? "sound direction")}.`
+                : "The requested removals leave no cue that earns a place in the mix.",
+            cues,
+          },
         };
       }
 
@@ -556,8 +637,7 @@ export function EditorShell({
 
       if (!needsVoice) return nextProject;
 
-      const voiceId =
-        nextProject.audio?.voiceId ?? getDefaultVoiceId();
+      const voiceId = nextProject.audio?.voiceId ?? getDefaultVoiceId();
       try {
         const scenes = await generateVoiceForScreenshotProject(
           token,
@@ -615,6 +695,15 @@ export function EditorShell({
           selectedMarkerIndex: screenshotMode ? undefined : selectedMarkerIndex,
           selectedSceneIndex: screenshotMode ? selectedSceneIndex : undefined,
           playheadMs,
+          soundDesign: project.audio?.soundDesign
+            ? {
+                decision: project.audio.soundDesign.decision,
+                profile: project.audio.soundDesign.profile,
+                cueCount: project.audio.soundDesign.cues.filter(
+                  (cue) => cue.enabled,
+                ).length,
+              }
+            : undefined,
         },
       };
 
@@ -710,7 +799,9 @@ export function EditorShell({
 
   const reorderMarkers = useCallback(
     (orderedIds: string[]) => {
-      const byId = new Map(project.markers.map((marker) => [marker.id, marker]));
+      const byId = new Map(
+        project.markers.map((marker) => [marker.id, marker]),
+      );
       const reordered = orderedIds
         .map((id) => byId.get(id))
         .filter((marker): marker is Marker => Boolean(marker));
@@ -802,7 +893,11 @@ export function EditorShell({
           >
             New project
           </Button>
-          <Button variant="outline" size="sm" render={<Link href="/dashboard" />}>
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link href="/dashboard" />}
+          >
             Dashboard
           </Button>
           <Button
@@ -881,68 +976,68 @@ export function EditorShell({
                   onFocusChange={updateFocus}
                 />
 
-            {chatReady && screenshotMode ? (
-              <ScreenshotSceneStrip
-                scenes={scenes}
-                selectedId={selectedId}
-                fps={project.meta.fps}
-                playerRef={playerRef}
-                onSelect={(id) => {
-                  setSelectedId(id);
-                  setInspectorOpen(true);
-                }}
-                onDelete={(id) => {
-                  if (scenes.length <= 1) return;
-                  const nextScenes = scenes.filter((s) => s.id !== id);
-                  const durationMs = nextScenes.reduce(
-                    (sum, s) => sum + s.durationMs,
-                    0,
-                  );
-                  updateProject({
-                    ...project,
-                    scenes: nextScenes,
-                    recording: { ...project.recording, durationMs },
-                  });
-                  setSelectedId(nextScenes[0]?.id ?? null);
-                }}
-                onReorder={reorderScenes}
-              />
-            ) : null}
+                {chatReady && screenshotMode ? (
+                  <ScreenshotSceneStrip
+                    scenes={scenes}
+                    selectedId={selectedId}
+                    fps={project.meta.fps}
+                    playerRef={playerRef}
+                    onSelect={(id) => {
+                      setSelectedId(id);
+                      setInspectorOpen(true);
+                    }}
+                    onDelete={(id) => {
+                      if (scenes.length <= 1) return;
+                      const nextScenes = scenes.filter((s) => s.id !== id);
+                      const durationMs = nextScenes.reduce(
+                        (sum, s) => sum + s.durationMs,
+                        0,
+                      );
+                      updateProject({
+                        ...project,
+                        scenes: nextScenes,
+                        recording: { ...project.recording, durationMs },
+                      });
+                      setSelectedId(nextScenes[0]?.id ?? null);
+                    }}
+                    onReorder={reorderScenes}
+                  />
+                ) : null}
 
-            {chatReady && !screenshotMode ? (
-              <SceneThumbnailStrip
-                markers={project.markers}
-                selectedId={selectedId}
-                recordingUrl={session.recordingUrl}
-                fps={project.meta.fps}
-                playerRef={playerRef}
-                onSelect={(id) => {
-                  setSelectedId(id);
-                  setInspectorOpen(true);
-                }}
-                onAdd={addSceneAtPlayhead}
-                onDelete={deleteMarker}
-                onReorder={reorderMarkers}
-              />
-            ) : null}
+                {chatReady && !screenshotMode ? (
+                  <SceneThumbnailStrip
+                    markers={project.markers}
+                    selectedId={selectedId}
+                    recordingUrl={session.recordingUrl}
+                    fps={project.meta.fps}
+                    playerRef={playerRef}
+                    onSelect={(id) => {
+                      setSelectedId(id);
+                      setInspectorOpen(true);
+                    }}
+                    onAdd={addSceneAtPlayhead}
+                    onDelete={deleteMarker}
+                    onReorder={reorderMarkers}
+                  />
+                ) : null}
 
-            <StylePresetPicker
-              compact
-              value={project.stylePreset ?? "startup"}
-              onChange={handleStylePreset}
-            />
+                <StylePresetPicker
+                  compact
+                  value={project.stylePreset ?? "startup"}
+                  onChange={handleStylePreset}
+                />
 
-            <div className="flex justify-end lg:hidden">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setInspectorOpen(true)}
-                disabled={!selectedMarker && !selectedScene}
-              >
-                <Settings2 data-icon="inline-start" />
-                Scene settings
-              </Button>
-            </div>
+                <div className="flex justify-end lg:hidden">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInspectorOpen(true)}
+                    disabled={!selectedMarker && !selectedScene}
+                  >
+                    <Settings2 data-icon="inline-start" />
+                    Scene settings
+                  </Button>
+                </div>
               </>
             )}
           </div>

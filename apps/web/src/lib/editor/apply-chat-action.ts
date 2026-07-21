@@ -3,6 +3,7 @@ import type {
   Marker,
   ScreenshotScene,
   StylePreset,
+  SoundDesign,
 } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 
@@ -29,6 +30,7 @@ export type ChatAction =
       voScript?: string;
     }
   | { type: "update_style_preset"; stylePreset: StylePreset }
+  | { type: "update_sound_design"; soundDesign: SoundDesign }
   | { type: "add_marker_at_ms"; startMs: number }
   | { type: "delete_marker"; markerIndex: number }
   | { type: "delete_scene"; sceneIndex: number };
@@ -48,7 +50,10 @@ export function applyChatAction(
       };
 
     case "refine_all_scenes": {
-      const durationMs = action.scenes.reduce((sum, s) => sum + s.durationMs, 0);
+      const durationMs = action.scenes.reduce(
+        (sum, s) => sum + s.durationMs,
+        0,
+      );
       return {
         project: {
           ...project,
@@ -109,6 +114,22 @@ export function applyChatAction(
         message: `Applied ${action.stylePreset} style preset.`,
       };
 
+    case "update_sound_design":
+      return {
+        project: {
+          ...project,
+          audio: {
+            ...project.audio,
+            volume: project.audio?.volume ?? 0.25,
+            soundDesign: action.soundDesign,
+          },
+        },
+        message:
+          action.soundDesign.decision === "silence"
+            ? "Motion sound is off. Silence is now an intentional part of the direction."
+            : `Remixed ${action.soundDesign.cues.length} motion sound cues in a ${action.soundDesign.profile} direction.`,
+      };
+
     case "add_marker_at_ms": {
       const marker = createDefaultMarker(action.startMs);
       return {
@@ -137,7 +158,9 @@ export function applyChatAction(
       if (scenes.length <= 1) {
         return { project, message: "Keep at least one scene." };
       }
-      const nextScenes = scenes.filter((_, index) => index !== action.sceneIndex);
+      const nextScenes = scenes.filter(
+        (_, index) => index !== action.sceneIndex,
+      );
       const durationMs = nextScenes.reduce((sum, s) => sum + s.durationMs, 0);
       return {
         project: {

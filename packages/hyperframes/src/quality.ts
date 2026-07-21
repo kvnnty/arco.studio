@@ -9,10 +9,7 @@ import type { QualityFinding, QualityReport } from "./types.js";
 const GENERIC_COPY =
   /\b(ai[- ]powered|game[- ]changer|next[- ]level|revolutionary|seamless experience|powerful platform|supercharge)\b/i;
 
-function add(
-  findings: QualityFinding[],
-  finding: QualityFinding,
-): void {
+function add(findings: QualityFinding[], finding: QualityFinding): void {
   findings.push(finding);
 }
 
@@ -39,7 +36,8 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
       add(findings, {
         code: "thin-story",
         severity: "warning",
-        message: "Use at least three beats to establish a hook, proof, and CTA.",
+        message:
+          "Use at least three beats to establish a hook, proof, and CTA.",
       });
     }
 
@@ -84,7 +82,8 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
           add(findings, {
             code: "headline-too-long",
             severity: "warning",
-            message: "Shorten the headline to preserve clean display typography.",
+            message:
+              "Shorten the headline to preserve clean display typography.",
             sceneId: scene.id,
           });
         }
@@ -94,7 +93,8 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
         add(findings, {
           code: "subheadline-too-long",
           severity: "warning",
-          message: "Shorten supporting copy so the product remains the focal point.",
+          message:
+            "Shorten supporting copy so the product remains the focal point.",
           sceneId: scene.id,
         });
       }
@@ -103,7 +103,8 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
         add(findings, {
           code: "generic-copy",
           severity: "warning",
-          message: "Replace generic AI marketing language with a concrete product truth.",
+          message:
+            "Replace generic AI marketing language with a concrete product truth.",
           sceneId: scene.id,
         });
       }
@@ -112,7 +113,8 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
         add(findings, {
           code: "beat-too-short",
           severity: "warning",
-          message: "Give the scene enough time for the UI and copy to register.",
+          message:
+            "Give the scene enough time for the UI and copy to register.",
           sceneId: scene.id,
         });
       }
@@ -131,7 +133,8 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
       add(findings, {
         code: "transition-monotony",
         severity: "warning",
-        message: "Vary transitions at story turns instead of fading every scene.",
+        message:
+          "Vary transitions at story turns instead of fading every scene.",
       });
     }
 
@@ -152,6 +155,36 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
       severity: "error",
       message: "A recording project needs an uploaded recording.",
     });
+  }
+
+  const soundDesign = project.audio?.soundDesign;
+  if (soundDesign?.decision === "include") {
+    const enabledCues = soundDesign.cues.filter((cue) => cue.enabled);
+    const durationSeconds = Math.max(1, project.recording.durationMs / 1000);
+    if (enabledCues.length === 0) {
+      add(findings, {
+        code: "empty-sound-plan",
+        severity: "warning",
+        message: "The sound plan says include, but no audible cue is enabled.",
+      });
+    }
+    if (enabledCues.length > Math.ceil(durationSeconds / 2.5)) {
+      add(findings, {
+        code: "sound-density",
+        severity: "warning",
+        message:
+          "Reduce motion sound density so important beats retain contrast.",
+      });
+    }
+    if (
+      enabledCues.some((cue) => cue.volume * soundDesign.masterVolume > 0.62)
+    ) {
+      add(findings, {
+        code: "sound-headroom",
+        severity: "warning",
+        message: "Lower motion sound levels to preserve mix headroom.",
+      });
+    }
   }
 
   const penalty = findings.reduce(

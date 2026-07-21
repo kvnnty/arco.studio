@@ -8,16 +8,16 @@ import {
   createScreenshotPendingProject,
   screenshotProjectDurationMs,
 } from "@arco/project-schema";
-import { applyStylePreset, STYLE_PRESETS } from "@arco/project-schema/style-presets";
+import {
+  applyStylePreset,
+  STYLE_PRESETS,
+} from "@arco/project-schema/style-presets";
 import {
   applyTemplateToProject,
   getTemplate,
 } from "@arco/project-schema/templates";
 
-import {
-  apiGenerateStoryboard,
-  apiGetBillingStatus,
-} from "@/lib/api/client";
+import { apiGenerateStoryboard, apiGetBillingStatus } from "@/lib/api/client";
 import type { BrandKit } from "@/lib/api/hooks/brand";
 import { assertWithinDurationLimit } from "@/lib/billing/duration-limits";
 import {
@@ -78,7 +78,8 @@ function defaultMotionForIndex(
     "ken-burns-in",
   ];
   if (preset === "apple") return index % 2 === 0 ? "ken-burns-in" : "static";
-  if (preset === "startup") return motions[index % motions.length] ?? "ken-burns-in";
+  if (preset === "startup")
+    return motions[index % motions.length] ?? "ken-burns-in";
   return motions[index % 3] ?? "ken-burns-in";
 }
 
@@ -86,7 +87,10 @@ function defaultTransitionForIndex(
   index: number,
   preset: StylePreset,
 ): NonNullable<ScreenshotScene["transition"]> {
-  const byPreset: Record<StylePreset, Array<NonNullable<ScreenshotScene["transition"]>["type"]>> = {
+  const byPreset: Record<
+    StylePreset,
+    Array<NonNullable<ScreenshotScene["transition"]>["type"]>
+  > = {
     linear: ["fade", "slide", "fade"],
     stripe: ["fade", "push", "scale"],
     apple: ["fade", "blur", "fade"],
@@ -165,7 +169,11 @@ export async function runScreenshotPipeline(
     brand: project.brand,
     template: project.template,
     exportFormat: project.exportFormat,
-    audio: project.audio,
+    audio: {
+      ...project.audio,
+      volume: project.audio?.volume ?? 0.25,
+      soundDesign: storyboard.soundDesign,
+    },
     creativeDirection: storyboard.creativeDirection,
     stylePreset: suggestedPreset,
     pipelineStatus: "pending",
@@ -182,13 +190,13 @@ export async function runScreenshotPipeline(
       audio: {
         ...project.audio,
         ...baseProject.audio,
-        musicId:
-          baseProject.audio?.customMusicSrc
-            ? undefined
-            : (baseProject.audio?.musicId ??
-              STYLE_PRESETS[suggestedPreset].audioId),
+        musicId: baseProject.audio?.customMusicSrc
+          ? undefined
+          : (baseProject.audio?.musicId ??
+            STYLE_PRESETS[suggestedPreset].audioId),
         customMusicSrc: baseProject.audio?.customMusicSrc,
         volume: baseProject.audio?.volume ?? 0.25,
+        soundDesign: storyboard.soundDesign,
       },
       brand: brandKit
         ? {
@@ -275,6 +283,7 @@ export async function runScreenshotPipeline(
       voiceId: voiceEnabled ? voiceId : undefined,
       voiceEnabled,
       duckUnderVoice: true,
+      soundDesign: storyboard.soundDesign,
     },
   };
 
@@ -292,14 +301,7 @@ export async function runScreenshotPipeline(
   });
   pipeline = {
     ...pipeline,
-    completedSteps: [
-      "analyze",
-      "draft",
-      "voice",
-      "layout",
-      "scenes",
-      "stitch",
-    ],
+    completedSteps: ["analyze", "draft", "voice", "layout", "scenes", "stitch"],
   };
   callbacks.onPipelineChange(pipeline, draftMarkers);
   callbacks.onProjectPatch?.(project);

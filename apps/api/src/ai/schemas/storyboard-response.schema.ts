@@ -1,5 +1,7 @@
 import {
+  MOTION_SOUND_IDS,
   screenshotMotionSchema,
+  soundDesignProfileSchema,
   stylePresetSchema,
   transitionTypeSchema,
 } from '@arco/project-schema';
@@ -30,6 +32,27 @@ export const storyboardResponseSchema = z.object({
     })
     .optional(),
   scenes: z.array(llmStoryboardSceneSchema).optional(),
+  soundDesign: z
+    .object({
+      decision: z.enum(['include', 'silence']),
+      rationale: z.string().min(1).max(500),
+      profile: soundDesignProfileSchema.optional(),
+      masterVolume: z.number().min(0).max(0.8).optional(),
+      cues: z
+        .array(
+          z.object({
+            sceneIndex: z.number().int().min(0),
+            soundId: z.enum(MOTION_SOUND_IDS),
+            offsetMs: z.number().int().min(-1200).max(5000).optional(),
+            volume: z.number().min(0).max(0.85).optional(),
+            intensity: z.number().min(0).max(1).optional(),
+            rationale: z.string().max(240).optional(),
+          }),
+        )
+        .max(12)
+        .optional(),
+    })
+    .optional(),
 });
 
 export type StoryboardResponse = z.infer<typeof storyboardResponseSchema>;
