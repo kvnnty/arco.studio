@@ -1,10 +1,10 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { SubscriptionGuard } from '../billing/subscription.guard';
 import { BrandService } from './brand.service';
 import { AnalyzeUrlDto } from './dto/analyze-url.dto';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @Controller('brand')
 export class BrandController {
   constructor(private readonly brandService: BrandService) {}

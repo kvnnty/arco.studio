@@ -1,4 +1,4 @@
-import { getServerSession } from "@/lib/auth/session";
+import { getAuthenticatedUser } from "@/lib/auth/session";
 import { DashboardHomeClient } from "@/components/dashboard/dashboard-home-client";
 
 export const metadata = {
@@ -10,12 +10,12 @@ type PageProps = {
 };
 
 export default async function DashboardHomePage({ searchParams }: PageProps) {
-  const session = await getServerSession();
+  const user = await getAuthenticatedUser();
   const params = await searchParams;
 
   return (
     <DashboardHomeClient
-      userName={session?.user?.name}
+      userName={user?.name}
       initialTemplateId={params.template ?? null}
     />
   );

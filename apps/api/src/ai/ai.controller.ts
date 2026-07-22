@@ -1,9 +1,8 @@
 import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { randomUUID } from 'node:crypto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { BillingService } from '../billing/billing.service';
-import { creditCostForVoiceGenerate } from '../billing/plans';
 import { SubscriptionGuard } from '../billing/subscription.guard';
 import { AiService } from './ai.service';
 import { GenerateDraftDto } from './dto/generate-draft.dto';
@@ -14,7 +13,7 @@ import { ChatDto } from './dto/chat.dto';
 
 type AuthedRequest = Request & { user: { id: string; email: string } };
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @Controller('ai')
 export class AiController {
   constructor(

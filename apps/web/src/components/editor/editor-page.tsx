@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -22,7 +22,7 @@ import {
 export function EditorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { session: authSession, loading: authLoading } = useAuth();
+  const { session: authSession, loading: authLoading } = useManagedAuth();
 
   const [session, setSession] = useState<EditorSession | null>(null);
   const [ready, setReady] = useState(false);

@@ -1,4 +1,5 @@
 import type { Marker, StylePreset } from "@arco/project-schema";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 import {
   createHeuristicSoundDesign,
   DEFAULT_FOCUS,
@@ -145,7 +146,7 @@ export type DraftAnalysisResult = {
 export async function runAnalysis(
   onStep: (stepIndex: number, detectedMarkers: Marker[]) => void,
   input: {
-    accessToken: string;
+    accessToken: AccessTokenSource;
     title: string;
     durationMs: number;
     platform?: string;

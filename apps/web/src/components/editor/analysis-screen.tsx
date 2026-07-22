@@ -4,7 +4,7 @@ import type { Marker } from "@arco/project-schema";
 import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { JourneyStepper } from "@/components/editor/journey-stepper";
 import {
   ANALYSIS_STEPS,
@@ -37,7 +37,7 @@ export function AnalysisScreen({
 }: AnalysisScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [detected, setDetected] = useState<Marker[]>([]);
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
 
   useEffect(() => {
     const accessToken = session?.accessToken;

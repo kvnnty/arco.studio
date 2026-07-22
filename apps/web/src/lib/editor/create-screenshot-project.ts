@@ -2,6 +2,7 @@ import type { ExportFormat, StylePreset } from "@arco/project-schema";
 import { createScreenshotPendingProject } from "@arco/project-schema";
 import { getTemplate } from "@arco/project-schema/templates";
 import { getDefaultVoiceId } from "@arco/project-schema/voices";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 
 import { uploadImageWithProgress } from "@/lib/api/client";
 import { createProject, syncProjectRecord } from "@/lib/api/projects";
@@ -9,7 +10,7 @@ import type { ProjectPlatform } from "@/lib/editor/create-project";
 import { deriveProjectTitle } from "@/lib/editor/create-from-template";
 
 export type CreateScreenshotProjectInput = {
-  accessToken: string;
+  accessToken: AccessTokenSource;
   title?: string;
   platform?: ProjectPlatform;
   templateId?: string;

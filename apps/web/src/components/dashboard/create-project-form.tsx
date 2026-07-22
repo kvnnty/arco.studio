@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { useRef, useState } from "react";
 import { Sparkles, Upload } from "lucide-react";
 
@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 
 export function CreateProjectForm() {
   const router = useRouter();
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");

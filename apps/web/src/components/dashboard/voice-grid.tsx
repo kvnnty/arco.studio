@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { apiPreviewVoice, type ArcoVoice } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +24,7 @@ export function VoiceGrid({
   onSelectVoice,
   onToggleEnabled,
 }: VoiceGridProps) {
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);

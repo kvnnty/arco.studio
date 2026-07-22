@@ -24,7 +24,7 @@ import {
 import { getTemplate, listTemplates } from "@arco/project-schema/templates";
 import { getVoiceById } from "@arco/project-schema/voices";
 
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import {
   MAX_SCREENSHOTS,
   MIN_SCREENSHOTS,
@@ -100,7 +100,7 @@ export function DashboardCreateHero({
   onOpenVoice,
 }: DashboardCreateHeroProps) {
   const router = useRouter();
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
   const composerId = useId();
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);

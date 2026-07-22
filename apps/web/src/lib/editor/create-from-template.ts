@@ -1,12 +1,13 @@
 import type { ExportFormat, StylePreset } from "@arco/project-schema";
 import { getTemplate } from "@arco/project-schema/templates";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 
 import { createProject } from "@/lib/api/projects";
 import { uploadProjectRecording } from "@/lib/editor/upload-project-recording";
 import type { ProjectPlatform } from "@/lib/editor/create-project";
 
 export type CreateAndUploadProjectInput = {
-  accessToken: string;
+  accessToken: AccessTokenSource;
   title?: string;
   platform?: ProjectPlatform;
   templateId?: string;

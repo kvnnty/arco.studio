@@ -14,7 +14,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import type { Request, Response } from 'express';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { SubscriptionGuard } from '../billing/subscription.guard';
 import { BillingService } from '../billing/billing.service';
 import { ProPlanGuard } from '../billing/pro-plan.guard';
@@ -29,7 +29,7 @@ export class UploadsController {
     private readonly billing: BillingService,
   ) {}
 
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(ClerkAuthGuard, SubscriptionGuard)
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
@@ -53,7 +53,7 @@ export class UploadsController {
     return this.uploadsService.uploadRecording(req.user.id, validFile);
   }
 
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(ClerkAuthGuard, SubscriptionGuard)
   @Post('thumbnail')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -69,7 +69,7 @@ export class UploadsController {
     return this.uploadsService.uploadThumbnail(req.user.id, validFile);
   }
 
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(ClerkAuthGuard, SubscriptionGuard)
   @Post('image')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -85,7 +85,7 @@ export class UploadsController {
     return this.uploadsService.uploadStoryboardImage(req.user.id, validFile);
   }
 
-  @UseGuards(JwtAuthGuard, SubscriptionGuard, ProPlanGuard)
+  @UseGuards(ClerkAuthGuard, SubscriptionGuard, ProPlanGuard)
   @Post('music')
   @UseInterceptors(
     FileInterceptor('file', {

@@ -1,10 +1,11 @@
 import type { ArcoProject, ScreenshotScene } from "@arco/project-schema";
 import { spokenScriptFromScene } from "@arco/project-schema";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 
 import { apiGenerateVoice } from "@/lib/api/client";
 
 export async function generateVoiceForScreenshotProject(
-  accessToken: string,
+  accessToken: AccessTokenSource,
   project: ArcoProject,
   voiceId: string,
 ): Promise<ScreenshotScene[]> {

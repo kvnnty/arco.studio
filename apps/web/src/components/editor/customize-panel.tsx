@@ -4,7 +4,7 @@ import type { ArcoProject } from "@arco/project-schema";
 import { isScreenshotProject } from "@arco/project-schema";
 import { Upload } from "lucide-react";
 import { useRef } from "react";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +32,7 @@ type CustomizePanelProps = {
 };
 
 export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
   const { data: billing } = useBillingStatus();
   const fileInputRef = useRef<HTMLInputElement>(null);
 

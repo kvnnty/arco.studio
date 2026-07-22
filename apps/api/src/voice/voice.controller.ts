@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { randomUUID } from 'node:crypto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { BillingService } from '../billing/billing.service';
 import { creditCostForVoiceGenerate } from '../billing/plans';
 import { SubscriptionGuard } from '../billing/subscription.guard';
@@ -22,7 +22,7 @@ export class VoiceController {
     return this.voiceService.listVoices();
   }
 
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(ClerkAuthGuard, SubscriptionGuard)
   @Post('preview')
   preview(@Req() req: AuthedRequest, @Body() dto: PreviewVoiceDto) {
     const referenceId = randomUUID();
@@ -35,7 +35,7 @@ export class VoiceController {
     );
   }
 
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(ClerkAuthGuard, SubscriptionGuard)
   @Post('generate')
   generate(@Body() dto: GenerateVoiceDto, @Req() req: AuthedRequest) {
     const referenceId = randomUUID();

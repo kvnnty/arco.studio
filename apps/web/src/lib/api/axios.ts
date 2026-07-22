@@ -1,6 +1,7 @@
 import axios, { isAxiosError, type AxiosInstance } from "axios";
 
 import { getRequestApiUrl } from "@/lib/api/config";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 
 const API_TIMEOUT_MS = 8_000;
 
@@ -29,14 +30,31 @@ function extractErrorMessage(error: unknown): string {
   return error.response?.statusText ?? error.message ?? "Request failed";
 }
 
-export function createApiClient(token?: string): AxiosInstance {
+export async function resolveAccessToken(
+  source?: AccessTokenSource,
+): Promise<string | null> {
+  if (!source) return null;
+  return typeof source === "function" ? source() : source;
+}
+
+export function createApiClient(token?: AccessTokenSource): AxiosInstance {
   const client = axios.create({
     baseURL: getRequestApiUrl(),
     timeout: API_TIMEOUT_MS,
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers:
+      typeof token === "string"
+        ? { Authorization: `Bearer ${token}` }
+        : undefined,
   });
+
+  if (typeof token === "function") {
+    client.interceptors.request.use(async (config) => {
+      const resolved = await token();
+      if (!resolved) throw new ApiError(401, "Authentication required");
+      config.headers.set("Authorization", `Bearer ${resolved}`);
+      return config;
+    });
+  }
 
   client.interceptors.response.use(
     (response) => response,

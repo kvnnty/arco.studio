@@ -5,7 +5,7 @@ import { isScreenshotProject } from "@arco/project-schema";
 import { RotateCcw, Send, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import type { BrandKit } from "@/lib/api/hooks/brand";
 import { useAnalyzeBrandMutation } from "@/lib/api/hooks/brand";
 import { useBillingStatus } from "@/lib/api/hooks/billing";
@@ -119,7 +119,7 @@ export function ChatPanel({
   );
   const bottomRef = useRef<HTMLDivElement>(null);
   const wasPipelineFailedRef = useRef(false);
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
   const analyzeBrand = useAnalyzeBrandMutation();
   const { data: billing } = useBillingStatus();
 

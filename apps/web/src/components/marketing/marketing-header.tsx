@@ -6,7 +6,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 import { MarketingLogo } from "@/components/marketing/marketing-logo";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { Button } from "@/components/ui/button";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { transitionMedium } from "@/lib/motion/presets";
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 export function MarketingHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const reduced = useReducedMotion();
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading } = useManagedAuth();
 
   return (
     <motion.header

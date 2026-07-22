@@ -1,10 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 
-type LastUsedBadgeProps = {
-  show?: boolean;
-};
-
-export function LastUsedBadge({ show = false }: LastUsedBadgeProps) {
+export function LastUsedBadge({ show = false }: { show?: boolean }) {
   if (!show) return null;
 
   return (

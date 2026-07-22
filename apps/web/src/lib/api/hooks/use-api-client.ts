@@ -2,11 +2,11 @@
 
 import { useMemo } from "react";
 
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { createApiClient } from "@/lib/api/axios";
 
 export function useAccessToken() {
-  const { session, loading } = useAuth();
+  const { session, loading } = useManagedAuth();
   return {
     token: session?.accessToken ?? null,
     loading,

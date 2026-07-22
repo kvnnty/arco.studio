@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Figtree, Geist_Mono, Instrument_Serif, Inter } from "next/font/google";
 
 import { ConsentProvider } from "@/components/consent/consent-provider";
 import { GoogleConsentDefaultScript } from "@/components/consent/google-consent-default";
-import { AuthProvider } from "@/components/providers/auth-provider";
 import { NavigationProgress } from "@/components/providers/navigation-progress";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
-import { getServerSession } from "@/lib/auth/session";
 import { rootMetadata } from "@/lib/marketing/metadata";
 
 import "./globals.css";
@@ -36,35 +35,33 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = rootMetadata;
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession();
-
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn("font-sans", figtree.variable, instrumentSerif.variable)}
-    >
-      <head>
-        <GoogleConsentDefaultScript />
-      </head>
-      <body
-        className={`${inter.variable} ${geistMono.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
+    <ClerkProvider>
+      <html
+        lang="en"
+        suppressHydrationWarning
+        className={cn("font-sans", figtree.variable, instrumentSerif.variable)}
       >
-        <NavigationProgress />
-        <AuthProvider initialSession={session}>
+        <head>
+          <GoogleConsentDefaultScript />
+        </head>
+        <body
+          className={`${inter.variable} ${geistMono.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
+        >
+          <NavigationProgress />
           <QueryProvider>
             <ConsentProvider>
               <TooltipProvider>{children}</TooltipProvider>
               <Toaster />
             </ConsentProvider>
           </QueryProvider>
-        </AuthProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

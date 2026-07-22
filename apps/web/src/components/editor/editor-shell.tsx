@@ -16,7 +16,7 @@ import {
 import { applyStylePreset } from "@arco/project-schema/style-presets";
 import { getTemplate } from "@arco/project-schema/templates";
 import Image from "next/image";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import type { VideoPlayerHandle } from "@/lib/editor/video-player";
 import Link from "next/link";
 import { Settings2, SlidersHorizontal } from "lucide-react";
@@ -94,7 +94,7 @@ export function EditorShell({
   session: initialSession,
   onSessionChange,
 }: EditorShellProps) {
-  const { session: authSession } = useAuth();
+  const { session: authSession } = useManagedAuth();
   const [session, setSession] = useState(initialSession);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

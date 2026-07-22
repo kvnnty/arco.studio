@@ -18,7 +18,7 @@ flowchart LR
 | Module | Responsibility |
 |--------|----------------|
 | `apps/web` | Intake, project UI, scene editing, review, and live preview |
-| `apps/api` | Auth, projects, uploads, brand analysis, AI, voice, billing, render jobs |
+| `apps/api` | Clerk token verification, product users, projects, uploads, AI, billing, and render jobs |
 | `packages/project-schema` | Runtime-validated contract shared by every process |
 | `packages/hyperframes` | Composition compiler, quality checks, asset staging, and export CLI |
 
@@ -188,8 +188,18 @@ pnpm video:render
 
 ## Authentication And Storage
 
-The NestJS API remains the authority for users, projects, and render jobs.
-Access tokens are short-lived; refresh sessions are persisted and rotated.
+Clerk is the sole authority for identity, credentials, email verification,
+OAuth, sessions, recovery, and token refresh. Next.js uses Clerk's server and
+client SDKs. The NestJS API accepts only Clerk bearer session tokens, verifies
+their signature and authorized-party claim with Clerk's public key, then maps
+the Clerk subject to an internal product user through `User.clerkUserId`.
+
+Arco stores no passwords, magic-link tokens, refresh tokens, OAuth identities,
+or login sessions. The internal `User` record owns only product state such as
+onboarding, projects, referrals, billing, and credits. Existing users are
+linked once by their Clerk-verified email on first sign-in; subsequent requests
+resolve by the unique Clerk user ID.
+
 Uploads and final renders use S3-compatible object storage. The render worker
 must receive browser-readable URLs for protected remote assets or stage them
 locally before compile.

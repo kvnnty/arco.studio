@@ -4,6 +4,7 @@ import type {
   ScreenshotScene,
   StylePreset,
 } from "@arco/project-schema";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 import {
   createScreenshotPendingProject,
   screenshotProjectDurationMs,
@@ -105,7 +106,7 @@ function defaultTransitionForIndex(
  * Each step does real work (no cosmetic delays except tiny UI pacing).
  */
 export async function runScreenshotPipeline(
-  accessToken: string,
+  accessToken: AccessTokenSource,
   baseProject: ArcoProject,
   callbacks: ScreenshotPipelineCallbacks,
 ): Promise<ScreenshotPipelineResult> {

@@ -13,7 +13,7 @@ import { msToFrames } from "@arco/project-schema";
 import { GripVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { formatMs } from "@/lib/editor/format-time";
@@ -150,7 +150,7 @@ export function ScreenshotSceneInspector({
   maxProjectDurationMs = 0,
   plan = null,
 }: ScreenshotSceneInspectorProps) {
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
   const [voiceBusy, setVoiceBusy] = useState(false);
 
   if (!scene) {
