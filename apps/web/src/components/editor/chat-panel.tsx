@@ -73,7 +73,10 @@ type ChatPanelProps = {
   pipelineMarkers: Marker[];
   onBrandAnalyzed: (kit: BrandKit) => void;
   onAnalysisComplete: (result: DraftAnalysisResult) => void;
-  onScreenshotPipelineComplete: (project: ArcoProject) => void;
+  onScreenshotPipelineComplete: (
+    project: ArcoProject,
+    failureMessage?: string,
+  ) => void;
   onScreenshotPipelinePatch?: (project: ArcoProject) => void;
   onRetryScreenshotPipeline?: () => void;
   pipelineFailed?: boolean;
@@ -194,6 +197,7 @@ export function ChatPanel({
 
     void (async () => {
       if (screenshotMode) {
+        let latestPipelineProject = project;
         const analyzeStatusId = createChatId();
         const statusIds: Partial<Record<PipelineStepId, string>> = {
           analyze: analyzeStatusId,
@@ -253,6 +257,7 @@ export function ChatPanel({
               onPipelineChange(pipeline, markers);
             },
             onProjectPatch: (patched) => {
+              latestPipelineProject = patched;
               onScreenshotPipelinePatch?.(patched);
             },
             onBrandAnalyzed: (kit) => {
@@ -306,10 +311,13 @@ export function ChatPanel({
             content: message,
             createdAt: Date.now(),
           });
-          onScreenshotPipelineComplete({
-            ...project,
-            pipelineStatus: "failed",
-          });
+          onScreenshotPipelineComplete(
+            {
+              ...latestPipelineProject,
+              pipelineStatus: "failed",
+            },
+            message,
+          );
         }
 
         return;

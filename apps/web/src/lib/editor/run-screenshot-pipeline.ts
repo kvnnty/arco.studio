@@ -120,6 +120,7 @@ export async function runScreenshotPipeline(
   let project = { ...baseProject };
   let brandKit: BrandKit | undefined;
   const productUrl = project.brief?.productUrl?.trim();
+  const billing = await apiGetBillingStatus(accessToken);
 
   // --- Analyze ---
   if (productUrl) {
@@ -213,6 +214,12 @@ export async function runScreenshotPipeline(
     scenes.reduce((sum, s) => sum + s.durationMs, 0) / 1000,
   );
 
+  assertWithinDurationLimit(
+    scenes.reduce((sum, scene) => sum + scene.durationMs, 0),
+    billing.maxProjectDurationMs,
+    billing.plan,
+  );
+
   pipeline = advancePipeline(pipeline, "draft", {
     sceneCount: scenes.length,
     targetDurationSec,
@@ -286,13 +293,6 @@ export async function runScreenshotPipeline(
       soundDesign: storyboard.soundDesign,
     },
   };
-
-  const billing = await apiGetBillingStatus(accessToken);
-  assertWithinDurationLimit(
-    project.recording.durationMs,
-    billing.maxProjectDurationMs,
-    billing.plan,
-  );
 
   // --- Stitch ---
   pipeline = advancePipeline(pipeline, "stitch", {

@@ -142,9 +142,7 @@ export class RenderProcessorService implements OnModuleInit {
           .catch((refundError) => {
             this.logger.error(
               `Failed to refund render reservation ${job.creditReservationId}: ${
-                refundError instanceof Error
-                  ? refundError.message
-                  : refundError
+                refundError instanceof Error ? refundError.message : refundError
               }`,
             );
           });
@@ -169,7 +167,12 @@ export class RenderProcessorService implements OnModuleInit {
     const exportQuality = normalizeExportQuality(quality) as ExportQuality;
     const sourceWidth = project.meta.width || 1920;
     const sourceHeight = project.meta.height || 1080;
-    const dims = getExportDimensions(exportQuality, sourceWidth, sourceHeight);
+    const dims = getExportDimensions(
+      exportQuality,
+      sourceWidth,
+      sourceHeight,
+      project.exportFormat,
+    );
     const screenshotMode = isScreenshotProject(project);
 
     const recordingSrc = screenshotMode

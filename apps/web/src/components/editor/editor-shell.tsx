@@ -317,7 +317,7 @@ export function EditorShell({
   }, [persist, session, syncProject]);
 
   const handleScreenshotPipelineComplete = useCallback(
-    (nextProject: ArcoProject) => {
+    (nextProject: ArcoProject, failureMessage?: string) => {
       const failed = nextProject.pipelineStatus === "failed";
       const nextSession: EditorSession = {
         ...session,
@@ -333,12 +333,11 @@ export function EditorShell({
       });
 
       if (failed) {
-        setPipelineFailureMessage(
-          "Video generation failed. Retry the pipeline — you do not need to create a new project.",
-        );
-        toast.error(
-          "Video generation failed. Use Retry pipeline to try again.",
-        );
+        const message =
+          failureMessage?.trim() ||
+          "Video generation failed. Retry the pipeline without creating a new project.";
+        setPipelineFailureMessage(message);
+        toast.error(message);
         persist(nextSession);
         return;
       }

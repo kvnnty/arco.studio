@@ -43,6 +43,7 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
 
     const headlines = new Set<string>();
     let fadeCount = 0;
+    const transitionTypes = new Set<string>();
     let repeatedMotion = 0;
     let previousMotion: string | undefined;
 
@@ -119,7 +120,9 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
         });
       }
 
-      if ((scene.transition?.type ?? "fade") === "fade") {
+      const transitionType = scene.transition?.type ?? "fade";
+      transitionTypes.add(transitionType);
+      if (transitionType === "fade") {
         fadeCount += 1;
       }
 
@@ -129,7 +132,10 @@ export function evaluateVideoQuality(input: ArcoProject): QualityReport {
       previousMotion = scene.motion;
     }
 
-    if (scenes.length >= 4 && fadeCount / scenes.length > 0.6) {
+    if (
+      scenes.length >= 3 &&
+      (transitionTypes.size === 1 || fadeCount / scenes.length > 0.6)
+    ) {
       add(findings, {
         code: "transition-monotony",
         severity: "warning",

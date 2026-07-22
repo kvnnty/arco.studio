@@ -203,20 +203,40 @@ function renderAudio(
 
   if (musicSrc) {
     const configuredVolume = project.audio?.volume ?? 0.25;
-    const volume =
-      hasVoice && project.audio?.duckUnderVoice !== false
-        ? Math.min(configuredVolume, 0.16)
-        : configuredVolume;
+    const shouldDuck = hasVoice && project.audio?.duckUnderVoice !== false;
 
-    tracks.push(`
+    if (shouldDuck && isScreenshotProject(project)) {
+      let start = 0;
+      for (const [index, scene] of (project.scenes ?? []).entries()) {
+        const sceneDuration = seconds(scene.durationMs);
+        const volume = scene.voAudioSrc
+          ? Math.min(configuredVolume, 0.16)
+          : configuredVolume;
+        tracks.push(`
+    <audio
+      id="music-bed-${index}"
+      data-start="${start}"
+      data-duration="${sceneDuration}"
+      data-media-start="${start}"
+      data-track-index="91"
+      data-audio-role="music-bed"
+      data-volume="${volume.toFixed(3)}"
+      src="${escapeHtml(musicSrc)}"
+    ></audio>`);
+        start = Number((start + sceneDuration).toFixed(3));
+      }
+    } else {
+      tracks.push(`
     <audio
       id="music-bed"
       data-start="0"
       data-duration="${duration}"
       data-track-index="91"
-      data-volume="${volume.toFixed(3)}"
+      data-audio-role="music-bed"
+      data-volume="${configuredVolume.toFixed(3)}"
       src="${escapeHtml(musicSrc)}"
     ></audio>`);
+    }
   }
 
   const soundDesign = project.audio?.soundDesign;

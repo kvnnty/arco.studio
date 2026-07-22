@@ -1,6 +1,7 @@
 import {
   createHeuristicSoundDesign,
   createScreenshotPendingProject,
+  getExportDimensions,
   type ArcoProject,
 } from "@arco/project-schema";
 import assert from "node:assert/strict";
@@ -72,7 +73,45 @@ test("compiles a deterministic HyperFrames composition", () => {
   assert.match(compiled.html, /@font-face/);
   assert.match(compiled.html, /layout-kinetic-hook/);
   assert.match(compiled.html, /layout-cta-lockup/);
+  assert.match(compiled.html, /data-role="device"/);
   assert.match(compiled.html, /window\.addEventListener\("hf-seek"/);
+});
+
+test("maps delivery formats to exact export dimensions", () => {
+  assert.deepEqual(getExportDimensions("1080p", 1440, 900, "16:9"), {
+    width: 1920,
+    height: 1080,
+  });
+  assert.deepEqual(getExportDimensions("1080p", 1440, 900, "9:16"), {
+    width: 1080,
+    height: 1920,
+  });
+  assert.deepEqual(getExportDimensions("720p", 1440, 900, "1:1"), {
+    width: 1280,
+    height: 1280,
+  });
+});
+
+test("ducks music only while voice-over scenes are active", () => {
+  const project = screenshotProject();
+  project.audio = {
+    musicId: "calm-focus",
+    volume: 0.24,
+    voiceEnabled: true,
+    duckUnderVoice: true,
+  };
+  project.scenes![1]!.voAudioSrc = "https://cdn.example/proof.mp3";
+
+  const compiled = compileArcoVideo(project);
+  const musicVolumes = Array.from(
+    compiled.html.matchAll(
+      /data-audio-role="music-bed"\s+data-volume="([0-9.]+)"/g,
+    ),
+    (match) => match[1],
+  );
+
+  assert.deepEqual(musicVolumes, ["0.240", "0.160", "0.240"]);
+  assert.match(compiled.html, /data-media-start="3"/);
 });
 
 test("escapes user-authored copy", () => {

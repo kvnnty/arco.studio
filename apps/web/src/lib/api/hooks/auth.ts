@@ -28,7 +28,9 @@ async function requestAuthRoute<T>(
       throw new Error(
         typeof payload?.message === "string"
           ? payload.message
-          : "Something went wrong.",
+          : error.code === "ECONNABORTED"
+            ? "Arco took too long to respond. Please try again."
+            : "Could not reach Arco. Check your connection and try again.",
       );
     }
     throw error;

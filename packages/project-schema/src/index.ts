@@ -366,17 +366,25 @@ function roundEven(value: number): number {
   return rounded % 2 === 0 ? rounded : rounded + 1;
 }
 
-/** Scale project canvas to export resolution while preserving native aspect ratio. */
+const EXPORT_ASPECT_RATIO: Record<ExportFormat, [number, number]> = {
+  "16:9": [16, 9],
+  "1:1": [1, 1],
+  "9:16": [9, 16],
+};
+
+/** Scale the canvas to export resolution and, when set, the delivery format. */
 export function getExportDimensions(
   quality: ExportQuality,
   sourceWidth: number,
   sourceHeight: number,
+  format?: ExportFormat,
 ): {
   width: number;
   height: number;
 } {
-  const width = Math.max(1, sourceWidth);
-  const height = Math.max(1, sourceHeight);
+  const [width, height] = format
+    ? EXPORT_ASPECT_RATIO[format]
+    : [Math.max(1, sourceWidth), Math.max(1, sourceHeight)];
   const longEdge = EXPORT_LONG_EDGE[quality] ?? EXPORT_LONG_EDGE["1080p"];
   const sourceLong = Math.max(width, height);
   const scale = longEdge / sourceLong;

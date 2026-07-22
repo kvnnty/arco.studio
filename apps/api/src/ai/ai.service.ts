@@ -754,6 +754,12 @@ export class AiService {
       Math.round(targetDurationMs / dto.imageUrls.length),
     );
     const intent = dto.intent ?? dto.brief?.intent;
+    const transitions: NonNullable<ScreenshotScene['transition']>['type'][] = [
+      'scale',
+      'slide',
+      'push',
+      'morph',
+    ];
 
     const scenes: ScreenshotScene[] = dto.imageUrls.map((imageSrc, index) => {
       const headline =
@@ -778,7 +784,7 @@ export class AiService {
           motion: 'ken-burns-in',
         }),
         motion: index % 2 === 0 ? 'ken-burns-in' : 'ken-burns-out',
-        transition: { type: 'fade' as const },
+        transition: { type: transitions[index % transitions.length] },
         beatRole:
           index === 0
             ? ('hook' as const)
@@ -890,7 +896,7 @@ export class AiService {
         imageSrc,
         durationMs: llmScene?.durationMs ?? defaultMs,
         headline: llmScene?.headline ?? `Scene ${index + 1}`,
-        subheadline: llmScene?.subheadline,
+        subheadline: llmScene?.subheadline ?? undefined,
         voScript:
           llmScene?.voScript ??
           [llmScene?.headline, llmScene?.subheadline]
@@ -908,8 +914,8 @@ export class AiService {
                   ? 'scale'
                   : 'slide'),
         },
-        beatRole: llmScene?.beatRole,
-        motionIntent: llmScene?.motionIntent,
+        beatRole: llmScene?.beatRole ?? undefined,
+        motionIntent: llmScene?.motionIntent ?? undefined,
       };
     });
 
@@ -917,7 +923,15 @@ export class AiService {
     const soundProject: ArcoProject = {
       ...createScreenshotPendingProject(dto.title, scenes),
       stylePreset,
-      creativeDirection: parsed.creativeDirection,
+      creativeDirection: parsed.creativeDirection
+        ? {
+            audience: parsed.creativeDirection.audience ?? undefined,
+            channel: parsed.creativeDirection.channel ?? undefined,
+            tone: parsed.creativeDirection.tone ?? undefined,
+            coreMessage: parsed.creativeDirection.coreMessage ?? undefined,
+            qualityNotes: parsed.creativeDirection.qualityNotes ?? undefined,
+          }
+        : undefined,
     };
     const llmSound = parsed.soundDesign;
     const soundDesign: SoundDesign =
@@ -971,7 +985,7 @@ export class AiService {
                       intensity: cue.intensity ?? 0.5,
                       enabled: true,
                       source: 'ai' as const,
-                      rationale: cue.rationale,
+                      rationale: cue.rationale ?? undefined,
                     },
                   ];
                 }),
@@ -986,7 +1000,7 @@ export class AiService {
     return {
       scenes,
       stylePreset,
-      creativeDirection: parsed.creativeDirection,
+      creativeDirection: soundProject.creativeDirection,
       soundDesign: normalizedSoundDesign,
     };
   }
