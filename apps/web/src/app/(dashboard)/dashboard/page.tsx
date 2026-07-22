@@ -1,6 +1,10 @@
 import { getServerSession } from "@/lib/auth/session";
 import { DashboardHomeClient } from "@/components/dashboard/dashboard-home-client";
 
+export const metadata = {
+  title: "Home",
+};
+
 type PageProps = {
   searchParams: Promise<{ template?: string }>;
 };

@@ -62,7 +62,7 @@ export const footerColumns: FooterColumn[] = [
 ];
 
 export const announcement = {
-  enabled: false,
+  enabled: true,
   badge: "Launch offer",
   message: "Make your first Pro video for $9.",
   href: "/pricing",

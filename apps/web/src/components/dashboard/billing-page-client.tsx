@@ -23,7 +23,11 @@ import {
   useTopUpCheckoutMutation,
 } from "@/lib/api/hooks/billing";
 import { useApiClient } from "@/lib/api/hooks/use-api-client";
-import { ApiError, type BillingInterval, type CheckoutPlan } from "@/lib/api/client";
+import {
+  ApiError,
+  type BillingInterval,
+  type CheckoutPlan,
+} from "@/lib/api/client";
 import { pricingPlans } from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +64,13 @@ export function BillingPageClient() {
   const [annual, setAnnual] = useState(false);
 
   const { token, loading: authLoading } = useApiClient();
-  const { data: status, isLoading, isError, error, refetch } = useBillingStatus();
+  const {
+    data: status,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useBillingStatus();
   const checkoutMutation = useCheckoutMutation();
   const portalMutation = useBillingPortalMutation();
   const topUpMutation = useTopUpCheckoutMutation();
@@ -72,17 +82,7 @@ export function BillingPageClient() {
   }
 
   if (!token) {
-    return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <PageHeader
-          title="Billing"
-          description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
-        />
-        <p className="text-sm text-muted-foreground">
-          Your session expired. Sign in again to manage billing.
-        </p>
-      </div>
-    );
+    return <BillingPageSkeleton />;
   }
 
   if (isError || !status) {
@@ -137,7 +137,9 @@ export function BillingPageClient() {
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Could not start checkout.",
+            error instanceof Error
+              ? error.message
+              : "Could not start checkout.",
           );
         },
       },
@@ -151,7 +153,9 @@ export function BillingPageClient() {
       },
       onError: (error) => {
         toast.error(
-          error instanceof Error ? error.message : "Could not open billing portal.",
+          error instanceof Error
+            ? error.message
+            : "Could not open billing portal.",
         );
       },
     });
@@ -213,7 +217,8 @@ export function BillingPageClient() {
       {checkout === "success" ? (
         <Card className="rounded-2xl border-[#5fc992]/30 bg-[#5fc992]/5">
           <CardContent className="pt-6 text-sm">
-            Payment received. Your subscription is active — create your first video.
+            Payment received. Your subscription is active — create your first
+            video.
           </CardContent>
         </Card>
       ) : null}
@@ -232,8 +237,8 @@ export function BillingPageClient() {
             <div>
               <CardTitle className="text-base">Your subscription</CardTitle>
               <CardDescription>
-                Upgrade, downgrade, cancel, or view invoices in the Polar customer
-                portal.
+                Upgrade, downgrade, cancel, or view invoices in the Polar
+                customer portal.
               </CardDescription>
             </div>
             <Button
@@ -294,13 +299,17 @@ export function BillingPageClient() {
               <Sparkles className="size-4 text-primary" />
               <CardTitle className="text-base">Intro</CardTitle>
             </div>
-            <CardDescription>Validate your launch at a lower price.</CardDescription>
+            <CardDescription>
+              Validate your launch at a lower price.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
                 ${displayPrice("trial")}
-                <span className="text-base font-normal text-muted-foreground">/mo</span>
+                <span className="text-base font-normal text-muted-foreground">
+                  /mo
+                </span>
               </p>
               {annual ? (
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -320,13 +329,17 @@ export function BillingPageClient() {
         <Card className="rounded-2xl border-primary/20">
           <CardHeader>
             <CardTitle className="text-base">Pro</CardTitle>
-            <CardDescription>Full 1080p toolkit for weekly shipping.</CardDescription>
+            <CardDescription>
+              Full 1080p toolkit for weekly shipping.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
                 ${displayPrice("pro")}
-                <span className="text-base font-normal text-muted-foreground">/mo</span>
+                <span className="text-base font-normal text-muted-foreground">
+                  /mo
+                </span>
               </p>
               {annual ? (
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -349,13 +362,17 @@ export function BillingPageClient() {
         <Card className="rounded-2xl">
           <CardHeader>
             <CardTitle className="text-base">Studio</CardTitle>
-            <CardDescription>4K, unlimited projects, social packs.</CardDescription>
+            <CardDescription>
+              4K, unlimited projects, social packs.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
                 ${displayPrice("studio")}
-                <span className="text-base font-normal text-muted-foreground">/mo</span>
+                <span className="text-base font-normal text-muted-foreground">
+                  /mo
+                </span>
               </p>
               {annual ? (
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -381,8 +398,9 @@ export function BillingPageClient() {
           <CardHeader>
             <CardTitle className="text-base">Credit balance</CardTitle>
             <CardDescription>
-              {status.credits.available} available · {status.credits.included} included ·{" "}
-              {status.credits.purchased} purchased · {status.credits.reserved} reserved
+              {status.credits.available} available · {status.credits.included}{" "}
+              included · {status.credits.purchased} purchased ·{" "}
+              {status.credits.reserved} reserved
               {status.credits.periodEnd
                 ? ` · Period ends ${new Date(status.credits.periodEnd).toLocaleDateString()}`
                 : null}
@@ -419,8 +437,8 @@ export function BillingPageClient() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              AI actions, voice generation, and exports spend credits. Failed actions
-              refund reserved credits automatically.
+              AI actions, voice generation, and exports spend credits. Failed
+              actions refund reserved credits automatically.
             </p>
           </CardContent>
         </Card>

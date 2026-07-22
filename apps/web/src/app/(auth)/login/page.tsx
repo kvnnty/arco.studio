@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import { getServerSession } from "@/lib/auth/session";
 
+export const metadata = {
+  title: "Log in",
+};
+
 type PageProps = {
   searchParams: Promise<{ error?: string; reset?: string }>;
 };

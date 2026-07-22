@@ -1,7 +1,7 @@
 import { TemplateGallery } from "@/components/dashboard/template-gallery";
 
 export const metadata = {
-  title: "Templates — Arco",
+  title: "Templates",
   description: "Browse Arco video templates and start your launch video.",
 };
 

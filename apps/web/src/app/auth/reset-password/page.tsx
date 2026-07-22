@@ -2,6 +2,10 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+export const metadata = {
+  title: "Reset password",
+};
+
 type PageProps = {
   searchParams: Promise<{ token?: string }>;
 };

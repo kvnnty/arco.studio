@@ -5,6 +5,10 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { ProjectsListClient } from "@/components/dashboard/projects-list-client";
 import { Button } from "@/components/ui/button";
 
+export const metadata = {
+  title: "Projects",
+};
+
 export default function ProjectsPage() {
 
   return (

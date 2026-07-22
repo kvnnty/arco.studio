@@ -110,7 +110,7 @@ export function AppSidebar({ billing }: { billing?: BillingStatus | null }) {
                 <SidebarMenuButton
                   render={<Link href="/dashboard/projects/new" />}
                   tooltip="New project"
-                  className="bg-primary text-black hover:bg-primary"
+                  className="bg-primary text-black hover:bg-primary hover:text-black"
                 >
                   <Plus />
                   <span>New project</span>

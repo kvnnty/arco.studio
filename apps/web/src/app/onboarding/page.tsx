@@ -6,6 +6,10 @@ import {
   hasRefreshSession,
 } from "@/lib/auth/session";
 
+export const metadata = {
+  title: "Welcome",
+};
+
 export default async function OnboardingPage() {
   const [session, hasRefresh] = await Promise.all([
     getServerSession(),

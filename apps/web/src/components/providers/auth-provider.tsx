@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { usePathname } from "next/navigation";
 
 import type { AuthSession, AuthUser } from "@/lib/auth/constants";
 import { createWebApiClient } from "@/lib/api/axios";
@@ -16,6 +17,7 @@ type AuthContextValue = {
   session: AuthSession | null;
   loading: boolean;
   refresh: (options?: { silent?: boolean }) => Promise<AuthSession | null>;
+  establishSession: (session: AuthSession) => void;
   setSessionUser: (user: AuthSession["user"]) => void;
 };
 
@@ -35,11 +37,20 @@ async function fetchSessionFromApi(): Promise<AuthSession | null> {
 
   sharedSessionRequest = (async () => {
     try {
-      const client = createWebApiClient();
-      const { data } = await client.get<{ session: AuthSession | null }>(
-        "/api/auth/session",
-      );
-      return data.session;
+      const load = async () => {
+        const client = createWebApiClient();
+        const { data } = await client.get<{ session: AuthSession | null }>(
+          "/api/auth/session",
+        );
+        return data.session;
+      };
+
+      // Refresh cookies are shared by tabs. Serialize rotation across tabs so
+      // simultaneous 401 recovery cannot reuse the same refresh token.
+      if (typeof navigator !== "undefined" && navigator.locks) {
+        return await navigator.locks.request("arco-session-refresh", load);
+      }
+      return await load();
     } catch {
       throw new Error("SESSION_FETCH_FAILED");
     } finally {
@@ -59,6 +70,7 @@ export function AuthProvider({
 }) {
   const [session, setSession] = useState<AuthSession | null>(initialSession);
   const [loading, setLoading] = useState(!initialSession);
+  const pathname = usePathname();
 
   const refresh = useCallback(async (options?: { silent?: boolean }) => {
     if (!options?.silent) {
@@ -69,10 +81,8 @@ export function AuthProvider({
       setSession(next);
       return next;
     } catch {
-      // Network failure: do not wipe an existing session on silent recovery.
-      if (!options?.silent) {
-        setSession(null);
-      }
+      // A network or rate-limit failure is not proof that the session ended.
+      // Preserve current state; definitive auth failures return session: null.
       return null;
     } finally {
       if (!options?.silent) {
@@ -85,15 +95,42 @@ export function AuthProvider({
     setSession((current) => (current ? { ...current, user } : current));
   }, []);
 
+  const establishSession = useCallback((nextSession: AuthSession) => {
+    setSession(nextSession);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
     if (!initialSession) {
       void refresh();
     }
   }, [initialSession, refresh]);
 
+  useEffect(() => {
+    if (!session) return;
+
+    const refreshAt = Math.max(Date.now(), session.expiresAt - 60_000);
+    const timeout = window.setTimeout(
+      () => void refresh({ silent: true }),
+      refreshAt - Date.now(),
+    );
+    return () => window.clearTimeout(timeout);
+  }, [refresh, session]);
+
+  useEffect(() => {
+    const isProtected = ["/dashboard", "/editor", "/onboarding"].some(
+      (prefix) => pathname.startsWith(prefix),
+    );
+    if (!loading && !session && isProtected) {
+      window.location.replace(
+        `/api/auth/continue?returnTo=${encodeURIComponent(`${pathname}${window.location.search}`)}`,
+      );
+    }
+  }, [loading, pathname, session]);
+
   const value = useMemo(
-    () => ({ session, loading, refresh, setSessionUser }),
-    [session, loading, refresh, setSessionUser],
+    () => ({ session, loading, refresh, establishSession, setSessionUser }),
+    [session, loading, refresh, establishSession, setSessionUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

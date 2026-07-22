@@ -1,7 +1,8 @@
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -280,7 +281,10 @@ export class AuthService {
         RATE_LIMITS.refreshPerSession,
       )
     ) {
-      throw new ForbiddenException('Too many refresh attempts.');
+      throw new HttpException(
+        'Too many refresh attempts.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     return this.sessions.rotateRefreshToken(refreshToken, ctx);

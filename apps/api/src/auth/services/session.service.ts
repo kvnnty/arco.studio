@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   AUTH_AUDIT_EVENTS,
@@ -83,24 +87,25 @@ export class SessionService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    if (session.revokedAt) {
-      await this.revokeFamily(session.familyId, session.userId, ctx);
-      this.audit.enqueue(AUTH_AUDIT_EVENTS.TOKEN_REFRESH_REUSE, {
-        userId: session.userId,
-        ctx,
-        metadata: { familyId: session.familyId },
-      });
-      throw new UnauthorizedException('Refresh token reuse detected');
-    }
+    if (session.revokedAt) await this.handleRefreshReuse(session, ctx);
 
     if (session.expiresAt.getTime() <= Date.now()) {
       throw new UnauthorizedException('Refresh token expired');
     }
 
-    await this.prisma.authSession.update({
-      where: { id: session.id },
+    // Compare-and-swap prevents concurrent refreshes from both issuing a valid
+    // successor for the same one-time token.
+    const claimed = await this.prisma.authSession.updateMany({
+      where: { id: session.id, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+
+    if (claimed.count !== 1) {
+      const current = await this.prisma.authSession.findUniqueOrThrow({
+        where: { id: session.id },
+      });
+      await this.handleRefreshReuse(current, ctx);
+    }
 
     const { tokens } = await this.createSession(
       session.userId,
@@ -198,5 +203,38 @@ export class SessionService {
       ctx,
       metadata: { reason: 'refresh_token_reuse', familyId },
     });
+  }
+
+  private async handleRefreshReuse(
+    session: {
+      id: string;
+      userId: string;
+      familyId: string;
+      revokedAt: Date | null;
+      ipAddress: string | null;
+      userAgent: string | null;
+    },
+    ctx: AuthContext,
+  ): Promise<never> {
+    const recentlyRotated =
+      session.revokedAt !== null &&
+      Date.now() - session.revokedAt.getTime() <= 10_000 &&
+      (session.ipAddress ?? undefined) === ctx.ipAddress &&
+      (session.userAgent ?? undefined) === ctx.userAgent;
+
+    // A duplicate from the same browser can arrive before its first response
+    // stores the successor cookie. Do not destroy the whole session family for
+    // that harmless race; the client can retry with the newly stored cookie.
+    if (recentlyRotated) {
+      throw new ConflictException('Refresh already completed; retry request');
+    }
+
+    await this.revokeFamily(session.familyId, session.userId, ctx);
+    this.audit.enqueue(AUTH_AUDIT_EVENTS.TOKEN_REFRESH_REUSE, {
+      userId: session.userId,
+      ctx,
+      metadata: { familyId: session.familyId, sessionId: session.id },
+    });
+    throw new UnauthorizedException('Refresh token reuse detected');
   }
 }

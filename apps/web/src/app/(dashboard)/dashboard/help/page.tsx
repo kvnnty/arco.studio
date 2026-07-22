@@ -17,6 +17,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+export const metadata = {
+  title: "Help & docs",
+};
+
 const gettingStarted = [
   {
     title: "Create your first product demo",

@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 import { MarketingLogo } from "@/components/marketing/marketing-logo";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { transitionMedium } from "@/lib/motion/presets";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 export function MarketingHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const reduced = useReducedMotion();
+  const { session, loading: authLoading } = useAuth();
 
   return (
     <motion.header
@@ -45,17 +47,30 @@ export function MarketingHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-marketing-muted hover:text-foreground"
-            render={<Link href="/login" />}
-          >
-            Sign in
-          </Button>
-          <Button size="sm" render={<Link href="/signup" />}>
-            Start a video
-          </Button>
+          {authLoading ? (
+            <div
+              className="h-8 w-28 animate-pulse rounded-lg bg-marketing-hover"
+              aria-hidden="true"
+            />
+          ) : session ? (
+            <Button size="sm" render={<Link href="/dashboard" />}>
+              Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-marketing-muted hover:text-foreground"
+                render={<Link href="/login" />}
+              >
+                Sign in
+              </Button>
+              <Button size="sm" render={<Link href="/signup" />}>
+                Start a video
+              </Button>
+            </>
+          )}
         </div>
 
         <button
@@ -75,7 +90,10 @@ export function MarketingHeader() {
           mobileOpen ? "block" : "hidden",
         )}
       >
-        <nav className="marketing-container flex flex-col gap-1 py-4" aria-label="Mobile">
+        <nav
+          className="marketing-container flex flex-col gap-1 py-4"
+          aria-label="Mobile"
+        >
           {mainNav.map((item) => (
             <Link
               key={item.href}
@@ -87,16 +105,38 @@ export function MarketingHeader() {
             </Link>
           ))}
           <div className="mt-3 flex flex-col gap-2 border-t border-marketing-border pt-4">
-            <Button
-              variant="outline"
-              className="w-full border-marketing-border bg-transparent"
-              render={<Link href="/login" />}
-            >
-              Sign in
-            </Button>
-            <Button className="w-full" render={<Link href="/signup" />}>
-              Start a video
-            </Button>
+            {authLoading ? (
+              <div
+                className="h-10 w-full animate-pulse rounded-lg bg-marketing-hover"
+                aria-hidden="true"
+              />
+            ) : session ? (
+              <Button
+                className="w-full"
+                render={<Link href="/dashboard" />}
+                onClick={() => setMobileOpen(false)}
+              >
+                Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  className="w-full border-marketing-border bg-transparent"
+                  render={<Link href="/login" />}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Sign in
+                </Button>
+                <Button
+                  className="w-full"
+                  render={<Link href="/signup" />}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Start a video
+                </Button>
+              </>
+            )}
           </div>
         </nav>
       </div>

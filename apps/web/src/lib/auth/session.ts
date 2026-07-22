@@ -1,4 +1,5 @@
-import { jwtVerify, type JWTPayload } from "jose";
+import { cache } from "react";
+import { decodeJwt, type JWTPayload } from "jose";
 
 import { ApiError, createApiClient } from "@/lib/api/axios";
 import {
@@ -13,22 +14,9 @@ type AccessPayload = JWTPayload & {
   type?: string;
 };
 
-function getJwtSecret() {
-  const secret = process.env.JWT_SECRET?.trim();
-  if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("JWT_SECRET is not configured");
-    }
-    return new TextEncoder().encode("arco-dev-secret");
-  }
-  return new TextEncoder().encode(secret);
-}
-
-export async function verifyAccessToken(
-  token: string,
-): Promise<AccessPayload | null> {
+function decodeAccessToken(token: string): AccessPayload | null {
   try {
-    const { payload } = await jwtVerify(token, getJwtSecret());
+    const payload = decodeJwt(token);
     if (payload.type !== "access" || !payload.sub || !payload.email) {
       return null;
     }
@@ -49,7 +37,10 @@ async function fetchCurrentUser(accessToken: string): Promise<AuthUser | null> {
     const { data } = await client.get<AuthUser>("/users/me");
     return data;
   } catch (error) {
-    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+    if (
+      error instanceof ApiError &&
+      (error.status === 401 || error.status === 403)
+    ) {
       return null;
     }
     // Transient network errors: still reject so callers can refresh rather
@@ -66,22 +57,27 @@ export async function buildSessionFromAccessToken(
     return null;
   }
 
-  const payload = await verifyAccessToken(accessToken);
+  // The API call above already verified the signature and active session. We
+  // only decode the same token here to schedule its refresh; the web app does
+  // not need a second copy of the API's signing secret.
+  const payload = decodeAccessToken(accessToken);
 
   return {
     user,
     accessToken,
-    expiresAt: payload?.exp
-      ? payload.exp * 1000
-      : Date.now() + 15 * 60 * 1000,
+    expiresAt: payload?.exp ? payload.exp * 1000 : Date.now() + 15 * 60 * 1000,
   };
 }
 
-export async function getServerSession(): Promise<AuthSession | null> {
+async function readServerSession(): Promise<AuthSession | null> {
   const accessToken = await getAccessTokenFromCookies();
   if (!accessToken) return null;
   return buildSessionFromAccessToken(accessToken);
 }
+
+// Root and protected layouts both need the session. React's request cache keeps
+// those checks on one authoritative API lookup for a render.
+export const getServerSession = cache(readServerSession);
 
 export async function hasRefreshSession(): Promise<boolean> {
   const refreshToken = await getRefreshTokenFromCookies();

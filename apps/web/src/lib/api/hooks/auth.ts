@@ -74,17 +74,18 @@ export function useResetPasswordMutation() {
 
 export function useLoginMutation() {
   const router = useRouter();
-  const { refresh } = useAuth();
+  const { establishSession } = useAuth();
 
   return useMutation({
     mutationFn: (input: { email: string; password: string }) =>
-      requestAuthRoute<{ user: { onboardingCompleted: boolean } }>(
-        "/api/auth/login",
-        input,
-      ),
+      requestAuthRoute<{
+        user: { onboardingCompleted: boolean };
+        session: import("@/lib/auth/constants").AuthSession;
+      }>("/api/auth/login", input),
     onSuccess: (data) => {
-      void refresh();
+      establishSession(data.session);
       router.push(data.user.onboardingCompleted ? "/dashboard" : "/onboarding");
+      router.refresh();
     },
   });
 }

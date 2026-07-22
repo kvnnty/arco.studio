@@ -36,6 +36,8 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
             user={user}
             availableCredits={availableCredits}
             planActive={planActive}
+            plan={billing?.plan ?? null}
+            credits={billing?.credits ?? null}
           />
           <div className="flex-1 overflow-y-auto p-6">
             <DashboardPaywall

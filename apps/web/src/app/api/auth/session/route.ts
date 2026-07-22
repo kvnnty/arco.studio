@@ -14,7 +14,7 @@ export async function GET() {
   const accessToken = await getAccessTokenFromCookies();
   if (accessToken) {
     const session = await buildSessionFromAccessToken(accessToken);
-    if (session) {
+    if (session && session.expiresAt > Date.now() + 60_000) {
       return NextResponse.json({ session });
     }
   }
@@ -41,10 +41,6 @@ export async function GET() {
     // Only clear cookies on definitive auth failure. Transient API errors
     // should not log the user out.
     if (error instanceof ApiError && error.status === 401) {
-      return clearAuthCookiesOnResponse(NextResponse.json({ session: null }));
-    }
-
-    if (error instanceof ApiError && error.status === 403) {
       return clearAuthCookiesOnResponse(NextResponse.json({ session: null }));
     }
 

@@ -9,7 +9,14 @@ export async function POST(request: Request) {
     const body = (await request.json()) as { email: string; password: string };
     const tokens = await loginWithPassword(body);
     return setAuthCookiesOnResponse(
-      NextResponse.json({ user: tokens.user }),
+      NextResponse.json({
+        user: tokens.user,
+        session: {
+          user: tokens.user,
+          accessToken: tokens.accessToken,
+          expiresAt: Date.now() + tokens.expiresIn * 1000,
+        },
+      }),
       tokens,
     );
   } catch (error) {

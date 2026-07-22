@@ -13,7 +13,7 @@ import { pricingPlans } from "@/lib/marketing/pricing";
 import { siteConfig } from "@/lib/marketing/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: `${siteConfig.name} - ${siteConfig.tagline}`,
+  title: `${siteConfig.name} — ${siteConfig.tagline}`,
   description: siteConfig.description,
   path: "/",
 });

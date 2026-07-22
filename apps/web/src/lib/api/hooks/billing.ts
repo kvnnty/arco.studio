@@ -14,6 +14,9 @@ import { useApiClient } from "@/lib/api/hooks/use-api-client";
 import { useAuth } from "@/components/providers/auth-provider";
 import { queryKeys } from "@/lib/api/query-keys";
 
+const SESSION_RECOVERY_ERROR =
+  "We could not renew your session. Check your connection and try again.";
+
 function useAuthenticatedBillingQuery<T>(
   queryKey: readonly unknown[],
   queryFn: (token: string) => Promise<T>,
@@ -32,7 +35,7 @@ function useAuthenticatedBillingQuery<T>(
         }
         const next = await refresh({ silent: true });
         if (!next?.accessToken) {
-          throw error;
+          throw new Error(SESSION_RECOVERY_ERROR);
         }
         return queryFn(next.accessToken);
       }
@@ -77,14 +80,15 @@ export function useCheckoutMutation() {
       plan: CheckoutPlan;
       interval?: BillingInterval;
     }) => {
-      const activeToken = token ?? (await refresh({ silent: true }))?.accessToken;
+      const activeToken =
+        token ?? (await refresh({ silent: true }))?.accessToken;
       if (!activeToken) throw new Error("Not authenticated");
       try {
         return await apiCreateBillingCheckout(activeToken, plan, interval);
       } catch (error) {
         if (!(error instanceof ApiError) || error.status !== 401) throw error;
         const next = await refresh({ silent: true });
-        if (!next?.accessToken) throw error;
+        if (!next?.accessToken) throw new Error(SESSION_RECOVERY_ERROR);
         return apiCreateBillingCheckout(next.accessToken, plan, interval);
       }
     },
@@ -97,14 +101,15 @@ export function useBillingPortalMutation() {
 
   return useMutation({
     mutationFn: async () => {
-      const activeToken = token ?? (await refresh({ silent: true }))?.accessToken;
+      const activeToken =
+        token ?? (await refresh({ silent: true }))?.accessToken;
       if (!activeToken) throw new Error("Not authenticated");
       try {
         return await apiCreateBillingPortal(activeToken);
       } catch (error) {
         if (!(error instanceof ApiError) || error.status !== 401) throw error;
         const next = await refresh({ silent: true });
-        if (!next?.accessToken) throw error;
+        if (!next?.accessToken) throw new Error(SESSION_RECOVERY_ERROR);
         return apiCreateBillingPortal(next.accessToken);
       }
     },
@@ -117,14 +122,15 @@ export function useTopUpCheckoutMutation() {
 
   return useMutation({
     mutationFn: async () => {
-      const activeToken = token ?? (await refresh({ silent: true }))?.accessToken;
+      const activeToken =
+        token ?? (await refresh({ silent: true }))?.accessToken;
       if (!activeToken) throw new Error("Not authenticated");
       try {
         return await apiCreateTopUpCheckout(activeToken);
       } catch (error) {
         if (!(error instanceof ApiError) || error.status !== 401) throw error;
         const next = await refresh({ silent: true });
-        if (!next?.accessToken) throw error;
+        if (!next?.accessToken) throw new Error(SESSION_RECOVERY_ERROR);
         return apiCreateTopUpCheckout(next.accessToken);
       }
     },
