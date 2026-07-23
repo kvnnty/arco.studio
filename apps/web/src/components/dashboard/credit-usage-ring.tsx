@@ -38,7 +38,12 @@ function UsageRingSvg({
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className={cn("pointer-events-none absolute inset-0 -rotate-90", className)}
+      // `size-full` is required so Button's `[&_svg:not([class*='size-'])]:size-4`
+      // does not shrink the ring to 16px and pin it to the top-left.
+      className={cn(
+        "pointer-events-none absolute inset-0 size-full -rotate-90",
+        className,
+      )}
       aria-hidden
     >
       <circle
@@ -107,10 +112,17 @@ type ProfileUsageAvatarProps = {
   showUsage?: boolean;
 };
 
+/** Outer box matches topbar icon-sm (size-8). */
 const PROFILE_SIZE = 32;
-const PROFILE_STROKE = 2.5;
+const PROFILE_STROKE = 2;
+/**
+ * Avatar inset so the ring stroke sits on its circumference
+ * (stroke width + 1px gap).
+ */
+const AVATAR_INSET = PROFILE_STROKE + 1;
+const AVATAR_SIZE = PROFILE_SIZE - AVATAR_INSET * 2;
 
-/** Avatar with usage ring behind it; percentage overlays on parent hover. */
+/** Avatar with usage ring on its circumference; percentage overlays on parent hover. */
 export function ProfileUsageAvatar({
   initials,
   usedPercent,
@@ -118,7 +130,7 @@ export function ProfileUsageAvatar({
 }: ProfileUsageAvatarProps) {
   return (
     <div
-      className="relative flex items-center justify-center"
+      className="relative shrink-0"
       style={{ width: PROFILE_SIZE, height: PROFILE_SIZE }}
     >
       {showUsage ? (
@@ -129,7 +141,13 @@ export function ProfileUsageAvatar({
         />
       ) : null}
 
-      <Avatar className="relative z-1 size-6 after:border-0">
+      <Avatar
+        className="absolute top-1/2 left-1/2 z-1 -translate-x-1/2 -translate-y-1/2 after:border-0"
+        style={{
+          width: showUsage ? AVATAR_SIZE : PROFILE_SIZE,
+          height: showUsage ? AVATAR_SIZE : PROFILE_SIZE,
+        }}
+      >
         <AvatarFallback className="bg-muted text-[10px] font-medium text-muted-foreground">
           {initials}
         </AvatarFallback>
@@ -138,7 +156,8 @@ export function ProfileUsageAvatar({
       {showUsage ? (
         <span
           data-slot="usage-pct"
-          className="pointer-events-none absolute z-2 flex size-6 items-center justify-center rounded-full bg-primary text-[10px] font-semibold tabular-nums leading-none text-primary-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+          className="pointer-events-none absolute top-1/2 left-1/2 z-2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-[10px] font-semibold tabular-nums leading-none text-primary-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+          style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
           aria-hidden
         >
           {usedPercent}%

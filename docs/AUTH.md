@@ -112,8 +112,9 @@ All flows use Clerk's `finalize()` / `setActive()` `navigate` callback from
 2. Otherwise `decorateUrl()` the destination and `router.push()`.
 
 Arco product-user linking happens lazily on the first authenticated
-`GET /users/me` request (`ClerkAuthGuard` on the API). Server layouts retry
-briefly via `resolveProductUser()` while provisioning completes.
+`GET /users/me` request (`ClerkAuthGuard` on the API). Protected routes use
+Clerk middleware `auth.protect()`; the API verifies tokens with
+`CLERK_SECRET_KEY` (JWKS) per [Clerk verifyToken docs](https://clerk.com/docs/reference/backend/verify-token).
 
 Do not remove the `clerk-captcha` mount points from sign-up, continue, or the
 OAuth callback. Clerk uses them when bot protection challenges are required.

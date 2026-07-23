@@ -60,8 +60,16 @@ export function createApiClient(token?: AccessTokenSource): AxiosInstance {
     (response) => response,
     (error) => {
       if (isAxiosError(error)) {
+        const networkFailure =
+          !error.response &&
+          (error.code === "ECONNREFUSED" ||
+            error.code === "ECONNRESET" ||
+            error.code === "ETIMEDOUT" ||
+            error.code === "ENOTFOUND" ||
+            error.code === "ECONNABORTED" ||
+            error.code === "ERR_NETWORK");
         throw new ApiError(
-          error.response?.status ?? 500,
+          error.response?.status ?? (networkFailure ? 503 : 500),
           extractErrorMessage(error),
         );
       }

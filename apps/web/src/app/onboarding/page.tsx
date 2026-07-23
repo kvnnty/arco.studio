@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
 
+import { ProductUserUnavailable } from "@/components/auth/product-user-unavailable";
 import { OnboardingClient } from "@/components/onboarding/onboarding-client";
-import { resolveProductUser } from "@/lib/auth/session";
-import { signInUrl } from "@/lib/auth/return-to";
+import { getAuthenticatedUser } from "@/lib/auth/session";
 
 export const metadata = { title: "Welcome" };
 
 export default async function OnboardingPage() {
-  const user = await resolveProductUser();
-  if (!user) redirect(signInUrl("/onboarding"));
+  const user = await getAuthenticatedUser();
+  if (!user) return <ProductUserUnavailable />;
   if (user.onboardingCompleted) redirect("/dashboard");
   return <OnboardingClient user={user} />;
 }

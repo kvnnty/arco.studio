@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  Logger,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -21,6 +22,7 @@ function bearerToken(request: Request): string | null {
 
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
+  private readonly logger = new Logger(ClerkAuthGuard.name);
   private readonly secretKey: string;
   private readonly jwtKey: string;
   private readonly authorizedParties: string[];
@@ -43,11 +45,7 @@ export class ClerkAuthGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    if (
-      !this.secretKey ||
-      !this.jwtKey ||
-      this.authorizedParties.length === 0
-    ) {
+    if (!this.secretKey || this.authorizedParties.length === 0) {
       throw new ServiceUnavailableException(
         'Authentication is not configured.',
       );
@@ -58,10 +56,16 @@ export class ClerkAuthGuard implements CanActivate {
     if (!token) throw new UnauthorizedException('Authentication required.');
 
     try {
+      // Prefer secretKey verification (Clerk JWKS) — reliable when JWT PEM is
+      // missing or truncated. Fall back to jwtKey for networkless verification.
+      // https://clerk.com/docs/reference/backend/verify-token
       const claims = await verifyToken(token, {
-        jwtKey: this.jwtKey,
+        ...(this.jwtKey.length > 80
+          ? { jwtKey: this.jwtKey }
+          : { secretKey: this.secretKey }),
         authorizedParties: this.authorizedParties,
       });
+
       if (!claims.sub || !claims.sid) {
         throw new UnauthorizedException('Invalid session token.');
       }
@@ -97,7 +101,15 @@ export class ClerkAuthGuard implements CanActivate {
       };
       return true;
     } catch (error) {
-      if (error instanceof UnauthorizedException) throw error;
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof ServiceUnavailableException
+      ) {
+        throw error;
+      }
+      this.logger.warn(
+        `Token verification failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw new UnauthorizedException('Invalid or expired session.');
     }
   }

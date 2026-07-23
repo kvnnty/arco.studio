@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { LoginForm } from "@/components/auth/login-form";
-import { resolveProductUser } from "@/lib/auth/session";
 import {
   Card,
   CardContent,
@@ -16,12 +15,7 @@ export const metadata = { title: "Sign in" };
 
 export default async function SignInPage() {
   const { userId } = await auth();
-  if (userId) {
-    const user = await resolveProductUser({ maxAttempts: 3, retryMs: 200 });
-    if (user) {
-      redirect(user.onboardingCompleted ? "/dashboard" : "/onboarding");
-    }
-  }
+  if (userId) redirect("/dashboard");
 
   return (
     <Suspense fallback={<SignInLoading />}>

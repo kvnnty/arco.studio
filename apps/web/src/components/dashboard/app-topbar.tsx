@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { Bell, HelpCircle, LogOut, Settings, User } from "lucide-react";
+import Link from "next/link";
 
+import { useConsent } from "@/components/consent/consent-provider";
 import {
   CreditUsageRing,
   ProfileUsageAvatar,
 } from "@/components/dashboard/credit-usage-ring";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { ExportsBadge, WorkspaceSwitcher } from "@/components/dashboard/workspace-switcher";
-import { useConsent } from "@/components/consent/consent-provider";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,7 +19,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useLogoutMutation } from "@/lib/api/hooks/auth";
 import {
@@ -66,7 +65,6 @@ export function AppTopbar({
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger />
-      <Separator orientation="vertical" className="mr-1 h-4" />
       <WorkspaceSwitcher name={user.name} email={user.email} />
       <div className="flex-1" />
       <ExportsBadge
@@ -94,7 +92,7 @@ export function AppTopbar({
             <Button
               variant="ghost"
               size="icon-sm"
-              className="group rounded-full p-0 hover:bg-muted/50 aria-expanded:[&_[data-slot=usage-pct]]:opacity-100"
+              className="group overflow-visible rounded-full p-0 hover:bg-muted/50 aria-expanded:[&_[data-slot=usage-pct]]:opacity-100"
               aria-label={
                 planActive
                   ? `Account menu, ${usage.usedPercent}% credits used`

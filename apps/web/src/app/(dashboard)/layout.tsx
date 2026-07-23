@@ -1,16 +1,16 @@
 import { redirect } from "next/navigation";
 
+import { ProductUserUnavailable } from "@/components/auth/product-user-unavailable";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { resolveProductUser } from "@/lib/auth/session";
-import { signInUrl } from "@/lib/auth/return-to";
+import { getAuthenticatedUser } from "@/lib/auth/session";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await resolveProductUser();
-  if (!user) redirect(signInUrl("/dashboard"));
+  const user = await getAuthenticatedUser();
+  if (!user) return <ProductUserUnavailable />;
   if (!user.onboardingCompleted) redirect("/onboarding");
 
   return (

@@ -90,6 +90,34 @@ function ToolbarChip({
   );
 }
 
+function dataTransferHasMedia(dataTransfer: DataTransfer | null) {
+  if (!dataTransfer) return false;
+  return Array.from(dataTransfer.types).some(
+    (type) => type === "Files" || type.startsWith("image/"),
+  );
+}
+
+function filesFromClipboard(clipboard: DataTransfer | null): File[] {
+  if (!clipboard) return [];
+
+  const fromFiles = Array.from(clipboard.files ?? []).filter(
+    (item) =>
+      item.type.startsWith("image/") || item.type.startsWith("video/"),
+  );
+  if (fromFiles.length > 0) return fromFiles;
+
+  const fromItems: File[] = [];
+  for (const item of Array.from(clipboard.items ?? [])) {
+    if (item.kind !== "file") continue;
+    if (!item.type.startsWith("image/") && !item.type.startsWith("video/")) {
+      continue;
+    }
+    const file = item.getAsFile();
+    if (file) fromItems.push(file);
+  }
+  return fromItems;
+}
+
 export function DashboardCreateHero({
   initialTemplateId = null,
   selectedMusicId = null,
@@ -118,6 +146,8 @@ export function DashboardCreateHero({
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const dragDepthRef = useRef(0);
 
   const detectedUrl = extractComposerUrl(prompt);
   const { state: previewState, preview } = useLinkPreview(detectedUrl ?? "");
@@ -162,13 +192,15 @@ export function DashboardCreateHero({
     setError(null);
   }, []);
 
-  const handleScreenshots = useCallback((picked: FileList | null) => {
-    if (!picked?.length) return;
+  const handleScreenshots = useCallback((picked: FileList | File[] | null) => {
+    if (!picked) return;
+    const list = Array.isArray(picked) ? picked : Array.from(picked);
+    if (!list.length) return;
     setMode("screenshots");
     setFile(null);
     setScreenshotFiles((prev) => {
       const next = [...prev];
-      for (const item of Array.from(picked)) {
+      for (const item of list) {
         if (!item.type.startsWith("image/")) continue;
         if (next.length >= MAX_SCREENSHOTS) break;
         next.push(item);
@@ -176,6 +208,33 @@ export function DashboardCreateHero({
       return next;
     });
     setError(null);
+  }, []);
+
+  const ingestMediaFiles = useCallback(
+    (files: File[]) => {
+      if (submitting || files.length === 0) return false;
+
+      const images = files.filter((item) => item.type.startsWith("image/"));
+      const videos = files.filter((item) => item.type.startsWith("video/"));
+
+      if (images.length > 0) {
+        handleScreenshots(images);
+        return true;
+      }
+
+      if (videos[0]) {
+        handleFile(videos[0]);
+        return true;
+      }
+
+      return false;
+    },
+    [handleFile, handleScreenshots, submitting],
+  );
+
+  const resetDragging = useCallback(() => {
+    dragDepthRef.current = 0;
+    setDragging(false);
   }, []);
 
   const submit = async () => {
@@ -265,19 +324,62 @@ export function DashboardCreateHero({
           Brief your AI motion designer
         </h2>
         <p className="text-sm text-muted-foreground">
-          Paste a product URL, describe the launch, then attach screenshots.
-          Recording is optional for deeper demos.
+          Paste a product URL, describe the launch, then drop or paste
+          screenshots. Recording is optional for deeper demos.
         </p>
       </div>
 
       <div
         className={cn(
-          "rounded-[28px] border bg-card/80 shadow-sm transition-[box-shadow,border-color,background-color]",
-          focused
-            ? "border-ring/40 bg-card shadow-md ring-3 ring-ring/20"
-            : "border-border/80",
+          "relative rounded-[28px] border bg-card/80 shadow-sm transition-[box-shadow,border-color,background-color]",
+          dragging
+            ? "border-primary/50 bg-primary/5 shadow-md ring-3 ring-primary/20"
+            : focused
+              ? "border-ring/40 bg-card shadow-md ring-3 ring-ring/20"
+              : "border-border/80",
         )}
+        onDragEnter={(event) => {
+          if (submitting || !dataTransferHasMedia(event.dataTransfer)) return;
+          event.preventDefault();
+          dragDepthRef.current += 1;
+          setDragging(true);
+        }}
+        onDragOver={(event) => {
+          if (submitting || !dataTransferHasMedia(event.dataTransfer)) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "copy";
+        }}
+        onDragLeave={(event) => {
+          if (!dragging) return;
+          event.preventDefault();
+          dragDepthRef.current -= 1;
+          if (dragDepthRef.current <= 0) resetDragging();
+        }}
+        onDrop={(event) => {
+          if (submitting) return;
+          event.preventDefault();
+          resetDragging();
+          const dropped = Array.from(event.dataTransfer.files ?? []);
+          if (!ingestMediaFiles(dropped)) {
+            setError("Drop image screenshots or a screen recording.");
+          }
+        }}
+        onPaste={(event) => {
+          if (submitting) return;
+          const media = filesFromClipboard(event.clipboardData);
+          if (media.length === 0) return;
+          event.preventDefault();
+          ingestMediaFiles(media);
+        }}
       >
+        {dragging ? (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-[28px] bg-primary/5">
+            <div className="rounded-full border border-primary/30 bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm">
+              Drop screenshots or a recording
+            </div>
+          </div>
+        ) : null}
+
         <label htmlFor={composerId} className="sr-only">
           Product URL or video brief
         </label>

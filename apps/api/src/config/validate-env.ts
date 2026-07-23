@@ -12,7 +12,6 @@ export function validateEnv(): void {
 
   const required = [
     'CLERK_SECRET_KEY',
-    'CLERK_JWT_KEY',
     'CLERK_AUTHORIZED_PARTIES',
     'DATABASE_URL',
     'WEB_APP_URL',
@@ -22,6 +21,12 @@ export function validateEnv(): void {
 
   for (const key of required) {
     if (!isSet(key)) errors.push(key);
+  }
+
+  if (!isSet('CLERK_JWT_KEY')) {
+    warnings.push(
+      'CLERK_JWT_KEY not set — API will verify session tokens via Clerk JWKS (secretKey)',
+    );
   }
 
   if (
