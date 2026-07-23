@@ -78,7 +78,7 @@ export default function HomePage() {
         title="Studio-quality product motion."
         titleAccent="No motion designer required."
         description="Turn real product UI into polished launch videos, feature announcements, and app showcases."
-        primaryCta={{ label: "Create your first video", href: "/signup" }}
+        primaryCta={{ label: "Create your first video", href: "/sign-up" }}
       />
 
       <HeroPreview />
@@ -90,7 +90,7 @@ export default function HomePage() {
           <SectionHeader
             eyebrow="Pricing"
             title="A studio line item you can actually predict."
-            description="Start small, then scale the plan with how often your team ships."
+            description="Start small, then scale the plan with how often your team ships. Save 17% with annual billing."
           />
           <div className="mt-14">
             <PricingCards
@@ -110,7 +110,7 @@ export default function HomePage() {
       <CtaBand
         title="Make the product the protagonist."
         description="Your interface is already the story. Give it the motion it deserves."
-        primaryCta={{ label: "Create your first video", href: "/signup" }}
+        primaryCta={{ label: "Create your first video", href: "/sign-up" }}
       />
     </>
   );

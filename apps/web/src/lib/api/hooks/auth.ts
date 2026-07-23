@@ -10,7 +10,7 @@ import { readReferralCode } from "@/lib/referral";
 export function useLogoutMutation() {
   const { signOut } = useClerk();
   return useMutation({
-    mutationFn: () => signOut({ redirectUrl: "/login" }),
+    mutationFn: () => signOut({ redirectUrl: "/sign-in" }),
   });
 }
 

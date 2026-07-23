@@ -1,11 +1,16 @@
 "use client";
 
-import { useSignUp } from "@clerk/nextjs";
+import { useAuth, useSignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { authErrorMessage } from "@/components/auth/auth-flow-utils";
+import {
+  authErrorMessage,
+  CLERK_SIGN_IN_PATH,
+  CLERK_SIGN_UP_VERIFY_PATH,
+  emailLinkVerificationUrl,
+} from "@/components/auth/auth-flow-utils";
 import { LastUsedBadge } from "@/components/auth/last-used-badge";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,102 +29,101 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useLastUsedAuthMethod } from "@/lib/auth/last-used-method";
+import { useCaptureReturnTo } from "@/hooks/use-capture-return-to";
+import { commitAuthMethod } from "@/lib/auth/last-used-method";
+import { useLastUsedAuthMethod } from "@/lib/auth/use-last-used-auth-method";
+import { createAuthNavigate } from "@/lib/auth/sync-product-user";
 
 export function SignupForm() {
   const { signUp, fetchStatus } = useSignUp();
+  const { getToken } = useAuth();
   const router = useRouter();
-  const { lastUsed, remember } = useLastUsedAuthMethod();
+  useCaptureReturnTo();
+  const { lastUsed } = useLastUsedAuthMethod();
   const [verifying, setVerifying] = useState(false);
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const finish = async () => {
     const result = await signUp.finalize({
-      navigate: async ({ decorateUrl }) => {
-        const url = decorateUrl("/post-auth");
-        if (url.startsWith("http")) window.location.href = url;
-        else router.push(url);
-      },
+      navigate: createAuthNavigate(router, getToken),
     });
-    if (result.error) setError(authErrorMessage(result.error));
+    if (result.error) {
+      setError(authErrorMessage(result.error));
+      return;
+    }
+    commitAuthMethod("email_link");
+  };
+
+  const sendMagicLink = async (nextEmail: string) => {
+    setVerifying(true);
+    setError(null);
+
+    const created = await signUp.create({ emailAddress: nextEmail });
+    if (created.error) {
+      setError(authErrorMessage(created.error));
+      setVerifying(false);
+      return;
+    }
+
+    const sent = await signUp.verifications.sendEmailLink({
+      verificationUrl: emailLinkVerificationUrl(CLERK_SIGN_UP_VERIFY_PATH),
+    });
+    if (sent.error) {
+      setError(authErrorMessage(sent.error));
+      setVerifying(false);
+      return;
+    }
+
+    const waited = await signUp.verifications.waitForEmailLinkVerification();
+    if (waited.error) {
+      setError(authErrorMessage(waited.error));
+      setVerifying(false);
+      return;
+    }
+
+    if (signUp.status === "complete") {
+      await finish();
+      return;
+    }
+
+    setError(
+      `Account setup still requires: ${signUp.missingFields.join(", ") || "an additional step"}.`,
+    );
+    setVerifying(false);
   };
 
   const pending = fetchStatus === "fetching";
 
   if (verifying) {
     return (
-      <Card className="w-full max-w-md rounded-2xl border-none shadow-none ring-0">
-        <CardHeader>
-          <CardTitle>Verify your email</CardTitle>
-          <CardDescription>
-            Enter the verification code Clerk sent to {email}.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              setError(null);
-              void signUp.verifications
-                .verifyEmailCode({ code })
-                .then(async (result) => {
-                  if (result.error) {
-                    setError(authErrorMessage(result.error));
-                    return;
-                  }
-                  if (signUp.status === "complete") {
-                    await finish();
-                    return;
-                  }
-                  setError(
-                    `Account setup still requires: ${signUp.missingFields.join(", ") || "an additional step"}.`,
-                  );
-                })
-                .catch((caught) => setError(authErrorMessage(caught)));
-            }}
-          >
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="signup-code">Verification code</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="signup-code"
-                    value={code}
-                    onChange={(event) => setCode(event.target.value)}
-                    autoComplete="one-time-code"
-                    inputMode="numeric"
-                    required
-                    autoFocus
-                  />
-                </FieldContent>
-              </Field>
-              {error ? (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              ) : null}
-              <Button type="submit" className="w-full" disabled={pending}>
-                {pending ? "Verifying…" : "Verify and create account"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  void signUp.reset();
-                  setVerifying(false);
-                  setCode("");
-                  setError(null);
-                }}
-              >
-                Use a different email
-              </Button>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
+      <>
+        <Card className="w-full max-w-md border border-border/60 shadow-sm">
+          <CardHeader className="items-center space-y-3 pb-2 text-center">
+            <CardTitle className="text-xl">Check your email</CardTitle>
+            <CardDescription className="text-balance leading-relaxed">
+              {error
+                ? error
+                : `We sent an account verification link to ${email}. Open it to continue — this page will finish sign-up automatically.`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                void signUp.reset();
+                setVerifying(false);
+                setError(null);
+              }}
+            >
+              Use a different email
+            </Button>
+          </CardContent>
+        </Card>
+        <div id="clerk-captcha" />
+      </>
     );
   }
 
@@ -128,7 +132,7 @@ export function SignupForm() {
       <CardHeader>
         <CardTitle>Create your account</CardTitle>
         <CardDescription>
-          Create your account with a verified email and secure password.
+          Use Google, GitHub, or verify your email with a secure magic link.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -141,40 +145,12 @@ export function SignupForm() {
           onSubmit={(event) => {
             event.preventDefault();
             setError(null);
-            remember("password");
             const formData = new FormData(event.currentTarget);
             const nextEmail = String(formData.get("email") ?? "").trim();
             setEmail(nextEmail);
-
-            void signUp
-              .password({
-                emailAddress: nextEmail,
-                password: String(formData.get("password") ?? ""),
-              })
-              .then(async (result) => {
-                if (result.error) {
-                  setError(authErrorMessage(result.error));
-                  return;
-                }
-                if (signUp.status === "complete") {
-                  await finish();
-                  return;
-                }
-                if (signUp.unverifiedFields.includes("email_address")) {
-                  const verification =
-                    await signUp.verifications.sendEmailCode();
-                  if (verification.error) {
-                    setError(authErrorMessage(verification.error));
-                    return;
-                  }
-                  setVerifying(true);
-                  return;
-                }
-                setError(
-                  `Account setup still requires: ${signUp.missingFields.join(", ") || "an additional step"}.`,
-                );
-              })
-              .catch((caught) => setError(authErrorMessage(caught)));
+            void sendMagicLink(nextEmail).catch((caught) =>
+              setError(authErrorMessage(caught)),
+            );
           }}
         >
           <FieldGroup>
@@ -191,20 +167,6 @@ export function SignupForm() {
                 />
               </FieldContent>
             </Field>
-            <Field>
-              <FieldLabel htmlFor="register-password">Password</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="register-password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  minLength={8}
-                  placeholder="At least 8 characters"
-                />
-              </FieldContent>
-            </Field>
             {error ? (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -215,8 +177,8 @@ export function SignupForm() {
               className="relative w-full"
               disabled={pending}
             >
-              <LastUsedBadge show={lastUsed === "password"} />
-              {pending ? "Creating account…" : "Create account"}
+              <LastUsedBadge show={lastUsed === "email_link"} />
+              {pending ? "Sending link…" : "Continue with magic link"}
             </Button>
             <div id="clerk-captcha" />
           </FieldGroup>
@@ -224,7 +186,7 @@ export function SignupForm() {
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
-            href="/login"
+            href={CLERK_SIGN_IN_PATH}
             className="text-accent-foreground hover:underline"
           >
             Sign in

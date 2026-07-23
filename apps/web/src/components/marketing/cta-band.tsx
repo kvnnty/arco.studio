@@ -19,7 +19,7 @@ type CtaBandProps = {
 export function CtaBand({
   title,
   description,
-  primaryCta = { label: "Start a video", href: "/signup" },
+  primaryCta = { label: "Start a video", href: "/sign-up" },
   className,
 }: CtaBandProps) {
   const reduced = useReducedMotion();

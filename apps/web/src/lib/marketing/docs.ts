@@ -104,7 +104,7 @@ const docsPages: Record<string, DocPage> = {
       {
         type: "list",
         items: [
-          "An Arco account (sign up free at /signup)",
+          "An Arco account (sign up free at /sign-up)",
           "3–10 product screenshots (PNG/JPG) and optionally your product URL",
         ],
       },

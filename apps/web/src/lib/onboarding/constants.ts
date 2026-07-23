@@ -54,7 +54,7 @@ export const ONBOARDING_GOALS: OnboardingGoal[] = [
 ];
 
 export const ONBOARDING_PLAN_SUMMARY =
-  "Pro is the best way to get started — ship every social format without hiring a motion designer.";
+  "Pro is the best way to get started — save 17% with annual billing and ship every social format without hiring a motion designer.";
 
 export type OnboardingReferralSource = {
   id: string;

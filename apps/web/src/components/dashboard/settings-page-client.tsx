@@ -30,10 +30,6 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
   const updateProfile = useUpdateProfileMutation();
   const clerk = useClerk();
   const { user: clerkUser } = useUser();
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [securityMessage, setSecurityMessage] = useState<string | null>(null);
-  const [securityPending, setSecurityPending] = useState(false);
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
@@ -144,81 +140,9 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
                             account.provider.replace("oauth_", ""),
                           )
                           .join(", ")
-                      : "Email and password"}
+                      : "Email magic link"}
                   </p>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {clerkUser?.passwordEnabled
-                    ? "Change password"
-                    : "Add a password"}
-                </CardTitle>
-                <CardDescription>
-                  Updating your password signs out every other active session.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {clerkUser?.passwordEnabled ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="current-password">Current password</Label>
-                    <Input
-                      id="current-password"
-                      type="password"
-                      autoComplete="current-password"
-                      value={currentPassword}
-                      onChange={(event) =>
-                        setCurrentPassword(event.target.value)
-                      }
-                    />
-                  </div>
-                ) : null}
-                <div className="space-y-2">
-                  <Label htmlFor="new-account-password">New password</Label>
-                  <Input
-                    id="new-account-password"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    value={newPassword}
-                    onChange={(event) => setNewPassword(event.target.value)}
-                  />
-                </div>
-                {securityMessage ? (
-                  <p className="text-sm text-muted-foreground">
-                    {securityMessage}
-                  </p>
-                ) : null}
-                <Button
-                  disabled={
-                    securityPending || !clerkUser || newPassword.length < 8
-                  }
-                  onClick={() => {
-                    if (!clerkUser) return;
-                    setSecurityPending(true);
-                    setSecurityMessage(null);
-                    void clerkUser
-                      .updatePassword({
-                        newPassword,
-                        currentPassword: currentPassword || undefined,
-                        signOutOfOtherSessions: true,
-                      })
-                      .then(() => {
-                        setCurrentPassword("");
-                        setNewPassword("");
-                        setSecurityMessage("Password updated.");
-                      })
-                      .catch(() =>
-                        setSecurityMessage("Could not update password."),
-                      )
-                      .finally(() => setSecurityPending(false));
-                  }}
-                >
-                  {securityPending ? "Updating…" : "Update password"}
-                </Button>
               </CardContent>
             </Card>
 

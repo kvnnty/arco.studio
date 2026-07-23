@@ -1,16 +1,33 @@
 "use client";
 
 import { useSignIn, useSignUp } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { authErrorMessage } from "@/components/auth/auth-flow-utils";
+import {
+  authErrorMessage,
+  CLERK_SSO_CALLBACK_PATH,
+  CLERK_SIGN_IN_CONTINUE_PATH,
+  CLERK_SIGN_IN_PATH,
+} from "@/components/auth/auth-flow-utils";
 import { LastUsedBadge } from "@/components/auth/last-used-badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useLastUsedAuthMethod } from "@/lib/auth/last-used-method";
+import { stashAuthMethod } from "@/lib/auth/last-used-method";
+import { useLastUsedAuthMethod } from "@/lib/auth/use-last-used-auth-method";
 
 type Provider = "google" | "github";
 
+/** Clerk OAuthStrategy values — see clerk.com/docs/.../oauth-connections */
+const STRATEGIES = {
+  google: "oauth_google",
+  github: "oauth_github",
+} as const;
+
+/**
+ * Clerk Core 3 OAuth — official custom flow:
+ * clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections
+ */
 export function OAuthButtons({
   intent,
   onError,
@@ -18,37 +35,59 @@ export function OAuthButtons({
   intent: "sign-in" | "sign-up";
   onError: (message: string) => void;
 }) {
+  const router = useRouter();
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
-  const { lastUsed, remember } = useLastUsedAuthMethod();
+  const { lastUsed } = useLastUsedAuthMethod();
   const [pending, setPending] = useState<Provider | null>(null);
 
   const start = async (provider: Provider) => {
     setPending(provider);
     onError("");
-    remember(provider);
+    stashAuthMethod(provider);
 
-    try {
-      const strategy = provider === "google" ? "oauth_google" : "oauth_github";
-      const result =
-        intent === "sign-in"
-          ? await signIn.sso({
-              strategy,
-              redirectCallbackUrl: "/sso-callback",
-              redirectUrl: "/post-auth",
-            })
-          : await signUp.sso({
-              strategy,
-              redirectCallbackUrl: "/sso-callback",
-              redirectUrl: "/post-auth",
-            });
+    const strategy = STRATEGIES[provider];
+    const ssoParams = {
+      strategy,
+      redirectCallbackUrl: CLERK_SSO_CALLBACK_PATH,
+      redirectUrl: CLERK_SSO_CALLBACK_PATH,
+    } as const;
 
-      if (result.error) {
-        onError(authErrorMessage(result.error));
-        setPending(null);
-      }
-    } catch (error) {
-      onError(authErrorMessage(error));
+    const result =
+      intent === "sign-in"
+        ? await signIn.sso(ssoParams)
+        : await signUp.sso(ssoParams);
+
+    if (result.error) {
+      onError(authErrorMessage(result.error));
+      setPending(null);
+      return;
+    }
+
+    const flow = intent === "sign-in" ? signIn : signUp;
+
+    if (flow.status === "needs_second_factor") {
+      setPending(null);
+      router.push(`${CLERK_SIGN_IN_PATH}?resume=1`);
+      return;
+    }
+
+    if (flow.status === "needs_client_trust") {
+      setPending(null);
+      router.push(`${CLERK_SIGN_IN_PATH}?resume=1`);
+      return;
+    }
+
+    if (flow.status === "missing_requirements") {
+      setPending(null);
+      router.push(CLERK_SIGN_IN_CONTINUE_PATH);
+      return;
+    }
+
+    if (flow.status !== "complete") {
+      onError(
+        "Sign-in could not be completed. Check Clerk Dashboard → SSO connections.",
+      );
       setPending(null);
     }
   };
@@ -59,24 +98,28 @@ export function OAuthButtons({
         <Button
           variant="outline"
           type="button"
-          className="relative w-full"
+          className="relative h-11 w-full"
           disabled={pending !== null}
           onClick={() => void start("google")}
         >
           <LastUsedBadge show={lastUsed === "google"} />
           <GoogleIcon />
-          {pending === "google" ? "Connecting…" : "Google"}
+          <span className="ml-2">
+            {pending === "google" ? "Redirecting…" : "Google"}
+          </span>
         </Button>
         <Button
           variant="outline"
           type="button"
-          className="relative w-full"
+          className="relative h-11 w-full"
           disabled={pending !== null}
           onClick={() => void start("github")}
         >
           <LastUsedBadge show={lastUsed === "github"} />
           <GitHubIcon />
-          {pending === "github" ? "Connecting…" : "GitHub"}
+          <span className="ml-2">
+            {pending === "github" ? "Redirecting…" : "GitHub"}
+          </span>
         </Button>
       </div>
       <div className="relative">
@@ -95,7 +138,7 @@ export function OAuthButtons({
 
 function GoogleIcon() {
   return (
-    <svg className="size-4" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="size-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
       <path
         fill="currentColor"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -119,7 +162,7 @@ function GoogleIcon() {
 function GitHubIcon() {
   return (
     <svg
-      className="size-4"
+      className="size-4 shrink-0"
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"

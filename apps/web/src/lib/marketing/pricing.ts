@@ -11,6 +11,20 @@ export type PricingPlan = {
   priceNote?: string;
 };
 
+export const ANNUAL_SAVINGS_LABEL = "Save 17%";
+
+export function planDisplayPrice(plan: PricingPlan, annual: boolean): number {
+  return annual ? plan.annualPrice : plan.monthlyPrice;
+}
+
+export function planHasAnnualDiscount(plan: PricingPlan): boolean {
+  return plan.annualPrice < plan.monthlyPrice;
+}
+
+export function planAnnualTotal(plan: PricingPlan): number {
+  return plan.annualPrice * 12;
+}
+
 export const pricingPlans: PricingPlan[] = [
   {
     id: "trial",
@@ -28,7 +42,7 @@ export const pricingPlans: PricingPlan[] = [
       "Community support",
     ],
     cta: "Get Intro",
-    href: "/signup?plan=trial",
+    href: "/sign-up?plan=trial",
     priceNote: "Top up anytime — 200 credits per pack",
   },
   {
@@ -48,7 +62,7 @@ export const pricingPlans: PricingPlan[] = [
       "Priority support",
     ],
     cta: "Get Pro",
-    href: "/signup?plan=pro",
+    href: "/sign-up?plan=pro",
     popular: true,
   },
   {
@@ -67,7 +81,7 @@ export const pricingPlans: PricingPlan[] = [
       "Priority render queue",
     ],
     cta: "Get Studio",
-    href: "/signup?plan=studio",
+    href: "/sign-up?plan=studio",
   },
 ];
 
@@ -95,7 +109,7 @@ export const pricingFaqs = [
   {
     question: "Do you offer annual billing?",
     answer:
-      "Yes. Annual billing saves roughly 17% compared to paying monthly.",
+      "Yes — and it's the best value. Annual billing saves 17% compared to paying monthly (two months free on Pro and Studio). You pay once per year and lock in the lower rate.",
   },
   {
     question: "What payment methods do you accept?",

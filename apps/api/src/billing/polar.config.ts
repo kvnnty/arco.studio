@@ -82,7 +82,7 @@ export function polarProductIds(): Record<
 
 export function resolvePolarProductId(
   plan: ArcoPlan,
-  interval: BillingInterval = 'monthly',
+  interval: BillingInterval = 'annual',
 ): string {
   const products = polarProductIds();
   const entry = products[plan];

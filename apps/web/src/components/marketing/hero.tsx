@@ -29,7 +29,7 @@ export function Hero({
   title,
   titleAccent,
   description,
-  primaryCta = { label: "Create your first video", href: "/signup" },
+  primaryCta = { label: "Create your first video", href: "/sign-up" },
   secondaryCta = { label: "Watch examples", href: "#examples" },
   className,
 }: HeroProps) {

@@ -392,7 +392,7 @@ export class BillingService implements OnModuleInit {
     userId: string,
     email: string,
     plan: CheckoutPlan,
-    interval: BillingInterval = 'monthly',
+    interval: BillingInterval = 'annual',
     customerIpAddress?: string,
   ): Promise<{ url: string }> {
     const polar = this.requirePolar();

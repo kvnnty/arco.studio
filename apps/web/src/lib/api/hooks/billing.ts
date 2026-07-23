@@ -76,7 +76,7 @@ export function useCheckoutMutation() {
   return useMutation({
     mutationFn: async ({
       plan,
-      interval = "monthly",
+      interval = "annual",
     }: {
       plan: CheckoutPlan;
       interval?: BillingInterval;

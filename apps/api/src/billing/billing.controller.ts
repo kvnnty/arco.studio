@@ -77,7 +77,7 @@ export class BillingController {
       req.user.id,
       req.user.email,
       body.plan,
-      body.interval ?? 'monthly',
+      body.interval ?? 'annual',
       resolveCustomerIp(req),
     );
   }

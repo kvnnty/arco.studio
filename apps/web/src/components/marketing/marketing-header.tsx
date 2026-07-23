@@ -62,11 +62,11 @@ export function MarketingHeader() {
                 variant="ghost"
                 size="sm"
                 className="text-marketing-muted hover:text-foreground"
-                render={<Link href="/login" />}
+                render={<Link href="/sign-in" />}
               >
                 Sign in
               </Button>
-              <Button size="sm" render={<Link href="/signup" />}>
+              <Button size="sm" render={<Link href="/sign-up" />}>
                 Start a video
               </Button>
             </>
@@ -123,14 +123,14 @@ export function MarketingHeader() {
                 <Button
                   variant="outline"
                   className="w-full border-marketing-border bg-transparent"
-                  render={<Link href="/login" />}
+                  render={<Link href="/sign-in" />}
                   onClick={() => setMobileOpen(false)}
                 >
                   Sign in
                 </Button>
                 <Button
                   className="w-full"
-                  render={<Link href="/signup" />}
+                  render={<Link href="/sign-up" />}
                   onClick={() => setMobileOpen(false)}
                 >
                   Start a video

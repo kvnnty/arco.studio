@@ -28,7 +28,7 @@ import {
   type BillingInterval,
   type CheckoutPlan,
 } from "@/lib/api/client";
-import { pricingPlans } from "@/lib/marketing/pricing";
+import { pricingPlans, ANNUAL_SAVINGS_LABEL, planAnnualTotal } from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
 const TRIAL_FEATURES = [
@@ -61,7 +61,7 @@ export function BillingPageClient() {
   const searchParams = useSearchParams();
   const welcome = searchParams.get("welcome") === "1";
   const checkout = searchParams.get("checkout");
-  const [annual, setAnnual] = useState(false);
+  const [annual, setAnnual] = useState(true);
 
   const { token, loading: authLoading } = useApiClient();
   const {
@@ -94,7 +94,7 @@ export function BillingPageClient() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <PageHeader
           title="Billing"
-          description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
+          description="Intro $9 · Pro from $24/mo billed annually · Studio from $49/mo billed annually."
         />
         <Card className="rounded-2xl">
           <CardContent className="flex flex-col gap-4 pt-6">
@@ -113,7 +113,7 @@ export function BillingPageClient() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    window.location.href = "/login";
+                    window.location.href = "/sign-in";
                   }}
                 >
                   Sign in
@@ -129,8 +129,10 @@ export function BillingPageClient() {
   const isActive = status.planStatus === "active";
 
   const handleCheckout = (plan: CheckoutPlan) => {
+    const interval: BillingInterval =
+      plan === "trial" ? "monthly" : billingInterval;
     checkoutMutation.mutate(
-      { plan, interval: billingInterval },
+      { plan, interval },
       {
         onSuccess: ({ url }) => {
           window.location.href = url;
@@ -199,7 +201,7 @@ export function BillingPageClient() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <PageHeader
         title="Billing"
-        description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
+        description="Intro $9 · Pro from $24/mo billed annually · Studio from $49/mo billed annually."
       />
 
       {welcome && !isActive ? (
@@ -253,42 +255,49 @@ export function BillingPageClient() {
       ) : null}
 
       {!isActive ? (
-        <div className="flex items-center justify-center gap-3">
-          <span
-            className={cn(
-              "text-sm font-medium",
-              !annual ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            Monthly
-          </span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={annual}
-            aria-label="Toggle annual billing"
-            className={cn(
-              "relative h-7 w-12 rounded-full border transition-colors",
-              annual ? "border-primary bg-primary" : "border-border bg-muted",
-            )}
-            onClick={() => setAnnual((value) => !value)}
-          >
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-3">
             <span
               className={cn(
-                "absolute top-0.5 left-0.5 size-6 rounded-full bg-background transition-transform",
-                annual ? "translate-x-5" : "translate-x-0",
+                "text-sm font-medium",
+                annual ? "text-foreground" : "text-muted-foreground",
               )}
-            />
-          </button>
-          <span
-            className={cn(
-              "text-sm font-medium",
-              annual ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            Annual
-            <span className="ml-1.5 text-xs text-primary">Save 17%</span>
-          </span>
+            >
+              Yearly
+              <Badge variant="secondary" className="ml-2 border-primary/20 bg-primary/10 text-primary">
+                {ANNUAL_SAVINGS_LABEL}
+              </Badge>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={annual}
+              aria-label="Toggle annual billing"
+              className={cn(
+                "relative h-7 w-12 rounded-full border transition-colors",
+                annual ? "border-primary bg-primary" : "border-border bg-muted",
+              )}
+              onClick={() => setAnnual((value) => !value)}
+            >
+              <span
+                className={cn(
+                  "absolute top-0.5 left-0.5 size-6 rounded-full bg-background transition-transform",
+                  annual ? "translate-x-0" : "translate-x-5",
+                )}
+              />
+            </button>
+            <span
+              className={cn(
+                "text-sm font-medium",
+                !annual ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              Monthly
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Annual billing is recommended — pay once per year and save 17%.
+          </p>
         </div>
       ) : null}
 
@@ -343,7 +352,7 @@ export function BillingPageClient() {
               </p>
               {annual ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Billed annually · {pricingPlans[1]?.cta}
+                  Billed as ${planAnnualTotal(pricingPlans[1]!)}/year · {ANNUAL_SAVINGS_LABEL.toLowerCase()}
                 </p>
               ) : null}
               <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
@@ -376,7 +385,7 @@ export function BillingPageClient() {
               </p>
               {annual ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Billed annually · {pricingPlans[2]?.cta}
+                  Billed as ${planAnnualTotal(pricingPlans[2]!)}/year · {ANNUAL_SAVINGS_LABEL.toLowerCase()}
                 </p>
               ) : null}
               <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">

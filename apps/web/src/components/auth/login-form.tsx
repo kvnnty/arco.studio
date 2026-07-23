@@ -1,11 +1,16 @@
 "use client";
 
-import { useSignIn } from "@clerk/nextjs";
+import { useAuth, useSignIn } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import { authErrorMessage } from "@/components/auth/auth-flow-utils";
+import {
+  authErrorMessage,
+  CLERK_SIGN_IN_VERIFY_PATH,
+  CLERK_SIGN_UP_PATH,
+  emailLinkVerificationUrl,
+} from "@/components/auth/auth-flow-utils";
 import { LastUsedBadge } from "@/components/auth/last-used-badge";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,45 +29,42 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useLastUsedAuthMethod } from "@/lib/auth/last-used-method";
+import { useCaptureReturnTo } from "@/hooks/use-capture-return-to";
+import { commitAuthMethod } from "@/lib/auth/last-used-method";
+import { useLastUsedAuthMethod } from "@/lib/auth/use-last-used-auth-method";
+import { createAuthNavigate } from "@/lib/auth/sync-product-user";
 
-type LoginMode = "code" | "password";
-type Step = "start" | "email-code" | "mfa";
+type Step = "start" | "email-link" | "mfa";
 type MfaStrategy = "email_code" | "phone_code" | "totp" | "backup_code";
 
 export function LoginForm() {
   const { signIn, fetchStatus } = useSignIn();
+  const { getToken } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { lastUsed, remember } = useLastUsedAuthMethod();
-  const [mode, setMode] = useState<LoginMode>("password");
+  useCaptureReturnTo();
+  const { lastUsed } = useLastUsedAuthMethod();
   const [step, setStep] = useState<Step>("start");
   const [mfaStrategy, setMfaStrategy] = useState<MfaStrategy | null>(null);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (lastUsed === "email_code") setMode("code");
-    if (lastUsed === "password") setMode("password");
-  }, [lastUsed]);
-
   const finish = useCallback(async () => {
     const result = await signIn.finalize({
-      navigate: async ({ decorateUrl }) => {
-        const url = decorateUrl("/post-auth");
-        if (url.startsWith("http")) window.location.href = url;
-        else router.push(url);
-      },
+      navigate: createAuthNavigate(router, getToken),
     });
-    if (result.error) setError(authErrorMessage(result.error));
-  }, [router, signIn]);
+    if (result.error) {
+      setError(authErrorMessage(result.error));
+      return;
+    }
+    commitAuthMethod("email_link");
+  }, [getToken, router, signIn]);
 
   const prepareMfa = useCallback(async () => {
     const strategies = new Set(
       signIn.supportedSecondFactors.map((factor) => factor.strategy),
     );
-
     let strategy: MfaStrategy | null = null;
     let result: { error: unknown | null } = { error: null };
 
@@ -140,24 +142,118 @@ export function LoginForm() {
     await continueFromStatus();
   };
 
-  const pending = fetchStatus === "fetching";
+  const sendMagicLink = async (nextEmail: string) => {
+    const sent = await signIn.emailLink.sendLink({
+      emailAddress: nextEmail,
+      verificationUrl: emailLinkVerificationUrl(CLERK_SIGN_IN_VERIFY_PATH),
+    });
+    if (sent.error) {
+      setError(authErrorMessage(sent.error));
+      return;
+    }
 
-  if (step === "email-code" || step === "mfa") {
-    const isMfa = step === "mfa";
+    setStep("email-link");
+
+    const waited = await signIn.emailLink.waitForVerification();
+    if (waited.error) {
+      setError(authErrorMessage(waited.error));
+      setStep("start");
+      return;
+    }
+
+    const verification = signIn.firstFactorVerification;
+    if (verification.status === "expired") {
+      setError("The email link has expired. Request a new one.");
+      setStep("start");
+      return;
+    }
+
+    if (signIn.status === "complete") {
+      await finish();
+      return;
+    }
+
+    if (
+      signIn.status === "needs_second_factor" ||
+      signIn.status === "needs_client_trust"
+    ) {
+      await prepareMfa();
+      return;
+    }
+
+    setError("Sign-in needs an additional authentication step. Try again.");
+    setStep("start");
+  };
+
+  const pending = fetchStatus === "fetching";
+  const firstFactorVerification = signIn.firstFactorVerification;
+
+  if (firstFactorVerification.status === "expired" && step === "start") {
+    return (
+      <Card className="w-full max-w-md border border-border/60 shadow-sm">
+        <CardHeader className="items-center space-y-3 pb-2 text-center">
+          <CardTitle className="text-xl">Link expired</CardTitle>
+          <CardDescription className="text-balance leading-relaxed">
+            The email link has expired. Request a new one to continue.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              void signIn.reset();
+              setError(null);
+            }}
+          >
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (step === "email-link") {
+    return (
+      <Card className="w-full max-w-md border border-border/60 shadow-sm">
+        <CardHeader className="items-center space-y-3 pb-2 text-center">
+          <CardTitle className="text-xl">Check your email</CardTitle>
+          <CardDescription className="text-balance leading-relaxed">
+            {error
+              ? error
+              : `We sent a secure sign-in link to ${email}. Open it to continue — this page will finish sign-in automatically.`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              void signIn.reset();
+              setStep("start");
+              setError(null);
+            }}
+          >
+            Use a different email
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (step === "mfa") {
     return (
       <Card className="w-full max-w-md rounded-2xl border-none shadow-none ring-0">
         <CardHeader>
-          <CardTitle>
-            {isMfa ? "Verify it’s you" : "Check your email"}
-          </CardTitle>
+          <CardTitle>Verify it’s you</CardTitle>
           <CardDescription>
-            {isMfa
-              ? mfaStrategy === "totp"
-                ? "Enter the code from your authenticator app."
-                : mfaStrategy === "backup_code"
-                  ? "Enter one of your backup codes."
-                  : "Enter the verification code Clerk sent to your trusted contact."
-              : `Enter the secure sign-in code sent to ${email}.`}
+            {mfaStrategy === "totp"
+              ? "Enter the code from your authenticator app."
+              : mfaStrategy === "backup_code"
+                ? "Enter one of your backup codes."
+                : "Enter the verification code Clerk sent to your trusted contact."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -165,12 +261,7 @@ export function LoginForm() {
             onSubmit={(event) => {
               event.preventDefault();
               setError(null);
-              void (isMfa
-                ? verifyMfa()
-                : signIn.emailCode.verifyCode({ code }).then(async (result) => {
-                    if (result.error) setError(authErrorMessage(result.error));
-                    else await continueFromStatus();
-                  }));
+              void verifyMfa();
             }}
           >
             <FieldGroup>
@@ -198,21 +289,6 @@ export function LoginForm() {
               <Button type="submit" className="w-full" disabled={pending}>
                 {pending ? "Verifying…" : "Verify and continue"}
               </Button>
-              {!isMfa ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    void signIn.reset();
-                    setStep("start");
-                    setCode("");
-                    setError(null);
-                  }}
-                >
-                  Use a different email
-                </Button>
-              ) : null}
             </FieldGroup>
           </form>
         </CardContent>
@@ -225,9 +301,7 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle>Welcome back</CardTitle>
         <CardDescription>
-          {mode === "password"
-            ? "Sign in with the email and password for your account."
-            : "We’ll send a one-time code to your email."}
+          We’ll email you a secure link—no password or code required.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -243,30 +317,9 @@ export function LoginForm() {
             const formData = new FormData(event.currentTarget);
             const nextEmail = String(formData.get("email") ?? "").trim();
             setEmail(nextEmail);
-
-            if (mode === "password") {
-              remember("password");
-              void signIn
-                .password({
-                  emailAddress: nextEmail,
-                  password: String(formData.get("password") ?? ""),
-                })
-                .then(async (result) => {
-                  if (result.error) setError(authErrorMessage(result.error));
-                  else await continueFromStatus();
-                })
-                .catch((caught) => setError(authErrorMessage(caught)));
-              return;
-            }
-
-            remember("email_code");
-            void signIn.emailCode
-              .sendCode({ emailAddress: nextEmail })
-              .then((result) => {
-                if (result.error) setError(authErrorMessage(result.error));
-                else setStep("email-code");
-              })
-              .catch((caught) => setError(authErrorMessage(caught)));
+            void sendMagicLink(nextEmail).catch((caught) =>
+              setError(authErrorMessage(caught)),
+            );
           }}
         >
           <FieldGroup>
@@ -283,21 +336,6 @@ export function LoginForm() {
                 />
               </FieldContent>
             </Field>
-            {mode === "password" ? (
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    placeholder="Your password"
-                  />
-                </FieldContent>
-              </Field>
-            ) : null}
             {error ? (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -308,51 +346,17 @@ export function LoginForm() {
               className="relative w-full"
               disabled={pending}
             >
-              <LastUsedBadge
-                show={
-                  lastUsed === (mode === "password" ? "password" : "email_code")
-                }
-              />
-              {pending
-                ? mode === "password"
-                  ? "Signing in…"
-                  : "Sending code…"
-                : mode === "password"
-                  ? "Sign in with password"
-                  : "Email me a sign-in code"}
+              <LastUsedBadge show={lastUsed === "email_link"} />
+              {pending ? "Sending link…" : "Email me a magic link"}
             </Button>
           </FieldGroup>
         </form>
 
-        <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
-          <p>
-            <button
-              type="button"
-              className="text-accent-foreground hover:underline"
-              onClick={() => {
-                setMode(mode === "password" ? "code" : "password");
-                setError(null);
-              }}
-            >
-              {mode === "password"
-                ? "Use an email code instead"
-                : "Sign in with password"}
-            </button>
-          </p>
-          {mode === "password" ? (
-            <p>
-              <Link
-                href="/forgot-password"
-                className="text-accent-foreground hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </p>
-          ) : null}
+        <div className="mt-6 text-center text-sm text-muted-foreground">
           <p>
             No account?{" "}
             <Link
-              href="/signup"
+              href={CLERK_SIGN_UP_PATH}
               className="text-accent-foreground hover:underline"
             >
               Create one

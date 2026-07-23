@@ -78,7 +78,7 @@ export class ReferralsService {
 
     return {
       code,
-      link: `${this.webAppUrl.replace(/\/$/, '')}/signup?ref=${code}`,
+      link: `${this.webAppUrl.replace(/\/$/, '')}/sign-up?ref=${code}`,
       creditsPerReferral: this.creditsPerReferral,
       stats: { pending, rewarded, creditsEarned },
       invites,

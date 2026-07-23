@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useCompleteOnboardingMutation } from "@/lib/api/hooks/auth";
 import { useCheckoutMutation } from "@/lib/api/hooks/billing";
-import type { CheckoutPlan } from "@/lib/api/client";
+import type { BillingInterval, CheckoutPlan } from "@/lib/api/client";
 import type { ProductUser } from "@/lib/auth/constants";
 import {
   ONBOARDING_GOALS,
@@ -88,13 +88,13 @@ export function OnboardingClient({ user }: OnboardingClientProps) {
     );
   }
 
-  function startCheckout(plan: CheckoutPlan) {
+  function startCheckout(plan: CheckoutPlan, interval: BillingInterval = "annual") {
     setError(null);
     completeOnboarding.mutate(
       { step: "completed" },
       {
         onSuccess: () => {
-          checkout.mutate({ plan }, {
+          checkout.mutate({ plan, interval }, {
             onSuccess: ({ url }) => {
               window.location.href = url;
             },
