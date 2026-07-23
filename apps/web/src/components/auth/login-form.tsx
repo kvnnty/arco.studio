@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth, useSignIn } from "@clerk/nextjs";
+import { useSignIn } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -32,14 +32,13 @@ import { Input } from "@/components/ui/input";
 import { useCaptureReturnTo } from "@/hooks/use-capture-return-to";
 import { commitAuthMethod } from "@/lib/auth/last-used-method";
 import { useLastUsedAuthMethod } from "@/lib/auth/use-last-used-auth-method";
-import { createAuthNavigate } from "@/lib/auth/sync-product-user";
+import { createAuthNavigate } from "@/lib/auth/auth-navigate";
 
 type Step = "start" | "email-link" | "mfa";
 type MfaStrategy = "email_code" | "phone_code" | "totp" | "backup_code";
 
 export function LoginForm() {
   const { signIn, fetchStatus } = useSignIn();
-  const { getToken } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   useCaptureReturnTo();
@@ -52,14 +51,14 @@ export function LoginForm() {
 
   const finish = useCallback(async () => {
     const result = await signIn.finalize({
-      navigate: createAuthNavigate(router, getToken),
+      navigate: createAuthNavigate(router),
     });
     if (result.error) {
       setError(authErrorMessage(result.error));
       return;
     }
     commitAuthMethod("email_link");
-  }, [getToken, router, signIn]);
+  }, [router, signIn]);
 
   const prepareMfa = useCallback(async () => {
     const strategies = new Set(

@@ -43,7 +43,7 @@ export default async function DocsPage({ params }: Props) {
 
           <div className="min-w-0 flex-1 lg:max-w-[720px]">
             <header className="mb-10 border-b border-[var(--marketing-border)] pb-8">
-              <h1 className="marketing-heading text-[2.5rem] sm:text-[3.25rem]">
+              <h1 className="marketing-title-section">
                 {page.title}
               </h1>
               <p className="mt-3 text-[16px] text-[var(--marketing-muted)]">

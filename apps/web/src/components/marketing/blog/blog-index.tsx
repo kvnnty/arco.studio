@@ -44,7 +44,7 @@ export function BlogIndex({ posts }: BlogIndexProps) {
           <MotionText
             as="h1"
             text="Blog"
-            className="marketing-heading text-[3rem] sm:text-[4rem]"
+            className="marketing-title-page"
           />
           <p className="mt-4 text-[17px] leading-relaxed text-marketing-muted">
             How product owners ship launch videos faster — without hiring motion design.

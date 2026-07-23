@@ -112,7 +112,7 @@ export function PricingCards({
                   <Badge className="absolute -top-3 left-6">Most popular</Badge>
                 ) : null}
 
-                <h3 className="text-[18px] font-semibold">{plan.name}</h3>
+                <h3 className="text-[22px] font-semibold">{plan.name}</h3>
                 <p className={cn("mt-2 text-[14px]", plan.popular ? "text-secondary-foreground" : "text-marketing-muted")}>{plan.description}</p>
 
                 <div className="mt-6 flex items-baseline gap-2">
@@ -128,7 +128,7 @@ export function PricingCards({
                   ) : null}
                   <motion.span
                     key={price}
-                    className="text-[3rem] font-semibold leading-none tracking-tight"
+                    className="text-[3.6rem] font-semibold leading-none tracking-tight"
                     initial={reduced ? false : { opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={reduced ? { duration: 0 } : springSnappy}

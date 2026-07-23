@@ -4,7 +4,7 @@ import { CtaBand } from "@/components/marketing/cta-band";
 import { FaqSection } from "@/components/marketing/faq-section";
 import { Hero } from "@/components/marketing/hero";
 import { JsonLd } from "@/components/marketing/json-ld";
-import { HeroPreview } from "@/components/marketing/motion/hero-preview";
+import { GalleryPreview } from "@/components/marketing/gallery-preview";
 import { PricingCards } from "@/components/marketing/pricing-cards";
 import { ProductWorkflow } from "@/components/marketing/product-workflow";
 import { SectionHeader } from "@/components/marketing/section-header";
@@ -75,13 +75,14 @@ export default function HomePage() {
       <JsonLd data={homeJsonLd} />
 
       <Hero
-        title="Studio-quality product motion."
-        titleAccent="No motion designer required."
-        description="Turn real product UI into polished launch videos, feature announcements, and app showcases."
-        primaryCta={{ label: "Create your first video", href: "/sign-up" }}
+        title="Launch videos from"
+        titleAccent="your product UI."
+        description="Upload screenshots and a brief. Arco builds the scenes, motion, and voice-over — then exports a polished video ready to ship."
+        primaryCta={{ label: "Start a video", href: "/sign-up" }}
+        secondaryCta={{ label: "View gallery", href: "/gallery" }}
       />
 
-      <HeroPreview />
+      <GalleryPreview />
 
       <ProductWorkflow />
 

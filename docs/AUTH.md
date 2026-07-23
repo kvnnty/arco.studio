@@ -8,6 +8,12 @@ used.
 Arco is passwordless. The supported entry methods are email magic links, Google
 OAuth, and GitHub OAuth.
 
+Official Clerk guides this implementation follows:
+
+- [Email links](https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/email-links)
+- [OAuth connections](https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections)
+- [Session tasks](https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/session-tasks)
+
 ## Ownership
 
 - Clerk owns sign-up, sign-in, verified emails, OAuth providers, magic-link
@@ -17,7 +23,8 @@ OAuth, and GitHub OAuth.
 - NestJS verifies Clerk tokens with the configured public key and rejects
   tokens whose `azp` origin is not explicitly allowed.
 - PostgreSQL owns product data only. `User.clerkUserId` links a Clerk identity
-  to projects, onboarding, billing, credits, and referrals.
+  to projects, onboarding, billing, credits, and referrals on the first
+  authenticated API request.
 
 ## Required configuration
 
@@ -39,17 +46,19 @@ In Clerk Dashboard -> SSO connections:
 
 ### Web
 
+Use `.env.local` in `apps/web`:
+
 ```env
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/post-auth
-NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/post-auth
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 Pull keys from Clerk with `npx clerk@latest env pull` inside `apps/web`.
+
+`ClerkProvider` fallback redirects default to `/dashboard`.
 
 ### API
 
@@ -64,8 +73,6 @@ public key. Never expose `CLERK_SECRET_KEY` to the browser.
 
 ## Custom UI flows (Clerk Core 3)
 
-Routes match [Clerk's official custom-flow guides](https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/email-links) exactly:
-
 | Route | Purpose |
 | --- | --- |
 | `/sign-in` | Sign-in form |
@@ -73,18 +80,43 @@ Routes match [Clerk's official custom-flow guides](https://clerk.com/docs/nextjs
 | `/sign-in/verify` | Email link verification (display only) |
 | `/sign-up/verify` | Email link verification (display only) |
 | `/sign-in/continue` | OAuth missing-requirements step |
-| `/sso-callback` | OAuth callback |
-| `/post-auth` | Post-auth Arco routing |
+| `/sso-callback` | OAuth callback when additional requirements are needed |
 
-- **OAuth:** [custom OAuth flow](https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections) — `signIn.sso()` / `signUp.sso()` with `redirectCallbackUrl: /sso-callback` and `redirectUrl: /post-auth`.
-- **SSO callback:** transfer/finalize logic on `/sso-callback` with `#clerk-captcha`.
-- **OAuth missing fields:** `/sign-in/continue` collects required sign-up fields via `signUp.update()`.
-- **Magic link sign-in:** sign-in page sends link + `waitForVerification()` + `finalize()`; `/sign-in/verify` is display-only via `signIn.emailLink.verification`.
-- **Magic link sign-up:** sign-up page sends link + `waitForEmailLinkVerification()` + `finalize()`; `/sign-up/verify` is display-only via `signUp.verifications.emailLinkVerification`.
-- **Post-auth routing:** `/post-auth` links the Clerk user to Arco and sends users to `/dashboard` or `/onboarding`.
+### Email links
 
-Do not remove the `clerk-captcha` mount points from signup, signup continue, or
-the OAuth callback. Clerk uses them when bot protection challenges are required.
+Per Clerk's email-link guide:
+
+- Sign-in page calls `signIn.emailLink.sendLink()` + `waitForVerification()` +
+  `signIn.finalize()`.
+- Sign-up page calls `signUp.create()` + `signUp.verifications.sendEmailLink()` +
+  `waitForEmailLinkVerification()` + `signUp.finalize()`.
+- Verify pages are display-only (`signIn.emailLink.verification` /
+  `signUp.verifications.emailLinkVerification`).
+
+### OAuth
+
+Per Clerk's OAuth guide:
+
+- `signIn.sso()` / `signUp.sso()` with:
+  - `redirectCallbackUrl: /sso-callback` — when additional requirements are needed
+  - `redirectUrl: /dashboard` (or stashed return URL) — when the session is created
+- `/sso-callback` runs transfer/finalize logic and mounts `#clerk-captcha`.
+- `/sign-in/continue` collects missing sign-up fields via `signUp.update()`.
+
+### Post-auth navigation
+
+All flows use Clerk's `finalize()` / `setActive()` `navigate` callback from
+`auth-navigate.ts`:
+
+1. If `session.currentTask` is set, stop — Clerk session tasks take over.
+2. Otherwise `decorateUrl()` the destination and `router.push()`.
+
+Arco product-user linking happens lazily on the first authenticated
+`GET /users/me` request (`ClerkAuthGuard` on the API). Server layouts retry
+briefly via `resolveProductUser()` while provisioning completes.
+
+Do not remove the `clerk-captcha` mount points from sign-up, continue, or the
+OAuth callback. Clerk uses them when bot protection challenges are required.
 
 ## Existing users
 

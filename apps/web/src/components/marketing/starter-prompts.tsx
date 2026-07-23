@@ -27,7 +27,7 @@ export function StarterPrompts({ prompts, className }: StarterPromptsProps) {
           <p className="text-[12px] font-semibold uppercase text-marketing-subtle">
             Start with the outcome
           </p>
-          <h2 className="marketing-heading mt-3 text-[2.5rem] leading-tight sm:text-[3.25rem]">
+          <h2 className="marketing-title-section mt-3">
             One studio for every product moment.
           </h2>
           <p className="mt-4 max-w-xl text-[16px] leading-relaxed text-marketing-muted">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth, useSignUp } from "@clerk/nextjs";
+import { useSignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import { useState } from "react";
 import {
   authErrorMessage,
   CLERK_SIGN_IN_PATH,
+  CLERK_SIGN_IN_CONTINUE_PATH,
   CLERK_SIGN_UP_VERIFY_PATH,
   emailLinkVerificationUrl,
 } from "@/components/auth/auth-flow-utils";
@@ -32,11 +33,10 @@ import { Input } from "@/components/ui/input";
 import { useCaptureReturnTo } from "@/hooks/use-capture-return-to";
 import { commitAuthMethod } from "@/lib/auth/last-used-method";
 import { useLastUsedAuthMethod } from "@/lib/auth/use-last-used-auth-method";
-import { createAuthNavigate } from "@/lib/auth/sync-product-user";
+import { createAuthNavigate } from "@/lib/auth/auth-navigate";
 
 export function SignupForm() {
   const { signUp, fetchStatus } = useSignUp();
-  const { getToken } = useAuth();
   const router = useRouter();
   useCaptureReturnTo();
   const { lastUsed } = useLastUsedAuthMethod();
@@ -46,7 +46,7 @@ export function SignupForm() {
 
   const finish = async () => {
     const result = await signUp.finalize({
-      navigate: createAuthNavigate(router, getToken),
+      navigate: createAuthNavigate(router),
     });
     if (result.error) {
       setError(authErrorMessage(result.error));
@@ -84,6 +84,11 @@ export function SignupForm() {
 
     if (signUp.status === "complete") {
       await finish();
+      return;
+    }
+
+    if (signUp.status === "missing_requirements") {
+      router.push(CLERK_SIGN_IN_CONTINUE_PATH);
       return;
     }
 

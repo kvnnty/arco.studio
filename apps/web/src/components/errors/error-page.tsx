@@ -116,7 +116,7 @@ export function ErrorPage({
           {code}
         </p>
 
-        <h1 className="marketing-heading mt-6 text-[1.75rem] sm:text-[2rem]">{title}</h1>
+        <h1 className="marketing-heading mt-6 text-[2.1rem] sm:text-[2.4rem]">{title}</h1>
         <p className="mt-3 text-pretty text-[16px] leading-relaxed text-marketing-muted">
           {description}
         </p>

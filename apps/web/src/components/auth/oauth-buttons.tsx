@@ -13,8 +13,13 @@ import {
 import { LastUsedBadge } from "@/components/auth/last-used-badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { createAuthNavigate } from "@/lib/auth/auth-navigate";
 import { stashAuthMethod } from "@/lib/auth/last-used-method";
 import { useLastUsedAuthMethod } from "@/lib/auth/use-last-used-auth-method";
+import {
+  DEFAULT_AFTER_SIGN_IN,
+  readReturnTo,
+} from "@/lib/auth/return-to";
 
 type Provider = "google" | "github";
 
@@ -25,8 +30,8 @@ const STRATEGIES = {
 } as const;
 
 /**
- * Clerk Core 3 OAuth — official custom flow:
- * clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections
+ * Clerk Core 3 OAuth custom flow:
+ * https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections
  */
 export function OAuthButtons({
   intent,
@@ -50,7 +55,7 @@ export function OAuthButtons({
     const ssoParams = {
       strategy,
       redirectCallbackUrl: CLERK_SSO_CALLBACK_PATH,
-      redirectUrl: CLERK_SSO_CALLBACK_PATH,
+      redirectUrl: readReturnTo() ?? DEFAULT_AFTER_SIGN_IN,
     } as const;
 
     const result =
@@ -65,6 +70,16 @@ export function OAuthButtons({
     }
 
     const flow = intent === "sign-in" ? signIn : signUp;
+
+    if (flow.status === "complete") {
+      const finalize = intent === "sign-in" ? signIn.finalize : signUp.finalize;
+      const finalized = await finalize({
+        navigate: createAuthNavigate(router),
+      });
+      if (finalized.error) onError(authErrorMessage(finalized.error));
+      setPending(null);
+      return;
+    }
 
     if (flow.status === "needs_second_factor") {
       setPending(null);
@@ -84,12 +99,10 @@ export function OAuthButtons({
       return;
     }
 
-    if (flow.status !== "complete") {
-      onError(
-        "Sign-in could not be completed. Check Clerk Dashboard → SSO connections.",
-      );
-      setPending(null);
-    }
+    onError(
+      "Sign-in could not be completed. Check Clerk Dashboard → SSO connections.",
+    );
+    setPending(null);
   };
 
   return (

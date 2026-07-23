@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth, useClerk, useSignIn, useSignUp } from "@clerk/nextjs";
+import { useClerk, useSignIn, useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -14,17 +14,16 @@ import {
   commitAuthMethod,
   consumeStashedAuthMethod,
 } from "@/lib/auth/last-used-method";
-import { createAuthNavigate } from "@/lib/auth/sync-product-user";
+import { createAuthNavigate } from "@/lib/auth/auth-navigate";
 
 const CALLBACK_TIMEOUT_MS = 20_000;
 
 /**
- * Clerk Core 3 SSO callback — official custom flow:
- * clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections
+ * Clerk SSO callback — official custom flow:
+ * https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections
  */
 export function SsoCallback() {
   const clerk = useClerk();
-  const { getToken } = useAuth();
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
   const router = useRouter();
@@ -36,7 +35,7 @@ export function SsoCallback() {
       if (!clerk.loaded || hasRun.current) return;
       hasRun.current = true;
 
-      const navigate = createAuthNavigate(router, getToken);
+      const navigate = createAuthNavigate(router);
       const stash = consumeStashedAuthMethod();
 
       const rememberSuccess = () => {
@@ -44,37 +43,21 @@ export function SsoCallback() {
       };
 
       const finalizeSignIn = async () => {
-        try {
-          const result = await signIn.finalize({ navigate });
-          if (result.error) {
-            setError(authErrorMessage(result.error));
-            return false;
-          }
-          rememberSuccess();
-          return true;
-        } catch {
-          setError(
-            "We couldn't finish setting up your account. Try signing in again.",
-          );
-          return false;
+        const result = await signIn.finalize({ navigate });
+        if (result.error) {
+          setError(authErrorMessage(result.error));
+          return;
         }
+        rememberSuccess();
       };
 
       const finalizeSignUp = async () => {
-        try {
-          const result = await signUp.finalize({ navigate });
-          if (result.error) {
-            setError(authErrorMessage(result.error));
-            return false;
-          }
-          rememberSuccess();
-          return true;
-        } catch {
-          setError(
-            "We couldn't finish setting up your account. Try signing in again.",
-          );
-          return false;
+        const result = await signUp.finalize({ navigate });
+        if (result.error) {
+          setError(authErrorMessage(result.error));
+          return;
         }
+        rememberSuccess();
       };
 
       if (signIn.status === "complete") {
@@ -140,7 +123,7 @@ export function SsoCallback() {
         "We couldn't finish connecting your account. Try signing in again.",
       );
     })();
-  }, [clerk, getToken, router, signIn, signUp]);
+  }, [clerk, router, signIn, signUp]);
 
   useEffect(() => {
     if (!error) return;
@@ -162,13 +145,13 @@ export function SsoCallback() {
   }
 
   return (
-    <>
+    <div>
       <AuthStatusCard
         variant="loading"
         title="Finishing sign-in"
         description="Securely connecting your account…"
       />
-      <div id="clerk-captcha" className="hidden" aria-hidden />
-    </>
+      <div id="clerk-captcha" />
+    </div>
   );
 }

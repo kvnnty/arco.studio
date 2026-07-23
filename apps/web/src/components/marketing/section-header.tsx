@@ -25,7 +25,7 @@ export function SectionHeader({
       <MotionText
         as="h2"
         text={title}
-        className="marketing-heading text-[2.5rem] leading-tight sm:text-[3.25rem]"
+        className="marketing-title-section"
         delay={0.05}
       />
       {description ? (

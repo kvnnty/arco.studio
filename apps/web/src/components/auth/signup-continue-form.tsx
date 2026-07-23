@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth, useSignUp } from "@clerk/nextjs";
+import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -21,22 +21,16 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { createAuthNavigate } from "@/lib/auth/sync-product-user";
+import { createAuthNavigate } from "@/lib/auth/auth-navigate";
 
 /**
  * Clerk OAuth missing-requirements continue step.
- * clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections
+ * https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections
  */
 export function SignupContinueForm() {
   const { signUp, fetchStatus } = useSignUp();
-  const { getToken } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-
-  if (signUp.status === "complete") {
-    void signUp.finalize({ navigate: createAuthNavigate(router, getToken) });
-    return null;
-  }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -45,15 +39,11 @@ export function SignupContinueForm() {
     const firstName = String(formData.get("firstName") ?? "").trim();
     const lastName = String(formData.get("lastName") ?? "").trim();
 
-    const updated = await signUp.update({ firstName, lastName });
-    if (updated.error) {
-      setError(authErrorMessage(updated.error));
-      return;
-    }
+    await signUp.update({ firstName, lastName });
 
     if (signUp.status === "complete") {
       const result = await signUp.finalize({
-        navigate: createAuthNavigate(router, getToken),
+        navigate: createAuthNavigate(router),
       });
       if (result.error) setError(authErrorMessage(result.error));
       return;

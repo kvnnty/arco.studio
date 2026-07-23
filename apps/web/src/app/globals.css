@@ -270,6 +270,39 @@
   @apply font-serif text-balance font-normal tracking-[-0.02em];
 }
 
+/* Marketing title scale — ~20% above previous defaults */
+.marketing-title-hero {
+  @apply font-serif text-balance font-normal tracking-[-0.02em] leading-[1.02] text-[3.6rem] sm:text-[4.8rem] lg:text-[5.7rem];
+}
+
+.marketing-title-section {
+  @apply font-serif text-balance font-normal tracking-[-0.02em] leading-[1.05] text-[3rem] sm:text-[3.9rem];
+}
+
+.marketing-title-section-lg {
+  @apply font-serif text-balance font-normal tracking-[-0.02em] leading-[1.02] text-[3.3rem] sm:text-[4.2rem];
+}
+
+.marketing-title-page {
+  @apply font-serif text-balance font-normal tracking-[-0.02em] text-[3.6rem] sm:text-[4.8rem];
+}
+
+.marketing-title-article {
+  @apply font-serif text-balance font-normal tracking-[-0.02em] leading-tight text-[3rem] sm:text-[4.2rem];
+}
+
+.marketing-title-card {
+  @apply font-serif text-balance font-normal tracking-[-0.02em] text-[2.7rem] sm:text-[3.6rem];
+}
+
+.marketing-title-legal {
+  @apply font-serif text-balance font-normal tracking-[-0.02em] text-[3.6rem] sm:text-[4.5rem];
+}
+
+.marketing-title-legal-section {
+  @apply font-serif text-balance font-normal tracking-[-0.02em] text-[1.8rem];
+}
+
 .marketing-grid-bg {
   background-image:
     linear-gradient(to right, var(--marketing-grid-line) 1px, transparent 1px),
@@ -296,13 +329,13 @@
 }
 
 .prose-marketing h2 {
-  @apply mt-12 scroll-mt-24 font-serif text-2xl font-normal first:mt-0;
+  @apply mt-12 scroll-mt-24 font-serif text-[1.8rem] font-normal first:mt-0;
   text-wrap: balance;
   letter-spacing: -0.02em;
 }
 
 .prose-marketing h3 {
-  @apply mt-8 scroll-mt-24 font-serif text-xl font-normal;
+  @apply mt-8 scroll-mt-24 font-serif text-[1.5rem] font-normal;
   text-wrap: balance;
   letter-spacing: -0.02em;
 }

@@ -83,7 +83,7 @@ export function FeaturedBlogCard({ post }: { post: BlogPost }) {
         </Link>
         <div className="flex flex-col justify-center p-8 sm:p-10">
           <Badge className="mb-4 w-fit">Featured</Badge>
-          <h2 className="marketing-heading max-w-xl text-[2.25rem] sm:text-[3rem]">
+          <h2 className="marketing-title-card max-w-xl">
             <Link href={`/blog/${post.slug}`} className="hover:opacity-80">
               {post.title}
             </Link>

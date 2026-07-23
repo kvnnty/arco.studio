@@ -17,7 +17,7 @@ export type NavItem = {
 };
 
 export const mainNav: NavItem[] = [
-  { label: "Examples", href: "/#examples" },
+  { label: "Gallery", href: "/gallery" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "Pricing", href: "/pricing" },
   { label: "Features", href: "/features" },
@@ -32,7 +32,7 @@ export const footerColumns: FooterColumn[] = [
   {
     title: "Product",
     links: [
-      { label: "Examples", href: "/#examples" },
+      { label: "Gallery", href: "/gallery" },
       { label: "Features", href: "/features" },
       { label: "Pricing", href: "/pricing" },
       { label: "Changelog", href: "/changelog" },
