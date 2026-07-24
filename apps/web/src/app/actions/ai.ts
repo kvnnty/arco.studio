@@ -2,21 +2,13 @@
 
 import type { Marker, StylePreset } from "@arco/project-schema";
 
-import { getAccessToken } from "@/lib/auth/session";
+import { requireAccessToken } from "@/lib/auth/session";
 import {
   apiChat,
   apiGenerateDraft,
   apiRefineProject,
   apiRegenerateMarker,
 } from "@/lib/api/client";
-
-async function requireAccessToken(): Promise<string> {
-  const token = await getAccessToken();
-  if (!token) {
-    throw new Error("Not authenticated");
-  }
-  return token;
-}
 
 export async function generateDraftAction(input: {
   title: string;

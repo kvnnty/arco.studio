@@ -2,7 +2,7 @@
 const PLAN_MONTHLY_CREDITS: Record<string, number> = {
   trial: 200,
   pro: 1250,
-  studio: 5000,
+  studio: 3000,
 };
 
 export type CreditUsageInput = {

@@ -45,10 +45,10 @@ export function VoicePickerModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Language &amp; Voice</DialogTitle>
+          <DialogTitle>Voiceover</DialogTitle>
           <DialogDescription>
-            Pick a narrator for your launch video. Turn off for music and text
-            only.
+            Choose whether this video includes AI narration. Turning voice off
+            skips ElevenLabs and uses fewer credits.
           </DialogDescription>
         </DialogHeader>
         <VoiceGrid

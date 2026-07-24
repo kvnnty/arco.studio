@@ -1,6 +1,6 @@
 "use server";
 
-import { getAccessToken } from "@/lib/auth/session";
+import { requireAccessToken } from "@/lib/auth/session";
 import { apiAnalyzeBrandUrl } from "@/lib/api/client";
 
 export type BrandKit = {
@@ -17,10 +17,6 @@ export type BrandKit = {
 };
 
 export async function analyzeBrandUrlAction(url: string): Promise<BrandKit> {
-  const token = await getAccessToken();
-  if (!token) {
-    throw new Error("Not authenticated");
-  }
-
+  const token = await requireAccessToken();
   return apiAnalyzeBrandUrl(token, url);
 }

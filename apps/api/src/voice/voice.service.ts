@@ -46,6 +46,12 @@ export class VoiceService {
       throw new ServiceUnavailableException('Voice not found.');
     }
 
+    // Cap length to protect ElevenLabs COGS (margin model assumes ≤400 chars/scene).
+    const clipped = text.trim().slice(0, 400);
+    if (!clipped) {
+      throw new ServiceUnavailableException('Voice script is empty.');
+    }
+
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice.id}`,
       {
@@ -56,7 +62,7 @@ export class VoiceService {
           Accept: 'audio/mpeg',
         },
         body: JSON.stringify({
-          text,
+          text: clipped,
           model_id: process.env.ELEVENLABS_MODEL_ID ?? 'eleven_multilingual_v2',
         }),
       },

@@ -7,10 +7,24 @@ import type { ProductUser } from '@/lib/auth/constants';
 const PRODUCT_USER_ATTEMPTS = 3;
 const PRODUCT_USER_RETRY_MS = 400;
 
+/** Resource-level gate — prefer this over middleware route matching. */
+export async function requireAuth(): Promise<void> {
+  await auth.protect();
+}
+
 export async function getAccessToken(): Promise<string | null> {
   const session = await auth();
   if (!session.userId) return null;
   return session.getToken();
+}
+
+export async function requireAccessToken(): Promise<string> {
+  await auth.protect();
+  const token = await getAccessToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+  return token;
 }
 
 function isTransientApiError(error: unknown): boolean {
@@ -55,6 +69,7 @@ async function readAuthenticatedUser(): Promise<ProductUser | null> {
 export const getAuthenticatedUser = cache(readAuthenticatedUser);
 
 export async function requireAuthenticatedUser(): Promise<ProductUser> {
+  await requireAuth();
   const user = await getAuthenticatedUser();
   if (!user) throw new Error('Not authenticated');
   return user;

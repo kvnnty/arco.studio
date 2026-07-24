@@ -306,8 +306,12 @@ export class BillingService implements OnModuleInit {
     userId: string,
     renderJobId: string,
     quality: string,
-  ) {
+  ): Promise<{ id: string } | null> {
     const cost = creditCostForExport(quality);
+    // Plan-included exports (cost 0) skip the credit ledger entirely.
+    if (cost <= 0) {
+      return null;
+    }
     return this.credits.reserveCredits({
       userId,
       amount: cost,

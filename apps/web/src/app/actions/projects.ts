@@ -2,7 +2,7 @@
 
 import type { ArcoProject } from "@arco/project-schema";
 
-import { getAccessToken } from "@/lib/auth/session";
+import { requireAccessToken } from "@/lib/auth/session";
 import {
   apiCreateProject,
   apiGetProject,
@@ -21,14 +21,6 @@ import {
   type EditorSession,
   type ProjectPlatform,
 } from "@/lib/editor/create-project";
-
-async function requireAccessToken(): Promise<string> {
-  const token = await getAccessToken();
-  if (!token) {
-    throw new Error("Not authenticated");
-  }
-  return token;
-}
 
 function toEditorSession(
   record: ApiProjectRecord,
@@ -69,9 +61,7 @@ function toEditorSession(
 }
 
 export async function listDashboardProjects(): Promise<DashboardProject[]> {
-  const token = await getAccessToken();
-  if (!token) return [];
-
+  const token = await requireAccessToken();
   const records = await apiListProjects(token);
   return records.map(toDashboardProject);
 }
@@ -79,8 +69,7 @@ export async function listDashboardProjects(): Promise<DashboardProject[]> {
 export async function getDashboardProject(
   id: string,
 ): Promise<DashboardProject | null> {
-  const token = await getAccessToken();
-  if (!token) return null;
+  const token = await requireAccessToken();
 
   try {
     const record = await apiGetProject(token, id);
@@ -127,8 +116,7 @@ export async function syncProject(input: {
   recordingSrc: string;
   thumbnailUrl?: string;
 }) {
-  const token = await getAccessToken();
-  if (!token) return;
+  const token = await requireAccessToken();
 
   await apiUpdateProject(token, input.projectId, {
     title: input.project.meta.title,
@@ -149,8 +137,7 @@ export async function syncProjectSummary(input: {
   exportFormat: string;
   markerCount: number;
 }) {
-  const token = await getAccessToken();
-  if (!token) return;
+  const token = await requireAccessToken();
 
   await apiUpdateProject(token, input.id, {
     title: input.title,

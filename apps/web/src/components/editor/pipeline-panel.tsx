@@ -124,6 +124,11 @@ export function PipelinePanel({
               const waiting =
                 pipeline.waitingForCredits &&
                 (step.id === "voice" || step.id === "scenes");
+              const voiceSkipped = step.id === "voice" && pipeline.voiceSkipped;
+              const label = voiceSkipped ? "Skip voice" : step.label;
+              const description = voiceSkipped
+                ? "Voiceover off — music and on-screen text only"
+                : step.description;
 
               return (
                 <li
@@ -152,7 +157,7 @@ export function PipelinePanel({
                         done && "text-foreground",
                       )}
                     >
-                      {step.label}
+                      {label}
                       {waiting ? (
                         <span className="ml-2 text-xs font-normal text-amber-600">
                           Waiting for credits
@@ -160,7 +165,7 @@ export function PipelinePanel({
                       ) : null}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {step.description}
+                      {description}
                     </p>
                   </div>
                 </li>

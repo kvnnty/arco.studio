@@ -228,15 +228,16 @@ export async function runScreenshotPipeline(
   callbacks.onPipelineChange(pipeline, draftMarkers);
   callbacks.onProjectPatch?.({ ...project, scenes });
 
-  // --- Voice ---
+  // --- Voice (skipped entirely when voiceEnabled === false) ---
+  const voiceEnabled = project.audio?.voiceEnabled !== false;
+  const voiceId = project.audio?.voiceId ?? getDefaultVoiceId();
+
   pipeline = advancePipeline(pipeline, "voice", {
     sceneCount: scenes.length,
     targetDurationSec,
+    voiceSkipped: !voiceEnabled,
   });
   callbacks.onPipelineChange(pipeline, draftMarkers);
-
-  const voiceEnabled = project.audio?.voiceEnabled !== false;
-  const voiceId = project.audio?.voiceId ?? getDefaultVoiceId();
 
   if (voiceEnabled && voiceId) {
     try {

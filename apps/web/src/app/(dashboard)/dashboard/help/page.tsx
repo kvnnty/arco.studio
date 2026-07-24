@@ -47,7 +47,7 @@ const faqs = [
   },
   {
     q: "How do credits work?",
-    a: "Your plan includes monthly credits. AI actions, voice generation, and exports spend credits. Top up anytime if you need more before your next billing period.",
+    a: "Your plan includes monthly credits. AI actions and voice generation spend credits — exports are included with your plan. Top up anytime if you need more before your next billing period.",
   },
   {
     q: "Can I edit after generation?",

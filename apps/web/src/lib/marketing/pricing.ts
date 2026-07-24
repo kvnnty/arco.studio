@@ -73,7 +73,7 @@ export const pricingPlans: PricingPlan[] = [
     monthlyPrice: 59,
     annualPrice: 49,
     features: [
-      "5,000 credits per month",
+      "3,000 credits per month",
       "Unlimited projects",
       "Up to 4K export",
       "Up to 10 min per video",
@@ -89,7 +89,7 @@ export const pricingFaqs = [
   {
     question: "How do credits work?",
     answer:
-      "Your plan includes monthly credits. Each AI action, voice generation, and export spends credits. Top up anytime if you need more before your next billing period.",
+      "Your plan includes monthly credits. AI storyboard and voiceover spend credits — exports are included with your plan. Turn voice off when creating a video to skip narration and use fewer credits. Top up anytime if you need more before your next billing period.",
   },
   {
     question: "Can I cancel anytime?",
@@ -99,7 +99,12 @@ export const pricingFaqs = [
   {
     question: "What's the difference between Intro, Pro, and Studio?",
     answer:
-      "Intro ($9) includes 200 monthly credits, 720p export, and videos up to 2 minutes. Pro ($29) includes 1,250 credits, up to 1080p export, videos up to 5 minutes, and full brand/audio features. Studio ($59) includes 5,000 credits, up to 4K export, and videos up to 10 minutes.",
+      "Intro ($9) includes 200 monthly credits, 720p export, and videos up to 2 minutes. Pro ($29) includes 1,250 credits, up to 1080p export, videos up to 5 minutes, and full brand/audio features. Studio ($59) includes 3,000 credits, up to 4K export, and videos up to 10 minutes.",
+  },
+  {
+    question: "Is voiceover required?",
+    answer:
+      "No. You can turn AI voiceover off in the composer or Customize panel. Videos without voice use music and on-screen text only, and do not spend voice credits.",
   },
   {
     question: "Do you offer team or seat-based plans?",
@@ -122,7 +127,7 @@ export const featureComparison = {
     {
       name: "Credits",
       features: [
-        { name: "Monthly credits", trial: "200", pro: "1,250", studio: "5,000" },
+        { name: "Monthly credits", trial: "200", pro: "1,250", studio: "3,000" },
         { name: "Credit top-ups", trial: true, pro: true, studio: true },
         { name: "Unlimited projects", trial: true, pro: true, studio: true },
       ],
@@ -142,7 +147,7 @@ export const featureComparison = {
         { name: "AI assistant", trial: true, pro: true, studio: true },
         { name: "Brand from URL", trial: false, pro: true, studio: true },
         { name: "Custom music upload", trial: false, pro: true, studio: true },
-        { name: "Voiceover", trial: true, pro: true, studio: true },
+        { name: "AI voiceover", trial: true, pro: true, studio: true },
       ],
     },
   ],

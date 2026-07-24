@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, HelpCircle, LogOut, Settings, User } from "lucide-react";
+import { Bell, LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
 
 import { useConsent } from "@/components/consent/consent-provider";
@@ -78,13 +78,6 @@ export function AppTopbar({
         render={<Link href="/dashboard/notifications" />}
       >
         <Bell className="size-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        render={<Link href="/dashboard/help" />}
-      >
-        <HelpCircle className="size-4" />
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger

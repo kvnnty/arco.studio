@@ -62,14 +62,16 @@ export class RendersService {
         format,
         quality,
         status: 'queued',
-        creditReservationId: reservation.id,
+        creditReservationId: reservation?.id ?? null,
       },
     });
 
-    await this.billing.updateReservationReference(reservation.id, job.id, {
-      quality,
-      renderJobId: job.id,
-    });
+    if (reservation) {
+      await this.billing.updateReservationReference(reservation.id, job.id, {
+        quality,
+        renderJobId: job.id,
+      });
+    }
 
     this.renderProcessor.queueJob(job.id);
 

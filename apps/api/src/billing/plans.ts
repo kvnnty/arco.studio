@@ -117,7 +117,7 @@ export function monthlyIncludedCredits(plan: ArcoPlan | null): number {
     case 'pro':
       return Number(process.env.MONTHLY_CREDITS_PRO ?? 1250);
     case 'studio':
-      return Number(process.env.MONTHLY_CREDITS_STUDIO ?? 5000);
+      return Number(process.env.MONTHLY_CREDITS_STUDIO ?? 3000);
     default:
       return 0;
   }
@@ -133,11 +133,12 @@ const CREDIT_COSTS: Record<CreditActionType, number> = {
   ai_chat: Number(process.env.CREDIT_COST_AI_CHAT ?? 5),
   ai_refine: Number(process.env.CREDIT_COST_AI_REFINE ?? 10),
   ai_regenerate: Number(process.env.CREDIT_COST_AI_REGENERATE ?? 8),
-  voice_generate: Number(process.env.CREDIT_COST_VOICE_GENERATE ?? 20),
-  voice_preview: Number(process.env.CREDIT_COST_VOICE_PREVIEW ?? 2),
-  export_720p: Number(process.env.CREDIT_COST_EXPORT_720P ?? 50),
-  export_1080p: Number(process.env.CREDIT_COST_EXPORT_1080P ?? 75),
-  export_4k: Number(process.env.CREDIT_COST_EXPORT_4K ?? 100),
+  voice_generate: Number(process.env.CREDIT_COST_VOICE_GENERATE ?? 40),
+  voice_preview: Number(process.env.CREDIT_COST_VOICE_PREVIEW ?? 5),
+  // Exports are included with the plan (quality gated). Charge AI/voice only.
+  export_720p: Number(process.env.CREDIT_COST_EXPORT_720P ?? 0),
+  export_1080p: Number(process.env.CREDIT_COST_EXPORT_1080P ?? 0),
+  export_4k: Number(process.env.CREDIT_COST_EXPORT_4K ?? 0),
 };
 
 export function creditCostForAction(action: CreditActionType): number {

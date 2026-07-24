@@ -46,7 +46,7 @@ const PRO_FEATURES = [
 ];
 
 const STUDIO_FEATURES = [
-  "5,000 credits per month",
+  "3,000 credits per month",
   "Up to 4K export · 10 min videos",
   "Everything in Pro",
 ];
@@ -446,8 +446,9 @@ export function BillingPageClient() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              AI actions, voice generation, and exports spend credits. Failed
-              actions refund reserved credits automatically.
+              AI actions and voice generation spend credits. Exports are
+              included with your plan. Turn voice off to skip narration and
+              save credits. Failed actions refund reserved credits automatically.
             </p>
           </CardContent>
         </Card>

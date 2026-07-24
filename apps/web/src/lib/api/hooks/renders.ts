@@ -21,7 +21,7 @@ export function useRenderJob(jobId: string | null, enabled = true) {
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       if (!status || !ACTIVE_RENDER_STATUSES.has(status)) return false;
-      return 2000;
+      return 1000;
     },
   });
 }

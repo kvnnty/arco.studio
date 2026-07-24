@@ -21,11 +21,13 @@ export const CREDIT_COST_HINTS = {
   ai_chat: 5,
   ai_refine: 10,
   ai_regenerate: 8,
-  voice_generate: 20,
-  voice_preview: 2,
-  export_720p: 50,
-  export_1080p: 75,
-  export_4k: 100,
+  /** Per scene — keep in sync with API CREDIT_COST_VOICE_GENERATE. */
+  voice_generate: 40,
+  voice_preview: 5,
+  /** Included with plan — keep in sync with API CREDIT_COST_EXPORT_*. */
+  export_720p: 0,
+  export_1080p: 0,
+  export_4k: 0,
 } as const;
 
 export function creditCostHint(

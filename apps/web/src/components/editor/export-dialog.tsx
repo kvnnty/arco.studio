@@ -1,7 +1,7 @@
 "use client";
 
 import type { ExportQuality } from "@arco/project-schema";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -49,28 +49,9 @@ type ExportDialogProps = {
 
 type ExportPhase =
   | "idle"
-  | "queued"
-  | "rendering"
-  | "uploading"
+  | "processing"
   | "completed"
   | "failed";
-
-const PHASE_LABELS: Record<ExportPhase, string> = {
-  idle: "Ready to export",
-  queued: "Queued for render…",
-  rendering: "Rendering video…",
-  uploading: "Uploading MP4…",
-  completed: "Export complete",
-  failed: "Export failed",
-};
-
-function phaseFromStatus(status: string): ExportPhase {
-  if (status === "rendering" || status === "processing") return "rendering";
-  if (status === "uploading") return "uploading";
-  if (status === "completed") return "completed";
-  if (status === "failed") return "failed";
-  return "queued";
-}
 
 function defaultQualityForPlan(
   allowed: ExportQuality[] | undefined,
@@ -84,6 +65,13 @@ function qualityLabel(quality: ExportQuality): string {
   return quality === "4k" ? "4K" : quality;
 }
 
+function formatElapsed(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}m ${s.toString().padStart(2, "0")}s`;
+}
+
 export function ExportDialog({
   open,
   onOpenChange,
@@ -95,6 +83,8 @@ export function ExportDialog({
   const [error, setError] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [quality, setQuality] = useState<ExportQuality>("1080p");
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
 
   const queryClient = useQueryClient();
   const { data: billing } = useBillingStatus();
@@ -109,13 +99,22 @@ export function ExportDialog({
   }, [billing]);
 
   useEffect(() => {
+    if (phase !== "processing" || !startedAt) return;
+    setElapsedSec(Math.floor((Date.now() - startedAt) / 1000));
+    const id = window.setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [phase, startedAt]);
+
+  useEffect(() => {
     if (!job) return;
 
     if (job.status === "completed" && job.outputUrl) {
       setPhase("completed");
       setOutputUrl(job.outputUrl);
       void queryClient.invalidateQueries({ queryKey: queryKeys.billing.usage });
-      toast.success("Export ready");
+      toast.success("Export ready — download your MP4");
       return;
     }
 
@@ -128,7 +127,7 @@ export function ExportDialog({
       return;
     }
 
-    setPhase(phaseFromStatus(job.status));
+    setPhase("processing");
   }, [job, queryClient]);
 
   const isQualityLocked = (id: ExportQuality) => !allowedQualities.includes(id);
@@ -142,6 +141,16 @@ export function ExportDialog({
     }
     return null;
   }, [quality]);
+
+  const processingHint = useMemo(() => {
+    if (elapsedSec < 15) {
+      return "Usually ready in under a minute.";
+    }
+    if (elapsedSec < 60) {
+      return "Still rendering — almost there.";
+    }
+    return "Taking longer than usual. Hang tight.";
+  }, [elapsedSec]);
 
   const startRender = async (renderQuality: ExportQuality) => {
     if (!billing?.canUseProduct) {
@@ -162,7 +171,7 @@ export function ExportDialog({
     if (created.status === "completed" && created.outputUrl) {
       setPhase("completed");
       setOutputUrl(created.outputUrl);
-      toast.success("Export ready");
+      toast.success("Export ready — download your MP4");
       return;
     }
 
@@ -170,14 +179,16 @@ export function ExportDialog({
       throw new Error(created.errorMessage ?? "Render failed.");
     }
 
-    setPhase(phaseFromStatus(created.status));
+    setPhase("processing");
   };
 
   const handleExport = async () => {
-    setPhase("queued");
+    setPhase("processing");
     setError(null);
     setOutputUrl(null);
     setJobId(null);
+    setStartedAt(Date.now());
+    setElapsedSec(0);
 
     try {
       await startRender(quality);
@@ -204,8 +215,7 @@ export function ExportDialog({
     link.remove();
   };
 
-  const isBusy =
-    phase === "queued" || phase === "rendering" || phase === "uploading";
+  const isBusy = phase === "processing";
 
   return (
     <Dialog
@@ -216,6 +226,8 @@ export function ExportDialog({
           setPhase("idle");
           setError(null);
           setOutputUrl(null);
+          setStartedAt(null);
+          setElapsedSec(0);
         }
         onOpenChange(next);
       }}
@@ -224,9 +236,8 @@ export function ExportDialog({
         <DialogHeader>
           <DialogTitle>Export video</DialogTitle>
           <DialogDescription>
-            Render <strong>{projectTitle}</strong> as MP4 at your project&apos;s
-            native aspect ratio. Re-exports are unlimited — your plan limits
-            active projects, not export retries.
+            Render <strong>{projectTitle}</strong> as MP4. Exports are included
+            with your plan — credits are only used for AI and voice.
           </DialogDescription>
         </DialogHeader>
 
@@ -256,7 +267,7 @@ export function ExportDialog({
                   >
                     <span className="font-mono text-sm">{item.label}</span>
                     <span className="text-[10px] font-normal text-muted-foreground">
-                      {locked ? item.upgradeHint : "HD export"}
+                      {locked ? item.upgradeHint : "Included"}
                     </span>
                   </ToggleGroupItem>
                 );
@@ -277,17 +288,25 @@ export function ExportDialog({
           </FieldContent>
         </Field>
 
-        {(phase === "queued" ||
-          phase === "rendering" ||
-          phase === "uploading") && (
-          <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-            {`${PHASE_LABELS[phase]} (${qualityLabel(quality)})`}
-          </p>
-        )}
+        {phase === "processing" ? (
+          <div className="flex items-start gap-3 rounded-lg bg-muted px-3 py-3 text-sm text-muted-foreground">
+            <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin" />
+            <div className="min-w-0 space-y-0.5">
+              <p className="font-medium text-foreground">
+                Processing {qualityLabel(quality)}… {formatElapsed(elapsedSec)}
+              </p>
+              <p>{processingHint}</p>
+            </div>
+          </div>
+        ) : null}
 
         {phase === "completed" && outputUrl ? (
           <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-            Export ready at {qualityLabel(quality)}. Download your MP4 below.
+            Ready at {qualityLabel(quality)}
+            {startedAt
+              ? ` · finished in ${formatElapsed(elapsedSec)}`
+              : null}
+            . Download your MP4 below.
           </p>
         ) : null}
 
@@ -308,9 +327,13 @@ export function ExportDialog({
             onClick={() => void handleExport()}
             disabled={isBusy || phase === "completed" || createRender.isPending}
           >
-            <Download data-icon="inline-start" />
+            {isBusy ? (
+              <Loader2 data-icon="inline-start" className="animate-spin" />
+            ) : (
+              <Download data-icon="inline-start" />
+            )}
             {isBusy
-              ? PHASE_LABELS[phase]
+              ? "Processing…"
               : phase === "failed"
                 ? "Retry export"
                 : `Export ${qualityLabel(quality)} MP4`}

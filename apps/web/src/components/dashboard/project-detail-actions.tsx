@@ -78,11 +78,9 @@ export function ProjectDetailActions({
     ) {
       setStatus("processing");
       setStageLabel(
-        job.status === "queued"
-          ? "Queued for render…"
-          : job.status === "uploading"
-            ? "Uploading MP4…"
-            : "Rendering video…",
+        job.status === "uploading"
+          ? "Uploading your MP4…"
+          : "Processing your video…",
       );
       return;
     }

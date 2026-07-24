@@ -8,7 +8,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useManagedAuth } from "@/hooks/use-managed-auth";
 import type { BrandKit } from "@/lib/api/hooks/brand";
 import { useAnalyzeBrandMutation } from "@/lib/api/hooks/brand";
-import { useBillingStatus } from "@/lib/api/hooks/billing";
 import { ChatMessageBubble } from "@/components/editor/chat-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,9 +23,6 @@ import {
   type ChatMessage,
 } from "@/lib/editor/chat-types";
 import {
-  creditCostHint,
-  getAvailableCredits,
-  hasEnoughCredits,
   inferBrandStyle,
 } from "@/lib/editor/generation-credits";
 import {
@@ -49,6 +45,14 @@ const SCREENSHOT_STATUS_LABELS: Partial<Record<PipelineStepId, string>> = {
   voice: "Recording voice-over…",
   layout: "Designing layout…",
 };
+
+function screenshotStatusLabel(
+  step: PipelineStepId,
+  voiceSkipped?: boolean,
+): string | undefined {
+  if (step === "voice" && voiceSkipped) return "Skipping voice…";
+  return SCREENSHOT_STATUS_LABELS[step];
+}
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -121,7 +125,6 @@ export function ChatPanel({
   const wasPipelineFailedRef = useRef(false);
   const { session } = useManagedAuth();
   const analyzeBrand = useAnalyzeBrandMutation();
-  const { data: billing } = useBillingStatus();
 
   const hostname = productUrl ? getUrlHostname(productUrl) : undefined;
   const screenshotMode = isScreenshotProject(project);
@@ -217,7 +220,7 @@ export function ChatPanel({
         const completeStatus = (step: PipelineStepId) => {
           const id = statusIds[step];
           const started = startedAt[step];
-          const label = SCREENSHOT_STATUS_LABELS[step];
+          const label = screenshotStatusLabel(step, pipelineVoiceSkipped);
           if (!id || started == null || !label) return;
           updateMessage(id, {
             done: true,
@@ -226,9 +229,15 @@ export function ChatPanel({
           });
         };
 
+        let pipelineVoiceSkipped =
+          project.audio?.voiceEnabled === false;
+
         try {
           const result = await runScreenshotPipeline(accessToken, project, {
             onPipelineChange: (pipeline, markers) => {
+              if (pipeline.voiceSkipped) {
+                pipelineVoiceSkipped = true;
+              }
               const step = pipeline.activeStep;
               if (
                 step !== lastStep &&
@@ -243,7 +252,7 @@ export function ChatPanel({
                 appendMessage({
                   id,
                   role: "status",
-                  content: SCREENSHOT_STATUS_LABELS[step]!,
+                  content: screenshotStatusLabel(step, pipeline.voiceSkipped)!,
                   createdAt: Date.now(),
                 });
                 lastStep = step;
@@ -454,11 +463,6 @@ export function ChatPanel({
         content: "Drafting scenes…",
       });
 
-      const creditsNeeded =
-        creditCostHint("voice_generate") * Math.max(1, result.markers.length);
-      const creditsAvailable = getAvailableCredits(billing);
-      const enoughCredits = !billing || hasEnoughCredits(billing, creditsNeeded);
-
       appendMessage({
         id: createChatId(),
         role: "assistant",
@@ -466,30 +470,10 @@ export function ChatPanel({
         createdAt: Date.now(),
       });
 
-      if (!enoughCredits) {
-        pipeline = {
-          ...advancePipeline(pipeline, "voice"),
-          waitingForCredits: true,
-        };
-        onPipelineChange(pipeline, liveMarkers);
-
-        appendMessage({
-          id: createChatId(),
-          role: "credits",
-          createdAt: Date.now(),
-          scenesNeeded: creditsNeeded,
-          creditsAvailable: Number.isFinite(creditsAvailable)
-            ? creditsAvailable
-            : creditsNeeded,
-          creditsShortfall: Math.max(0, creditsNeeded - creditsAvailable),
-        });
-
-        return;
-      }
-
-      pipeline = advancePipeline(pipeline, "voice");
+      // Recording mode has no ElevenLabs VO — skip the voice credit gate.
+      pipeline = advancePipeline(pipeline, "voice", { voiceSkipped: true });
       onPipelineChange(pipeline, liveMarkers);
-      await delay(600);
+      await delay(400);
 
       pipeline = advancePipeline(pipeline, "layout");
       onPipelineChange(pipeline, liveMarkers);
@@ -516,7 +500,6 @@ export function ChatPanel({
     analysisStarted,
     analyzeBrand,
     appendMessage,
-    billing,
     durationMs,
     hostname,
     intent,

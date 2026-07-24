@@ -580,8 +580,8 @@ export function DashboardCreateHero({
             <ToolbarChip disabled={submitting} onClick={onOpenVoice}>
               <Mic className="size-3.5" />
               {voiceEnabled
-                ? (voice?.name ?? "Voice")
-                : "Voice off"}
+                ? (voice?.name ?? "Voice on")
+                : "No voice"}
               <ChevronDown className="size-3 opacity-60" />
             </ToolbarChip>
           ) : null}
