@@ -20,12 +20,9 @@ import {
   useBillingUsage,
   useTopUpCheckoutMutation,
 } from "@/lib/api/hooks/billing";
-import { buildWeeklyExportChart } from "@/lib/dashboard/usage-chart";
+import { buildWeeklyCreditSpendChart } from "@/lib/dashboard/usage-chart";
 
 const TYPE_LABELS: Record<string, string> = {
-  export_720p: "720p exports",
-  export_1080p: "1080p exports",
-  export_4k: "4K exports",
   ai_draft: "AI drafts",
   ai_storyboard: "Storyboards",
   ai_regenerate: "Scene regenerations",
@@ -66,15 +63,13 @@ export function UsagePageClient() {
     );
   }
 
-  const chartData = buildWeeklyExportChart(usage.events);
+  const chartData = buildWeeklyCreditSpendChart(usage.events);
   const credits = status.credits;
 
-  const breakdown = Object.entries(usage.counts)
-    .filter(([type]) => type !== "export_refund")
-    .map(([type, count]) => ({
-      label: TYPE_LABELS[type] ?? type,
-      count,
-    }));
+  const breakdown = Object.entries(usage.counts).map(([type, count]) => ({
+    label: TYPE_LABELS[type] ?? type,
+    count,
+  }));
 
   const handleTopUp = () => {
     topUpMutation.mutate(undefined, {
@@ -147,9 +142,12 @@ export function UsagePageClient() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Zap className="size-4" />
-            Exports this month
+            Credits spent
           </CardTitle>
-          <CardDescription>Successful exports over the last 7 days.</CardDescription>
+          <CardDescription>
+            AI and voice usage over the last 7 days. Exports are included with
+            your plan and are not metered here.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <UsageChart data={chartData} />
@@ -160,7 +158,7 @@ export function UsagePageClient() {
         <Card className="rounded-2xl">
           <CardHeader>
             <CardTitle className="text-base">Activity breakdown</CardTitle>
-            <CardDescription>Chargeable actions this calendar month.</CardDescription>
+            <CardDescription>Credit-backed AI and voice actions this calendar month.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {breakdown.length === 0 ? (

@@ -18,7 +18,6 @@ This document tracks the marketing site build for Arco. Design aesthetic: **dark
 | Home             | `/`                     | Done   |
 | Pricing          | `/pricing`              | Done   |
 | Features         | `/features`             | Done   |
-| Documentation    | `/docs`, `/docs/*`      | Done   |
 | Blog             | `/blog`, `/blog/[slug]` | Done   |
 | Changelog        | `/changelog`            | Done   |
 | Contact (mailto) | `mailto:hello@arco.app` | Done   |
@@ -30,7 +29,6 @@ This document tracks the marketing site build for Arco. Design aesthetic: **dark
 ### Layout systems
 
 - Marketing layout (nav + footer + announcement)
-- Documentation layout (sidebar, TOC, prev/next, code blocks with copy)
 - Legal page template (sticky TOC, section numbering)
 - Blog (index with search/filter, article page with TOC + related)
 
@@ -39,7 +37,7 @@ This document tracks the marketing site build for Arco. Design aesthetic: **dark
 - `Hero`, `SectionHeader`, `CtaBand`, `FaqSection`
 - `FeatureGrid`, `LogoCloud`, `TestimonialGrid`
 - `PricingCards`, `FeatureComparisonTable`
-- `DocsSidebar`, `DocContent`, `CodeBlock`
+- `CodeBlock`
 - `LegalPageLayout`, `BlogCard`, `BlogIndex`
 
 ### Already existed (unchanged)
@@ -59,7 +57,7 @@ This document tracks the marketing site build for Arco. Design aesthetic: **dark
 
 ### Hurdle 3 — Content & SEO
 
-- [ ] MDX or CMS for blog/docs content
+- [ ] MDX or CMS for blog content
 - [ ] `sitemap.xml` and `robots.txt`
 - [ ] Per-page Open Graph images
 - [ ] RSS feed for blog
@@ -87,7 +85,6 @@ src/
     page.tsx              # Home
     pricing/page.tsx
     features/page.tsx
-    docs/[[...slug]]/page.tsx
     blog/page.tsx
     blog/[slug]/page.tsx
     changelog/page.tsx
@@ -104,12 +101,12 @@ src/
     faq-section.tsx
     feature-grid.tsx
     pricing-cards.tsx
+    code-block.tsx
     ...
   lib/marketing/
     site-config.ts
     pricing.ts
     features.ts
-    docs.ts
     blog.ts
     changelog.ts
     legal.ts

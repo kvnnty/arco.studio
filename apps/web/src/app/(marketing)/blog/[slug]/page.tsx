@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { CodeBlock } from "@/components/marketing/docs/code-block";
+import { CodeBlock } from "@/components/marketing/code-block";
 import { BlogCard } from "@/components/marketing/blog/blog-card";
 import {
   getBlogPost,
