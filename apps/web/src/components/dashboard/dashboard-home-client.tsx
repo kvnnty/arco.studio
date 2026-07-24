@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/card";
 import { useProjects } from "@/lib/api/hooks/projects";
 import { useBillingStatus } from "@/lib/api/hooks/billing";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { buildProjectActivity } from "@/lib/dashboard/activity";
 import type { MusicTrackId } from "@/lib/editor/music-tracks";
 import { getDefaultVoiceId } from "@arco/project-schema/voices";
@@ -37,7 +37,7 @@ export function DashboardHomeClient({
   initialTemplateId = null,
 }: DashboardHomeClientProps) {
   const { data: projects = [], isLoading } = useProjects();
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
   const { data: billing } = useBillingStatus();
   const [bgmOpen, setBgmOpen] = useState(false);
   const [selectedMusicId, setSelectedMusicId] = useState<MusicTrackId | null>(

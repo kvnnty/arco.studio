@@ -70,7 +70,7 @@ export default function FeaturesPage() {
       <CtaBand
         title="Ship your next video without hiring"
         description="Social ad, launch reel, or feature drop — create your first project and export in under 10 minutes."
-        primaryCta={{ label: "Start a video", href: "/signup" }}
+        primaryCta={{ label: "Start a video", href: "/sign-up" }}
       />
     </>
   );

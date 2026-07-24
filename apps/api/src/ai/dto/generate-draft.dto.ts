@@ -46,6 +46,9 @@ class TemplateContextDto {
 
   @IsString()
   stylePreset!: string;
+
+  @IsString()
+  soundProfile!: string;
 }
 
 export class GenerateDraftDto {

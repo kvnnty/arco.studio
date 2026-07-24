@@ -51,6 +51,8 @@ export type PipelineState = {
   sceneCount?: number;
   targetDurationSec?: number;
   waitingForCredits?: boolean;
+  /** When true, the voice step was skipped (no ElevenLabs / no voice credits). */
+  voiceSkipped?: boolean;
 };
 
 export function createInitialPipelineState(): PipelineState {

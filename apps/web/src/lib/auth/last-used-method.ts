@@ -1,55 +1,47 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
-import type { OAuthProviderId } from "@/lib/auth/oauth";
-
-export type AuthMethod = OAuthProviderId | "magic" | "password";
+export type AuthMethod = "google" | "github" | "email_link";
 
 const STORAGE_KEY = "arco_last_auth_method";
-
-const AUTH_METHODS = new Set<AuthMethod>([
-  "google",
-  "github",
-  "magic",
-  "password",
-]);
+const PENDING_KEY = "arco_pending_auth_method";
+const METHODS = new Set<AuthMethod>(["google", "github", "email_link"]);
 
 function isAuthMethod(value: string | null): value is AuthMethod {
-  return value !== null && AUTH_METHODS.has(value as AuthMethod);
+  return value !== null && METHODS.has(value as AuthMethod);
 }
 
-export function getLastUsedAuthMethod(): AuthMethod | null {
-  if (typeof window === "undefined") return null;
-
+/** Remember only after auth succeeds — never on button click. */
+export function commitAuthMethod(method: AuthMethod) {
   try {
-    const value = localStorage.getItem(STORAGE_KEY);
-    return isAuthMethod(value) ? value : null;
+    localStorage.setItem(STORAGE_KEY, method);
+    sessionStorage.removeItem(PENDING_KEY);
+  } catch {
+    // Authentication must continue when browser storage is unavailable.
+  }
+}
+
+/** Stash OAuth provider during redirect; committed in sso-callback on success. */
+export function stashAuthMethod(method: AuthMethod) {
+  try {
+    sessionStorage.setItem(PENDING_KEY, method);
+  } catch {
+    // Ignore — badge is cosmetic.
+  }
+}
+
+export function consumeStashedAuthMethod(): AuthMethod | null {
+  try {
+    const pending = sessionStorage.getItem(PENDING_KEY);
+    sessionStorage.removeItem(PENDING_KEY);
+    return isAuthMethod(pending) ? pending : null;
   } catch {
     return null;
   }
 }
 
-export function setLastUsedAuthMethod(method: AuthMethod) {
-  if (typeof window === "undefined") return;
-
+export function readStoredAuthMethod(): AuthMethod | null {
   try {
-    localStorage.setItem(STORAGE_KEY, method);
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return isAuthMethod(stored) ? stored : null;
   } catch {
-    // Ignore storage failures (private mode, quota, etc.).
+    return null;
   }
-}
-
-export function useLastUsedAuthMethod() {
-  const [lastUsed, setLastUsed] = useState<AuthMethod | null>(null);
-
-  useEffect(() => {
-    setLastUsed(getLastUsedAuthMethod());
-  }, []);
-
-  const remember = useCallback((method: AuthMethod) => {
-    setLastUsedAuthMethod(method);
-  }, []);
-
-  return { lastUsed, remember };
 }

@@ -1,8 +1,17 @@
 "use client";
 
+import { useSignUp } from "@clerk/nextjs";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
+import {
+  authErrorMessage,
+  CLERK_SIGN_IN_PATH,
+  CLERK_SIGN_IN_CONTINUE_PATH,
+  CLERK_SIGN_UP_VERIFY_PATH,
+  emailLinkVerificationUrl,
+} from "@/components/auth/auth-flow-utils";
 import { LastUsedBadge } from "@/components/auth/last-used-badge";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,199 +30,173 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  useMagicLinkMutation,
-  useRegisterMutation,
-} from "@/lib/api/hooks/auth";
-import { useLastUsedAuthMethod } from "@/lib/auth/last-used-method";
-
-type SignupMode = "magic" | "password";
+import { useCaptureReturnTo } from "@/hooks/use-capture-return-to";
+import { commitAuthMethod } from "@/lib/auth/last-used-method";
+import { useLastUsedAuthMethod } from "@/lib/auth/use-last-used-auth-method";
+import { createAuthNavigate } from "@/lib/auth/auth-navigate";
 
 export function SignupForm() {
-  const [mode, setMode] = useState<SignupMode>("magic");
-  const [sent, setSent] = useState<{ message?: string } | null>(null);
-  const { lastUsed, remember } = useLastUsedAuthMethod();
+  const { signUp, fetchStatus } = useSignUp();
+  const router = useRouter();
+  useCaptureReturnTo();
+  const { lastUsed } = useLastUsedAuthMethod();
+  const [verifying, setVerifying] = useState(false);
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const magicLink = useMagicLinkMutation();
-  const register = useRegisterMutation();
-
-  useEffect(() => {
-    if (lastUsed === "magic" || lastUsed === "password") {
-      setMode(lastUsed);
+  const finish = async () => {
+    const result = await signUp.finalize({
+      navigate: createAuthNavigate(router),
+    });
+    if (result.error) {
+      setError(authErrorMessage(result.error));
+      return;
     }
-  }, [lastUsed]);
+    commitAuthMethod("email_link");
+  };
 
-  const pending = mode === "magic" ? magicLink.isPending : register.isPending;
-  const error =
-    mode === "magic"
-      ? magicLink.error?.message
-      : register.error?.message;
+  const sendMagicLink = async (nextEmail: string) => {
+    setVerifying(true);
+    setError(null);
 
-  if (sent) {
+    const created = await signUp.create({ emailAddress: nextEmail });
+    if (created.error) {
+      setError(authErrorMessage(created.error));
+      setVerifying(false);
+      return;
+    }
+
+    const sent = await signUp.verifications.sendEmailLink({
+      verificationUrl: emailLinkVerificationUrl(CLERK_SIGN_UP_VERIFY_PATH),
+    });
+    if (sent.error) {
+      setError(authErrorMessage(sent.error));
+      setVerifying(false);
+      return;
+    }
+
+    const waited = await signUp.verifications.waitForEmailLinkVerification();
+    if (waited.error) {
+      setError(authErrorMessage(waited.error));
+      setVerifying(false);
+      return;
+    }
+
+    if (signUp.status === "complete") {
+      await finish();
+      return;
+    }
+
+    if (signUp.status === "missing_requirements") {
+      router.push(CLERK_SIGN_IN_CONTINUE_PATH);
+      return;
+    }
+
+    setError(
+      `Account setup still requires: ${signUp.missingFields.join(", ") || "an additional step"}.`,
+    );
+    setVerifying(false);
+  };
+
+  const pending = fetchStatus === "fetching";
+
+  if (verifying) {
     return (
-      <Card className="w-full max-w-md rounded-2xl">
-        <CardHeader>
-          <CardTitle>Verify your email</CardTitle>
-          <CardDescription>
-            {sent.message ??
-              "We sent a verification link. Confirm your email to continue."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button
-            variant="outline"
-            className="w-full"
-            render={<Link href="/login" />}
-          >
-            Back to sign in
-          </Button>
-        </CardContent>
-      </Card>
+      <>
+        <Card className="w-full max-w-md border border-border/60 shadow-sm">
+          <CardHeader className="items-center space-y-3 pb-2 text-center">
+            <CardTitle className="text-xl">Check your email</CardTitle>
+            <CardDescription className="text-balance leading-relaxed">
+              {error
+                ? error
+                : `We sent an account verification link to ${email}. Open it to continue — this page will finish sign-up automatically.`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                void signUp.reset();
+                setVerifying(false);
+                setError(null);
+              }}
+            >
+              Use a different email
+            </Button>
+          </CardContent>
+        </Card>
+        <div id="clerk-captcha" />
+      </>
     );
   }
 
   return (
-    <Card className="w-full max-w-md rounded-2xl border-none ring-0 shadow-none">
+    <Card className="w-full max-w-md rounded-2xl border-none shadow-none ring-0">
       <CardHeader>
         <CardTitle>Create your account</CardTitle>
         <CardDescription>
-          {mode === "magic"
-            ? "Start with just your email. Add a password later if you want."
-            : "Create your account with an email and password."}
+          Use Google, GitHub, or verify your email with a secure magic link.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <OAuthButtons />
-        {mode === "magic" ? (
-          <form
-            className="mt-6"
-            onSubmit={(event) => {
-              event.preventDefault();
-              remember("magic");
-              const formData = new FormData(event.currentTarget);
-              magicLink.mutate(String(formData.get("email") ?? ""), {
-                onSuccess: () => {
-                  setSent({});
-                },
-              });
-            }}
+        <OAuthButtons
+          intent="sign-up"
+          onError={(message) => setError(message || null)}
+        />
+        <form
+          className="mt-6"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setError(null);
+            const formData = new FormData(event.currentTarget);
+            const nextEmail = String(formData.get("email") ?? "").trim();
+            setEmail(nextEmail);
+            void sendMagicLink(nextEmail).catch((caught) =>
+              setError(authErrorMessage(caught)),
+            );
+          }}
+        >
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="register-email">Email</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="register-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="you@company.com"
+                />
+              </FieldContent>
+            </Field>
+            {error ? (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+            <Button
+              type="submit"
+              className="relative w-full"
+              disabled={pending}
+            >
+              <LastUsedBadge show={lastUsed === "email_link"} />
+              {pending ? "Sending link…" : "Continue with magic link"}
+            </Button>
+            <div id="clerk-captcha" />
+          </FieldGroup>
+        </form>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link
+            href={CLERK_SIGN_IN_PATH}
+            className="text-accent-foreground hover:underline"
           >
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="you@company.com"
-                  />
-                </FieldContent>
-              </Field>
-              {error ? (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              ) : null}
-              <Button type="submit" className="relative w-full" disabled={pending}>
-                <LastUsedBadge show={lastUsed === "magic"} />
-                {pending ? "Sending link…" : "Continue with email"}
-              </Button>
-            </FieldGroup>
-          </form>
-        ) : (
-          <form
-            className="mt-6"
-            onSubmit={(event) => {
-              event.preventDefault();
-              remember("password");
-              const formData = new FormData(event.currentTarget);
-              register.mutate(
-                {
-                  email: String(formData.get("email") ?? ""),
-                  password: String(formData.get("password") ?? ""),
-                },
-                {
-                  onSuccess: (result) => {
-                    setSent({ message: result.message });
-                  },
-                },
-              );
-            }}
-          >
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="register-email">Email</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="register-email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="you@company.com"
-                  />
-                </FieldContent>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="register-password">Password</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="register-password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={8}
-                    placeholder="At least 8 characters"
-                  />
-                </FieldContent>
-              </Field>
-              {error ? (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              ) : null}
-              <Button type="submit" className="relative w-full" disabled={pending}>
-                <LastUsedBadge show={lastUsed === "password"} />
-                {pending ? "Creating account…" : "Create account"}
-              </Button>
-            </FieldGroup>
-          </form>
-        )}
-
-        <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
-          <p>
-            {mode === "magic" ? (
-              <>
-                Prefer a password?{" "}
-                <button
-                  type="button"
-                  className="text-accent-foreground hover:underline"
-                  onClick={() => setMode("password")}
-                >
-                  Create account with password
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                className="text-accent-foreground hover:underline"
-                onClick={() => setMode("magic")}
-              >
-                Use a magic link instead
-              </button>
-            )}
-          </p>
-          <p>
-            Already have an account?{" "}
-            <Link href="/login" className="text-accent-foreground hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
+            Sign in
+          </Link>
+        </p>
       </CardContent>
     </Card>
   );

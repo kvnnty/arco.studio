@@ -1,102 +1,76 @@
-import { jwtVerify, type JWTPayload } from "jose";
+import { auth } from '@clerk/nextjs/server';
+import { cache } from 'react';
 
-import { ApiError, createApiClient } from "@/lib/api/axios";
-import {
-  getAccessTokenFromCookies,
-  getRefreshTokenFromCookies,
-} from "@/lib/auth/cookies";
-import type { AuthSession, AuthUser } from "@/lib/auth/constants";
+import { ApiError, createApiClient } from '@/lib/api/axios';
+import type { ProductUser } from '@/lib/auth/constants';
 
-type AccessPayload = JWTPayload & {
-  sub?: string;
-  email?: string;
-  type?: string;
-};
+const PRODUCT_USER_ATTEMPTS = 3;
+const PRODUCT_USER_RETRY_MS = 400;
 
-function getJwtSecret() {
-  const secret = process.env.JWT_SECRET?.trim();
-  if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("JWT_SECRET is not configured");
-    }
-    return new TextEncoder().encode("arco-dev-secret");
-  }
-  return new TextEncoder().encode(secret);
-}
-
-export async function verifyAccessToken(
-  token: string,
-): Promise<AccessPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, getJwtSecret());
-    if (payload.type !== "access" || !payload.sub || !payload.email) {
-      return null;
-    }
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Live API check is the source of truth. A JWT can still verify after the
- * server session was revoked (refresh rotation) — never invent a session
- * from claims alone or clients keep calling the API with a dead token.
- */
-async function fetchCurrentUser(accessToken: string): Promise<AuthUser | null> {
-  try {
-    const client = createApiClient(accessToken);
-    const { data } = await client.get<AuthUser>("/users/me");
-    return data;
-  } catch (error) {
-    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-      return null;
-    }
-    // Transient network errors: still reject so callers can refresh rather
-    // than serving a stale/unverified session.
-    return null;
-  }
-}
-
-export async function buildSessionFromAccessToken(
-  accessToken: string,
-): Promise<AuthSession | null> {
-  const user = await fetchCurrentUser(accessToken);
-  if (!user) {
-    return null;
-  }
-
-  const payload = await verifyAccessToken(accessToken);
-
-  return {
-    user,
-    accessToken,
-    expiresAt: payload?.exp
-      ? payload.exp * 1000
-      : Date.now() + 15 * 60 * 1000,
-  };
-}
-
-export async function getServerSession(): Promise<AuthSession | null> {
-  const accessToken = await getAccessTokenFromCookies();
-  if (!accessToken) return null;
-  return buildSessionFromAccessToken(accessToken);
-}
-
-export async function hasRefreshSession(): Promise<boolean> {
-  const refreshToken = await getRefreshTokenFromCookies();
-  return Boolean(refreshToken);
-}
-
-export async function requireServerSession(): Promise<AuthSession> {
-  const session = await getServerSession();
-  if (!session) {
-    throw new Error("Not authenticated");
-  }
-  return session;
+/** Resource-level gate — prefer this over middleware route matching. */
+export async function requireAuth(): Promise<void> {
+  await auth.protect();
 }
 
 export async function getAccessToken(): Promise<string | null> {
-  const session = await getServerSession();
-  return session?.accessToken ?? null;
+  const session = await auth();
+  if (!session.userId) return null;
+  return session.getToken();
+}
+
+export async function requireAccessToken(): Promise<string> {
+  await auth.protect();
+  const token = await getAccessToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+  return token;
+}
+
+function isTransientApiError(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  if (error.status === 503) return true;
+  return /ECONNREFUSED|ECONNRESET|ETIMEDOUT|ECONNABORTED|socket hang up|timeout/i.test(
+    error.message,
+  );
+}
+
+async function fetchProductUser(token: string): Promise<ProductUser | null> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= PRODUCT_USER_ATTEMPTS; attempt++) {
+    try {
+      const client = createApiClient(token);
+      const { data } = await client.get<ProductUser>('/users/me');
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) return null;
+      lastError = error;
+      if (!isTransientApiError(error) || attempt === PRODUCT_USER_ATTEMPTS) {
+        break;
+      }
+      await new Promise((resolve) =>
+        setTimeout(resolve, PRODUCT_USER_RETRY_MS * attempt),
+      );
+    }
+  }
+
+  // Nest --watch restarts briefly refuse connections; don't hard-crash the page.
+  if (isTransientApiError(lastError)) return null;
+  throw lastError;
+}
+
+async function readAuthenticatedUser(): Promise<ProductUser | null> {
+  const token = await getAccessToken();
+  if (!token) return null;
+  return fetchProductUser(token);
+}
+
+export const getAuthenticatedUser = cache(readAuthenticatedUser);
+
+export async function requireAuthenticatedUser(): Promise<ProductUser> {
+  await requireAuth();
+  const user = await getAuthenticatedUser();
+  if (!user) throw new Error('Not authenticated');
+  return user;
 }

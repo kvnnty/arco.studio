@@ -18,14 +18,15 @@ export const legalDocuments: Record<string, LegalDocument> = {
     slug: "privacy",
     title: "Privacy Policy",
     lastUpdated: "June 2026",
-    description: "How Arco collects, uses, and protects your personal information.",
+    description:
+      "How Arco collects, uses, and protects your personal information.",
     sections: [
       {
         id: "introduction",
         number: "1",
         title: "Introduction",
         content: [
-          "Arco Inc. (\"Arco\", \"we\", \"us\") respects your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services.",
+          'Arco Inc. ("Arco", "we", "us") respects your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services.',
           "By using Arco, you agree to the collection and use of information in accordance with this policy.",
         ],
       },
@@ -34,7 +35,7 @@ export const legalDocuments: Record<string, LegalDocument> = {
         number: "2",
         title: "Information We Collect",
         content: [
-          "Account information: name, email address, and password when you create an account.",
+          "Account information: name and verified email address when you create an account.",
           "Usage data: projects, exports, feature usage, and interaction logs within the application.",
           "Payment information: processed by Polar; we do not store full credit card numbers.",
           "Content you upload: screen recordings and brand assets you provide for video generation.",
@@ -185,16 +186,14 @@ export const legalDocuments: Record<string, LegalDocument> = {
         number: "7",
         title: "Limitation of Liability",
         content: [
-          "Arco is provided \"as is\" without warranties. To the maximum extent permitted by law, Arco shall not be liable for indirect, incidental, or consequential damages.",
+          'Arco is provided "as is" without warranties. To the maximum extent permitted by law, Arco shall not be liable for indirect, incidental, or consequential damages.',
         ],
       },
       {
         id: "contact-terms",
         number: "8",
         title: "Contact",
-        content: [
-          "Questions about these terms? Contact legal@arco.app.",
-        ],
+        content: ["Questions about these terms? Contact legal@arco.app."],
       },
     ],
   },

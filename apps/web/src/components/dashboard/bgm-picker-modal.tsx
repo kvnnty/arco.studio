@@ -16,6 +16,7 @@ import {
   type CustomMusicSelection,
 } from "@/components/dashboard/custom-music-upload";
 import type { MusicTrackId } from "@/lib/editor/music-tracks";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 
 type BgmPickerModalProps = {
   open: boolean;
@@ -24,7 +25,7 @@ type BgmPickerModalProps = {
   onSelectLibrary: (id: MusicTrackId | null) => void;
   customMusic: CustomMusicSelection | null;
   onSelectCustom: (selection: CustomMusicSelection | null) => void;
-  accessToken?: string;
+  accessToken?: AccessTokenSource;
   canUploadCustomMusic?: boolean;
 };
 

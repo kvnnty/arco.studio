@@ -4,7 +4,7 @@ import type { ArcoProject } from "@arco/project-schema";
 import { isScreenshotProject } from "@arco/project-schema";
 import { Upload } from "lucide-react";
 import { useRef } from "react";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { BgmTrackGrid } from "@/components/dashboard/bgm-track-grid";
 import {
   CustomMusicUpload,
@@ -23,7 +24,9 @@ import {
 } from "@/components/dashboard/custom-music-upload";
 import { uploadThumbnail } from "@/lib/api/client";
 import { useBillingStatus } from "@/lib/api/hooks/billing";
+import { creditCostHint } from "@/lib/editor/generation-credits";
 import type { MusicTrackId } from "@/lib/editor/music-tracks";
+import { SoundDesignPanel } from "@/components/editor/sound-design-panel";
 
 type CustomizePanelProps = {
   project: ArcoProject;
@@ -31,7 +34,7 @@ type CustomizePanelProps = {
 };
 
 export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
   const { data: billing } = useBillingStatus();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,13 +62,12 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
     });
   };
 
-  const customMusicSelection: CustomMusicSelection | null =
-    audio.customMusicSrc
-      ? {
-          url: audio.customMusicSrc,
-          filename: audio.customMusicSrc.split("/").pop() ?? "Custom track",
-        }
-      : null;
+  const customMusicSelection: CustomMusicSelection | null = audio.customMusicSrc
+    ? {
+        url: audio.customMusicSrc,
+        filename: audio.customMusicSrc.split("/").pop() ?? "Custom track",
+      }
+    : null;
 
   const handleCustomMusicSelect = (selection: CustomMusicSelection | null) => {
     if (selection) {
@@ -183,26 +185,22 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
 
       {isScreenshotProject(project) ? (
         <Field>
-          <FieldLabel>Voiceover</FieldLabel>
+          <div className="flex items-center justify-between gap-3">
+            <FieldLabel htmlFor="voiceover-enabled">AI voiceover</FieldLabel>
+            <Switch
+              id="voiceover-enabled"
+              checked={audio.voiceEnabled !== false}
+              onCheckedChange={(enabled) =>
+                updateAudio({ voiceEnabled: enabled })
+              }
+            />
+          </div>
           <FieldContent>
             <FieldDescription>
               {audio.voiceEnabled === false
-                ? "Muted — export will use music and on-screen text only."
-                : "Narration is included per scene when generated at create time."}
+                ? "Off — export uses music and on-screen text only. No voice credits are spent."
+                : `On — narration plays in export. Generating or regenerating uses ~${creditCostHint("voice_generate")} credits per scene.`}
             </FieldDescription>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() =>
-                updateAudio({
-                  voiceEnabled: !(audio.voiceEnabled ?? true),
-                })
-              }
-            >
-              {audio.voiceEnabled === false ? "Enable voiceover" : "Mute voiceover"}
-            </Button>
           </FieldContent>
         </Field>
       ) : null}
@@ -223,6 +221,13 @@ export function CustomizePanel({ project, onChange }: CustomizePanelProps) {
           <FieldDescription>
             {Math.round((audio.volume ?? 0.85) * 100)}%
           </FieldDescription>
+        </FieldContent>
+      </Field>
+
+      <Field>
+        <FieldLabel>Sound direction</FieldLabel>
+        <FieldContent>
+          <SoundDesignPanel project={project} onChange={onChange} />
         </FieldContent>
       </Field>
     </FieldGroup>

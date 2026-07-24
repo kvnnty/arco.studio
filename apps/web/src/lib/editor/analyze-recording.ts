@@ -1,5 +1,7 @@
 import type { Marker, StylePreset } from "@arco/project-schema";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 import {
+  createHeuristicSoundDesign,
   DEFAULT_FOCUS,
   effectsFromClickEffect,
 } from "@arco/project-schema";
@@ -35,7 +37,10 @@ const DRAFT_LABELS = [
 ];
 
 const DRAFT_CALLOUTS = [
-  { text: "See every metric instantly", subtext: "Understand what drives growth" },
+  {
+    text: "See every metric instantly",
+    subtext: "Understand what drives growth",
+  },
   { text: "Understand what drives growth", subtext: "Real-time insights" },
   { text: "Make better decisions", subtext: "Data you can act on" },
   { text: "Ship with confidence", subtext: "Built for modern teams" },
@@ -79,7 +84,8 @@ export function generateDraftMarkers(durationMs: number): Marker[] {
   const times = pickMarkerTimes(durationMs, count);
 
   return times.map((startMs, index) => {
-    const clickEffect = DRAFT_CLICK_EFFECTS[index % DRAFT_CLICK_EFFECTS.length] ?? "ripple";
+    const clickEffect =
+      DRAFT_CLICK_EFFECTS[index % DRAFT_CLICK_EFFECTS.length] ?? "ripple";
     const callout = DRAFT_CALLOUTS[index % DRAFT_CALLOUTS.length]!;
     const effects = [
       ...effectsFromClickEffect(clickEffect, 1.15),
@@ -112,10 +118,21 @@ export function buildDraftProject(
   markers?: Marker[],
 ): import("@arco/project-schema").ArcoProject {
   const withStyle = applyStylePreset(project, stylePreset ?? "startup");
-  return {
+  const nextProject = {
     ...withStyle,
     markers: markers ?? generateDraftMarkers(project.recording.durationMs),
-    audio: { musicId: "warm-launch", volume: 0.25 },
+    audio: {
+      ...withStyle.audio,
+      musicId: "warm-launch",
+      volume: 0.25,
+    },
+  };
+  return {
+    ...nextProject,
+    audio: {
+      ...nextProject.audio,
+      soundDesign: createHeuristicSoundDesign(nextProject),
+    },
   };
 }
 
@@ -129,7 +146,7 @@ export type DraftAnalysisResult = {
 export async function runAnalysis(
   onStep: (stepIndex: number, detectedMarkers: Marker[]) => void,
   input: {
-    accessToken: string;
+    accessToken: AccessTokenSource;
     title: string;
     durationMs: number;
     platform?: string;
@@ -159,7 +176,11 @@ export async function runAnalysis(
   }).catch(() => {
     if (template) {
       return {
-        markers: applyTemplateBlueprint(template, input.durationMs, input.title),
+        markers: applyTemplateBlueprint(
+          template,
+          input.durationMs,
+          input.title,
+        ),
         stylePreset: template.stylePreset,
         source: "heuristic" as const,
       };

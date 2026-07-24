@@ -24,22 +24,22 @@ export const starterPrompts: StarterPrompt[] = [
   {
     title: "Feature launch",
     description: "Announce a new capability with a crisp walkthrough.",
-    href: "/signup?brief=feature-launch",
+    href: "/sign-up?brief=feature-launch",
   },
   {
     title: "Social ad",
     description: "A punchy 15-30s clip for LinkedIn, X, or Meta.",
-    href: "/signup?brief=social-ad",
+    href: "/sign-up?brief=social-ad",
   },
   {
     title: "Changelog reel",
     description: "Ship what changed this week without a freelancer.",
-    href: "/signup?brief=changelog",
+    href: "/sign-up?brief=changelog",
   },
   {
     title: "Waitlist teaser",
     description: "Build anticipation before your product is live.",
-    href: "/signup?brief=waitlist",
+    href: "/sign-up?brief=waitlist",
   },
 ];
 

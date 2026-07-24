@@ -1,4 +1,5 @@
 import type { ArcoProject, ExportFormat, StylePreset } from "@arco/project-schema";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 
 import {
   apiCreateProject,
@@ -57,23 +58,23 @@ export function toEditorSession(
   };
 }
 
-export async function fetchDashboardProjects(token: string) {
+export async function fetchDashboardProjects(token: AccessTokenSource) {
   const records = await apiListProjects(token);
   return records.map(toDashboardProject);
 }
 
-export async function fetchDashboardProject(token: string, id: string) {
+export async function fetchDashboardProject(token: AccessTokenSource, id: string) {
   const record = await apiGetProject(token, id);
   return toDashboardProject(record);
 }
 
-export async function fetchEditorProject(token: string, projectId: string) {
+export async function fetchEditorProject(token: AccessTokenSource, projectId: string) {
   const record = await apiGetProject(token, projectId);
   return toEditorSession(record);
 }
 
 export async function createProject(
-  token: string,
+  token: AccessTokenSource,
   input: {
     title: string;
     platform: ProjectPlatform;
@@ -97,7 +98,7 @@ export async function createProject(
 }
 
 export async function syncProjectRecord(
-  token: string,
+  token: AccessTokenSource,
   input: {
     projectId: string;
     project: ArcoProject;
@@ -118,6 +119,6 @@ export async function syncProjectRecord(
   });
 }
 
-export async function deleteProject(token: string, projectId: string) {
+export async function deleteProject(token: AccessTokenSource, projectId: string) {
   return apiDeleteProject(token, projectId);
 }

@@ -41,11 +41,11 @@ export function WaitlistPage() {
             We use your email only for Arco updates. Unsubscribe anytime.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link href="/signup" className="inline-flex rounded-lg bg-primary px-6 py-3 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90">
+            <Link href="/sign-up" className="inline-flex rounded-lg bg-primary px-6 py-3 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90">
               Get started
             </Link>
             <Link
-              href="/login"
+              href="/sign-in"
               className="inline-flex rounded-lg bg-secondary px-6 py-3 text-[13px] font-medium text-secondary-foreground transition-opacity hover:opacity-90"
             >
               Sign in →

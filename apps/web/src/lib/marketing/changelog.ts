@@ -51,7 +51,7 @@ export const changelog: ChangelogEntry[] = [
     features: [
       "Initial editor with upload, analyze, and export",
       "Deterministic 1080p MP4 rendering via HyperFrames",
-      "Email/password signup and login",
+      "Account signup and login",
     ],
   },
 ];

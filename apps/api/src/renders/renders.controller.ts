@@ -7,12 +7,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { SubscriptionGuard } from '../billing/subscription.guard';
 import { RendersService } from './renders.service';
 import { CreateRenderDto } from './dto/create-render.dto';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @Controller('renders')
 export class RendersController {
   constructor(private readonly rendersService: RendersService) {}

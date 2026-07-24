@@ -12,59 +12,65 @@ This document tracks the marketing site build for Arco. Design aesthetic: **dark
 ## Completed (Hurdle 1)
 
 ### Core pages
-| Page | Route | Status |
-|------|-------|--------|
-| Home | `/` | Done |
-| Pricing | `/pricing` | Done |
-| Features | `/features` | Done |
-| Documentation | `/docs`, `/docs/*` | Done |
-| Blog | `/blog`, `/blog/[slug]` | Done |
-| Changelog | `/changelog` | Done |
-| Contact (mailto) | `mailto:hello@arco.app` | Done |
-| Company info | `/` (landing section) | Done |
-| Privacy | `/privacy` | Done |
-| Terms | `/terms` | Done |
-| Cookies | `/cookies` | Done |
+
+| Page             | Route                   | Status |
+| ---------------- | ----------------------- | ------ |
+| Home             | `/`                     | Done   |
+| Pricing          | `/pricing`              | Done   |
+| Features         | `/features`             | Done   |
+| Blog             | `/blog`, `/blog/[slug]` | Done   |
+| Changelog        | `/changelog`            | Done   |
+| Contact (mailto) | `mailto:hello@arco.app` | Done   |
+| Company info     | `/` (landing section)   | Done   |
+| Privacy          | `/privacy`              | Done   |
+| Terms            | `/terms`                | Done   |
+| Cookies          | `/cookies`              | Done   |
 
 ### Layout systems
+
 - Marketing layout (nav + footer + announcement)
-- Documentation layout (sidebar, TOC, prev/next, code blocks with copy)
 - Legal page template (sticky TOC, section numbering)
 - Blog (index with search/filter, article page with TOC + related)
 
 ### Reusable components
+
 - `Hero`, `SectionHeader`, `CtaBand`, `FaqSection`
 - `FeatureGrid`, `LogoCloud`, `TestimonialGrid`
 - `PricingCards`, `FeatureComparisonTable`
-- `DocsSidebar`, `DocContent`, `CodeBlock`
+- `CodeBlock`
 - `LegalPageLayout`, `BlogCard`, `BlogIndex`
 
 ### Already existed (unchanged)
-- Sign In `/login`, Sign Up `/signup`
+
+- Sign In `/sign-in`, Sign Up `/sign-up`
 - Dashboard `/dashboard/*` (billing, settings, usage, etc.)
 
 ## Remaining (Future hurdles)
 
 ### Hurdle 2 — Conversion & product pages
-- [ ] Forgot password flow (currently redirects to login)
+
+- [x] Passwordless magic-link and OAuth authentication
 - [ ] Verify email standalone page
 - [ ] Checkout / subscription success pages
 - [ ] Book a demo page
 - [ ] Public integrations page
 
 ### Hurdle 3 — Content & SEO
-- [ ] MDX or CMS for blog/docs content
+
+- [ ] MDX or CMS for blog content
 - [ ] `sitemap.xml` and `robots.txt`
 - [ ] Per-page Open Graph images
 - [ ] RSS feed for blog
 
 ### Hurdle 4 — Trust & enterprise
+
 - [ ] Trust center / compliance hub
 - [ ] DPA and Refund Policy pages
 - [ ] Status page integration
 - [ ] Customer logos / case studies
 
 ### Hurdle 5 — Polish
+
 - [ ] Product demo video in hero
 - [ ] Scroll animations (respect reduced motion)
 - [ ] Analytics on conversion CTAs
@@ -79,7 +85,6 @@ src/
     page.tsx              # Home
     pricing/page.tsx
     features/page.tsx
-    docs/[[...slug]]/page.tsx
     blog/page.tsx
     blog/[slug]/page.tsx
     changelog/page.tsx
@@ -96,12 +101,12 @@ src/
     faq-section.tsx
     feature-grid.tsx
     pricing-cards.tsx
+    code-block.tsx
     ...
   lib/marketing/
     site-config.ts
     pricing.ts
     features.ts
-    docs.ts
     blog.ts
     changelog.ts
     legal.ts

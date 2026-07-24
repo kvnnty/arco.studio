@@ -30,7 +30,7 @@ export default function ChangelogPage() {
                 <div className="absolute top-1.5 left-0 size-[15px] rounded-full border-2 border-primary bg-marketing-bg" />
 
                 <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="text-[20px] font-semibold">v{entry.version}</h2>
+                  <h2 className="text-[24px] font-semibold">v{entry.version}</h2>
                   <span className="text-[13px] text-marketing-subtle">
                     {entry.date}
                   </span>

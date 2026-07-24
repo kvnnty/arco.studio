@@ -10,6 +10,7 @@ import type {
   Marker,
   ScreenshotScene,
   StylePreset,
+  SoundDesignProfile,
   TransitionType,
 } from "./index.js";
 import {
@@ -38,13 +39,12 @@ export type ArcoTemplate = {
   stylePreset: StylePreset;
   exportFormat: ExportFormat;
   audio: { musicId: string; volume: number };
+  soundProfile: SoundDesignProfile;
   sceneBlueprint: TemplateSceneBlueprint[];
   copyTone: string;
 };
 
-function blueprint(
-  scenes: TemplateSceneBlueprint[],
-): TemplateSceneBlueprint[] {
+function blueprint(scenes: TemplateSceneBlueprint[]): TemplateSceneBlueprint[] {
   return scenes;
 }
 
@@ -59,6 +59,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     stylePreset: "startup",
     exportFormat: "16:9",
     audio: { musicId: "warm-launch", volume: 0.25 },
+    soundProfile: "balanced",
     copyTone: "Confident, minimal, devtool audience. Short punchy headlines.",
     sceneBlueprint: blueprint([
       {
@@ -98,13 +99,15 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
   {
     id: "dev-tool",
     name: "Dev Tool Demo",
-    description: "Linear-style precision — subtle zooms, technical copy, dark palette.",
+    description:
+      "Linear-style precision — subtle zooms, technical copy, dark palette.",
     tags: ["SaaS", "Dev tool"],
     previewVideoUrl: "/templates/dev-tool-poster.svg",
     previewPosterUrl: "/templates/dev-tool-poster.svg",
     stylePreset: "linear",
     exportFormat: "16:9",
     audio: { musicId: "calm-focus", volume: 0.25 },
+    soundProfile: "minimal",
     copyTone: "Technical, precise, engineer-friendly. No hype.",
     sceneBlueprint: blueprint([
       {
@@ -143,6 +146,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     stylePreset: "apple",
     exportFormat: "16:9",
     audio: { musicId: "mountain-rise", volume: 0.25 },
+    soundProfile: "playful",
     copyTone: "Clean, consumer-friendly, benefit-led.",
     sceneBlueprint: blueprint([
       {
@@ -189,6 +193,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     stylePreset: "stripe",
     exportFormat: "16:9",
     audio: { musicId: "bright-pulse", volume: 0.25 },
+    soundProfile: "energetic",
     copyTone: "Excited but credible. Hook → problem → solution → CTA.",
     sceneBlueprint: blueprint([
       {
@@ -235,6 +240,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     stylePreset: "startup",
     exportFormat: "16:9",
     audio: { musicId: "launch-drive", volume: 0.25 },
+    soundProfile: "cinematic",
     copyTone: "Announce what's new. Lead with the feature name.",
     sceneBlueprint: blueprint([
       {
@@ -273,6 +279,7 @@ export const ARCO_TEMPLATES: ArcoTemplate[] = [
     stylePreset: "apple",
     exportFormat: "16:9",
     audio: { musicId: "up-bit", volume: 0.25 },
+    soundProfile: "minimal",
     copyTone: "Friendly, instructional, step-by-step.",
     sceneBlueprint: blueprint([
       {
@@ -339,7 +346,8 @@ function pickClick(index: number) {
 }
 
 function interpolateCalloutHint(hint: string, productTitle: string): string {
-  const product = productTitle.replace(/\s+launch video$/i, "").trim() || "Your product";
+  const product =
+    productTitle.replace(/\s+launch video$/i, "").trim() || "Your product";
   return hint
     .replace(/\{product\}/gi, product)
     .replace(/\{feature\}/gi, "workflow")
@@ -373,7 +381,10 @@ export function applyTemplateBlueprint(
 
     return {
       id: `m-template-${index}-${template.id}`,
-      startMs: Math.min(startMs, Math.max(0, durationMs - sceneDurationMs - 200)),
+      startMs: Math.min(
+        startMs,
+        Math.max(0, durationMs - sceneDurationMs - 200),
+      ),
       durationMs: sceneDurationMs,
       effects,
       callout: { text: calloutText },
@@ -401,8 +412,9 @@ export function applyTemplateToScreenshotProject(
     Math.round(targetDurationMs / Math.max(sceneCount, 1)),
   );
 
-  const scenes: ScreenshotScene[] = imageSrcs.slice(0, sceneCount).map(
-    (imageSrc, index) => {
+  const scenes: ScreenshotScene[] = imageSrcs
+    .slice(0, sceneCount)
+    .map((imageSrc, index) => {
       const scene = blueprint[index % blueprint.length];
       const headline = interpolateCalloutHint(scene.calloutHint, productTitle);
 
@@ -422,8 +434,7 @@ export function applyTemplateToScreenshotProject(
         motion: index % 2 === 0 ? "ken-burns-in" : "ken-burns-out",
         transition: { type: scene.transition },
       };
-    },
-  );
+    });
 
   const durationMs = scenes.reduce((sum, s) => sum + s.durationMs, 0);
 
@@ -449,7 +460,11 @@ export function applyTemplateToProject(
     stylePreset: template.stylePreset,
     exportFormat: template.exportFormat,
     brand: { ...presetConfig.brand },
-    audio: { ...template.audio },
+    audio: {
+      ...project.audio,
+      ...template.audio,
+      soundDesign: project.audio?.soundDesign,
+    },
     template: { id: template.id, name: template.name },
   };
 }
@@ -488,5 +503,6 @@ export function buildTemplateContext(template: ArcoTemplate) {
     sceneCount: template.sceneBlueprint.length,
     sceneHints: template.sceneBlueprint.map((s) => s.calloutHint),
     stylePreset: template.stylePreset,
+    soundProfile: template.soundProfile,
   };
 }

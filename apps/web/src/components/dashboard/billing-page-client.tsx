@@ -23,8 +23,12 @@ import {
   useTopUpCheckoutMutation,
 } from "@/lib/api/hooks/billing";
 import { useApiClient } from "@/lib/api/hooks/use-api-client";
-import { ApiError, type BillingInterval, type CheckoutPlan } from "@/lib/api/client";
-import { pricingPlans } from "@/lib/marketing/pricing";
+import {
+  ApiError,
+  type BillingInterval,
+  type CheckoutPlan,
+} from "@/lib/api/client";
+import { pricingPlans, ANNUAL_SAVINGS_LABEL, planAnnualTotal } from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
 const TRIAL_FEATURES = [
@@ -42,7 +46,7 @@ const PRO_FEATURES = [
 ];
 
 const STUDIO_FEATURES = [
-  "5,000 credits per month",
+  "3,000 credits per month",
   "Up to 4K export · 10 min videos",
   "Everything in Pro",
 ];
@@ -57,10 +61,16 @@ export function BillingPageClient() {
   const searchParams = useSearchParams();
   const welcome = searchParams.get("welcome") === "1";
   const checkout = searchParams.get("checkout");
-  const [annual, setAnnual] = useState(false);
+  const [annual, setAnnual] = useState(true);
 
   const { token, loading: authLoading } = useApiClient();
-  const { data: status, isLoading, isError, error, refetch } = useBillingStatus();
+  const {
+    data: status,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useBillingStatus();
   const checkoutMutation = useCheckoutMutation();
   const portalMutation = useBillingPortalMutation();
   const topUpMutation = useTopUpCheckoutMutation();
@@ -72,17 +82,7 @@ export function BillingPageClient() {
   }
 
   if (!token) {
-    return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <PageHeader
-          title="Billing"
-          description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
-        />
-        <p className="text-sm text-muted-foreground">
-          Your session expired. Sign in again to manage billing.
-        </p>
-      </div>
-    );
+    return <BillingPageSkeleton />;
   }
 
   if (isError || !status) {
@@ -94,7 +94,7 @@ export function BillingPageClient() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <PageHeader
           title="Billing"
-          description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
+          description="Intro $9 · Pro from $24/mo billed annually · Studio from $49/mo billed annually."
         />
         <Card className="rounded-2xl">
           <CardContent className="flex flex-col gap-4 pt-6">
@@ -113,7 +113,7 @@ export function BillingPageClient() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    window.location.href = "/login";
+                    window.location.href = "/sign-in";
                   }}
                 >
                   Sign in
@@ -129,15 +129,19 @@ export function BillingPageClient() {
   const isActive = status.planStatus === "active";
 
   const handleCheckout = (plan: CheckoutPlan) => {
+    const interval: BillingInterval =
+      plan === "trial" ? "monthly" : billingInterval;
     checkoutMutation.mutate(
-      { plan, interval: billingInterval },
+      { plan, interval },
       {
         onSuccess: ({ url }) => {
           window.location.href = url;
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Could not start checkout.",
+            error instanceof Error
+              ? error.message
+              : "Could not start checkout.",
           );
         },
       },
@@ -151,7 +155,9 @@ export function BillingPageClient() {
       },
       onError: (error) => {
         toast.error(
-          error instanceof Error ? error.message : "Could not open billing portal.",
+          error instanceof Error
+            ? error.message
+            : "Could not open billing portal.",
         );
       },
     });
@@ -195,7 +201,7 @@ export function BillingPageClient() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <PageHeader
         title="Billing"
-        description="Intro $9 · Pro $29 · Studio $59 — for indie hackers and product owners."
+        description="Intro $9 · Pro from $24/mo billed annually · Studio from $49/mo billed annually."
       />
 
       {welcome && !isActive ? (
@@ -213,7 +219,8 @@ export function BillingPageClient() {
       {checkout === "success" ? (
         <Card className="rounded-2xl border-[#5fc992]/30 bg-[#5fc992]/5">
           <CardContent className="pt-6 text-sm">
-            Payment received. Your subscription is active — create your first video.
+            Payment received. Your subscription is active — create your first
+            video.
           </CardContent>
         </Card>
       ) : null}
@@ -232,8 +239,8 @@ export function BillingPageClient() {
             <div>
               <CardTitle className="text-base">Your subscription</CardTitle>
               <CardDescription>
-                Upgrade, downgrade, cancel, or view invoices in the Polar customer
-                portal.
+                Upgrade, downgrade, cancel, or view invoices in the Polar
+                customer portal.
               </CardDescription>
             </div>
             <Button
@@ -248,42 +255,49 @@ export function BillingPageClient() {
       ) : null}
 
       {!isActive ? (
-        <div className="flex items-center justify-center gap-3">
-          <span
-            className={cn(
-              "text-sm font-medium",
-              !annual ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            Monthly
-          </span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={annual}
-            aria-label="Toggle annual billing"
-            className={cn(
-              "relative h-7 w-12 rounded-full border transition-colors",
-              annual ? "border-primary bg-primary" : "border-border bg-muted",
-            )}
-            onClick={() => setAnnual((value) => !value)}
-          >
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-3">
             <span
               className={cn(
-                "absolute top-0.5 left-0.5 size-6 rounded-full bg-background transition-transform",
-                annual ? "translate-x-5" : "translate-x-0",
+                "text-sm font-medium",
+                annual ? "text-foreground" : "text-muted-foreground",
               )}
-            />
-          </button>
-          <span
-            className={cn(
-              "text-sm font-medium",
-              annual ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            Annual
-            <span className="ml-1.5 text-xs text-primary">Save 17%</span>
-          </span>
+            >
+              Yearly
+              <Badge variant="secondary" className="ml-2 border-primary/20 bg-primary/10 text-primary">
+                {ANNUAL_SAVINGS_LABEL}
+              </Badge>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={annual}
+              aria-label="Toggle annual billing"
+              className={cn(
+                "relative h-7 w-12 rounded-full border transition-colors",
+                annual ? "border-primary bg-primary" : "border-border bg-muted",
+              )}
+              onClick={() => setAnnual((value) => !value)}
+            >
+              <span
+                className={cn(
+                  "absolute top-0.5 left-0.5 size-6 rounded-full bg-background transition-transform",
+                  annual ? "translate-x-0" : "translate-x-5",
+                )}
+              />
+            </button>
+            <span
+              className={cn(
+                "text-sm font-medium",
+                !annual ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              Monthly
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Annual billing is recommended — pay once per year and save 17%.
+          </p>
         </div>
       ) : null}
 
@@ -294,13 +308,17 @@ export function BillingPageClient() {
               <Sparkles className="size-4 text-primary" />
               <CardTitle className="text-base">Intro</CardTitle>
             </div>
-            <CardDescription>Validate your launch at a lower price.</CardDescription>
+            <CardDescription>
+              Validate your launch at a lower price.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
                 ${displayPrice("trial")}
-                <span className="text-base font-normal text-muted-foreground">/mo</span>
+                <span className="text-base font-normal text-muted-foreground">
+                  /mo
+                </span>
               </p>
               {annual ? (
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -320,17 +338,21 @@ export function BillingPageClient() {
         <Card className="rounded-2xl border-primary/20">
           <CardHeader>
             <CardTitle className="text-base">Pro</CardTitle>
-            <CardDescription>Full 1080p toolkit for weekly shipping.</CardDescription>
+            <CardDescription>
+              Full 1080p toolkit for weekly shipping.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
                 ${displayPrice("pro")}
-                <span className="text-base font-normal text-muted-foreground">/mo</span>
+                <span className="text-base font-normal text-muted-foreground">
+                  /mo
+                </span>
               </p>
               {annual ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Billed annually · {pricingPlans[1]?.cta}
+                  Billed as ${planAnnualTotal(pricingPlans[1]!)}/year · {ANNUAL_SAVINGS_LABEL.toLowerCase()}
                 </p>
               ) : null}
               <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
@@ -349,17 +371,21 @@ export function BillingPageClient() {
         <Card className="rounded-2xl">
           <CardHeader>
             <CardTitle className="text-base">Studio</CardTitle>
-            <CardDescription>4K, unlimited projects, social packs.</CardDescription>
+            <CardDescription>
+              4K, unlimited projects, social packs.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-3xl font-semibold tracking-tight">
                 ${displayPrice("studio")}
-                <span className="text-base font-normal text-muted-foreground">/mo</span>
+                <span className="text-base font-normal text-muted-foreground">
+                  /mo
+                </span>
               </p>
               {annual ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Billed annually · {pricingPlans[2]?.cta}
+                  Billed as ${planAnnualTotal(pricingPlans[2]!)}/year · {ANNUAL_SAVINGS_LABEL.toLowerCase()}
                 </p>
               ) : null}
               <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
@@ -381,8 +407,9 @@ export function BillingPageClient() {
           <CardHeader>
             <CardTitle className="text-base">Credit balance</CardTitle>
             <CardDescription>
-              {status.credits.available} available · {status.credits.included} included ·{" "}
-              {status.credits.purchased} purchased · {status.credits.reserved} reserved
+              {status.credits.available} available · {status.credits.included}{" "}
+              included · {status.credits.purchased} purchased ·{" "}
+              {status.credits.reserved} reserved
               {status.credits.periodEnd
                 ? ` · Period ends ${new Date(status.credits.periodEnd).toLocaleDateString()}`
                 : null}
@@ -419,8 +446,9 @@ export function BillingPageClient() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              AI actions, voice generation, and exports spend credits. Failed actions
-              refund reserved credits automatically.
+              AI actions and voice generation spend credits. Exports are
+              included with your plan. Turn voice off to skip narration and
+              save credits. Failed actions refund reserved credits automatically.
             </p>
           </CardContent>
         </Card>

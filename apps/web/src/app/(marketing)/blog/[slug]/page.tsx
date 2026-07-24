@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { CodeBlock } from "@/components/marketing/docs/code-block";
+import { CodeBlock } from "@/components/marketing/code-block";
 import { BlogCard } from "@/components/marketing/blog/blog-card";
 import {
   getBlogPost,
@@ -116,7 +116,7 @@ export default async function BlogArticlePage({ params }: Props) {
           <Badge variant="outline" className="mb-4 border-marketing-border">
             {post.category}
           </Badge>
-          <h1 className="marketing-heading text-[2.5rem] leading-tight sm:text-[3.5rem]">
+          <h1 className="marketing-title-article">
             {post.title}
           </h1>
           <p className="mt-4 text-[17px] leading-relaxed text-marketing-muted">
@@ -160,7 +160,7 @@ export default async function BlogArticlePage({ params }: Props) {
       {related.length > 0 ? (
         <section className="mt-24 border-t border-marketing-border pt-16">
           <div className="marketing-container">
-            <h2 className="text-[20px] font-semibold">Related articles</h2>
+            <h2 className="text-[24px] font-semibold">Related articles</h2>
             <div className="mt-8 grid gap-6 sm:grid-cols-2">
               {related.map((p) => (
                 <BlogCard key={p.slug} post={p} />

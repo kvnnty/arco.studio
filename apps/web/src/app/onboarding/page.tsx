@@ -1,24 +1,18 @@
 import { redirect } from "next/navigation";
 
+import { ProductUserUnavailable } from "@/components/auth/product-user-unavailable";
 import { OnboardingClient } from "@/components/onboarding/onboarding-client";
 import {
-  getServerSession,
-  hasRefreshSession,
+  getAuthenticatedUser,
+  requireAuth,
 } from "@/lib/auth/session";
 
+export const metadata = { title: "Welcome" };
+
 export default async function OnboardingPage() {
-  const [session, hasRefresh] = await Promise.all([
-    getServerSession(),
-    hasRefreshSession(),
-  ]);
-
-  if (!session && !hasRefresh) {
-    redirect("/login");
-  }
-
-  if (session?.user.onboardingCompleted) {
-    redirect("/dashboard");
-  }
-
-  return <OnboardingClient user={session?.user ?? null} />;
+  await requireAuth();
+  const user = await getAuthenticatedUser();
+  if (!user) return <ProductUserUnavailable />;
+  if (user.onboardingCompleted) redirect("/dashboard");
+  return <OnboardingClient user={user} />;
 }

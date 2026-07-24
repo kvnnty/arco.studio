@@ -23,8 +23,8 @@ Anything that does not unblock the screenshot-first AI motion designer loop is *
 
 All must be true:
 
-- [~] **M1 - Brief to animatic:** Composer create always runs real Analyze -> Draft -> Voice -> Layout; user sees theater then preview; failures show clear error + retry. *(19 Jul: auth wait + retry UI + failed sync; still need golden-path QA)*
-- [ ] **M2 - Motion polish:** Export passes [quality checklist](./TECHNICAL.md#template--screenshot-quality): device frame, varied transitions, timed duck, not slideshow; 16:9 + 9:16 spot-checked.
+- [~] **M1 - Brief to animatic:** Composer create always runs real Analyze -> Draft -> Voice -> Layout; user sees theater then preview; failures show clear error + retry. *(22 Jul: production API startup, strict storyboard schema, duration preflight, failed-draft persistence, and exact errors fixed. Storyboard fallback verified; live VO and browser create -> theater -> preview still need approved provider QA.)*
+- [x] **M2 - Motion polish:** Export passes [quality checklist](./TECHNICAL.md#template--screenshot-quality): device frame, varied transitions, timed duck, not slideshow; 16:9 + 9:16 spot-checked. *(22 Jul: H.264/AAC renders and hook/feature/CTA frames verified at 1280x720 and 720x1280.)*
 - [ ] **M3 - Revision loop:** Chat ("Make headlines shorter" / "Stronger CTA") updates scene copy + re-TTS without full rebuild.
 - [ ] **M4 - Trust:** Brand applied when URL present; errors toasted; UI/copy says AI motion designer for product owners; golden path < 10 min on staging.
 - [ ] **Delivery package:** Format QA (9:16 / 1:1 / Studio 4K smoke); landing uses real Arco MP4 (or honest posters + note); staging env/auth/deploy checklist done.
@@ -72,6 +72,11 @@ If behind: cut landing polish and Studio 4K; keep 16:9 + 9:16 screenshot path gr
 | Timed duck | Music lowers on VO scenes |
 | BGM | Distinct library tracks ([AUDIO.md](./AUDIO.md)) |
 | Taste test | Beats CapCut static slideshow in 5s side-by-side |
+
+**Verified 22 Jul:** device frames remain legible in landscape and portrait;
+heuristic storyboards vary `scale`, `slide`, and `push`; music is split by scene
+and ducks only where VO is present; the six-track BGM library stages into export;
+both format renders passed codec, duration, and visual frame inspection.
 
 **Code anchors:** `packages/hyperframes/src/compile.ts`, `quality.ts`, and `render-file.ts`
 

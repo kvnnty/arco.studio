@@ -2,6 +2,8 @@ import {
   isScreenshotProject,
   parseArcoProject,
   projectDurationMs,
+  getMotionSound,
+  resolveSoundCueStartMs,
   type ArcoProject,
   type BeatRole,
   type CameraMove,
@@ -11,7 +13,10 @@ import {
   type ScreenshotScene,
   type TransitionType,
 } from "@arco/project-schema";
-import { MUSIC_FILE_BY_ID, type MusicTrackId } from "@arco/project-schema/music";
+import {
+  MUSIC_FILE_BY_ID,
+  type MusicTrackId,
+} from "@arco/project-schema/music";
 import { STYLE_PRESETS } from "@arco/project-schema/style-presets";
 
 import { evaluateVideoQuality } from "./quality.js";
@@ -76,10 +81,7 @@ function joinUrl(base: string, path: string): string {
   return `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
 }
 
-function resolveAssetUrl(
-  src: string,
-  options: CompileOptions,
-): string {
+function resolveAssetUrl(src: string, options: CompileOptions): string {
   if (/^(https?:|blob:|data:|file:)/i.test(src)) return src;
   const base = options.assetBaseUrl ?? "";
   return base ? joinUrl(base, src) : `/${src.replace(/^\/+/, "")}`;
@@ -133,10 +135,7 @@ function inferCamera(scene: ScreenshotScene, index: number): CameraMove {
   }
 }
 
-function inferDepth(
-  scene: ScreenshotScene,
-  layout: SceneLayout,
-): SceneDepth {
+function inferDepth(scene: ScreenshotScene, layout: SceneLayout): SceneDepth {
   if (scene.depth) return scene.depth;
   if (layout === "kinetic-hook" || layout === "cta-lockup") {
     return "dimensional";
@@ -204,20 +203,70 @@ function renderAudio(
 
   if (musicSrc) {
     const configuredVolume = project.audio?.volume ?? 0.25;
-    const volume =
-      hasVoice && project.audio?.duckUnderVoice !== false
-        ? Math.min(configuredVolume, 0.16)
-        : configuredVolume;
+    const shouldDuck = hasVoice && project.audio?.duckUnderVoice !== false;
 
-    tracks.push(`
+    if (shouldDuck && isScreenshotProject(project)) {
+      let start = 0;
+      for (const [index, scene] of (project.scenes ?? []).entries()) {
+        const sceneDuration = seconds(scene.durationMs);
+        const volume = scene.voAudioSrc
+          ? Math.min(configuredVolume, 0.16)
+          : configuredVolume;
+        tracks.push(`
+    <audio
+      id="music-bed-${index}"
+      data-start="${start}"
+      data-duration="${sceneDuration}"
+      data-media-start="${start}"
+      data-track-index="91"
+      data-audio-role="music-bed"
+      data-volume="${volume.toFixed(3)}"
+      src="${escapeHtml(musicSrc)}"
+    ></audio>`);
+        start = Number((start + sceneDuration).toFixed(3));
+      }
+    } else {
+      tracks.push(`
     <audio
       id="music-bed"
       data-start="0"
       data-duration="${duration}"
       data-track-index="91"
-      data-volume="${volume.toFixed(3)}"
+      data-audio-role="music-bed"
+      data-volume="${configuredVolume.toFixed(3)}"
       src="${escapeHtml(musicSrc)}"
     ></audio>`);
+    }
+  }
+
+  const soundDesign = project.audio?.soundDesign;
+  if (soundDesign?.decision === "include") {
+    const mixHeadroom = hasVoice ? 0.72 : 1;
+    soundDesign.cues.forEach((cue, index) => {
+      if (!cue.enabled) return;
+      const sound = getMotionSound(cue.soundId);
+      if (!sound) return;
+      const start = seconds(resolveSoundCueStartMs(project, cue));
+      const cueDuration = Math.min(
+        sound.durationMs,
+        Math.max(0, duration * 1000 - start * 1000),
+      );
+      if (cueDuration <= 0) return;
+      const volume = Math.min(
+        0.65,
+        cue.volume * soundDesign.masterVolume * mixHeadroom,
+      );
+      tracks.push(`
+    <audio
+      id="sound-${index}-${escapeHtml(cue.id)}"
+      data-start="${start}"
+      data-duration="${seconds(cueDuration)}"
+      data-track-index="${100 + index}"
+      data-volume="${volume.toFixed(3)}"
+      data-audio-role="motion-sound"
+      src="${escapeHtml(resolveAssetUrl(sound.file, options))}"
+    ></audio>`);
+    });
   }
 
   return tracks.join("");
@@ -238,16 +287,8 @@ function renderSceneCopy(
   return `
         <div class="scene-copy" data-role="copy">
           <div class="eyebrow">${escapeHtml(eyebrow)}</div>
-          ${
-            scene.headline
-              ? `<h1>${escapeHtml(scene.headline)}</h1>`
-              : ""
-          }
-          ${
-            scene.subheadline
-              ? `<p>${escapeHtml(scene.subheadline)}</p>`
-              : ""
-          }
+          ${scene.headline ? `<h1>${escapeHtml(scene.headline)}</h1>` : ""}
+          ${scene.subheadline ? `<p>${escapeHtml(scene.subheadline)}</p>` : ""}
           ${
             role === "cta" && project.brief?.productUrl
               ? `<div class="cta-url">${escapeHtml(project.brief.productUrl)}</div>`
@@ -483,15 +524,9 @@ function renderRecording(
   };
 }
 
-function renderStyles(
-  project: ArcoProject,
-  options: CompileOptions,
-): string {
+function renderStyles(project: ArcoProject, options: CompileOptions): string {
   const preset = STYLE_PRESETS[project.stylePreset ?? "startup"];
-  const primary = safeColor(
-    project.brand?.primary,
-    preset.brand.primary,
-  );
+  const primary = safeColor(project.brand?.primary, preset.brand.primary);
   const background = safeColor(
     project.brand?.background,
     preset.brand.background,

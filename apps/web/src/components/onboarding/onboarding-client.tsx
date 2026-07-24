@@ -3,11 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { useAuth } from "@/components/providers/auth-provider";
 import { OnboardingOptionGrid } from "@/components/onboarding/onboarding-option-grid";
 import { OnboardingPricingStep } from "@/components/onboarding/onboarding-pricing-step";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
-import { InlineContentSkeleton } from "@/components/dashboard/page-skeletons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -21,8 +19,8 @@ import {
 } from "@/components/ui/select";
 import { useCompleteOnboardingMutation } from "@/lib/api/hooks/auth";
 import { useCheckoutMutation } from "@/lib/api/hooks/billing";
-import type { CheckoutPlan } from "@/lib/api/client";
-import type { AuthUser } from "@/lib/auth/constants";
+import type { BillingInterval, CheckoutPlan } from "@/lib/api/client";
+import type { ProductUser } from "@/lib/auth/constants";
 import {
   ONBOARDING_GOALS,
   ONBOARDING_PERSONAS,
@@ -33,24 +31,11 @@ import {
 } from "@/lib/onboarding/constants";
 
 type OnboardingClientProps = {
-  user: AuthUser | null;
+  user: ProductUser;
 };
 
-export function OnboardingClient({ user: initialUser }: OnboardingClientProps) {
+export function OnboardingClient({ user }: OnboardingClientProps) {
   const router = useRouter();
-  const { session, loading } = useAuth();
-  const user = session?.user ?? initialUser;
-
-  useEffect(() => {
-    if (loading || user) return;
-    router.replace("/login");
-  }, [loading, user, router]);
-
-  useEffect(() => {
-    if (user?.onboardingCompleted) {
-      router.replace("/dashboard");
-    }
-  }, [user, router]);
 
   const [step, setStep] = useState<OnboardingStep>("profile");
   const [name, setName] = useState("");
@@ -66,27 +51,12 @@ export function OnboardingClient({ user: initialUser }: OnboardingClientProps) {
   const didInitializeStep = useRef(false);
 
   useEffect(() => {
-    if (!user) return;
     if (!didInitializeStep.current) {
       didInitializeStep.current = true;
       setStep(resolveOnboardingStep(user.onboardingStep));
     }
     setName(user.name ?? "");
   }, [user]);
-
-  if (!user) {
-    return (
-      <OnboardingShell>
-        {loading ? (
-          <InlineContentSkeleton className="w-full max-w-sm" lines={4} />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Redirecting to sign in…
-          </p>
-        )}
-      </OnboardingShell>
-    );
-  }
 
   const stepIndex = ONBOARDING_STEPS.indexOf(step);
 
@@ -118,13 +88,13 @@ export function OnboardingClient({ user: initialUser }: OnboardingClientProps) {
     );
   }
 
-  function startCheckout(plan: CheckoutPlan) {
+  function startCheckout(plan: CheckoutPlan, interval: BillingInterval = "annual") {
     setError(null);
     completeOnboarding.mutate(
       { step: "completed" },
       {
         onSuccess: () => {
-          checkout.mutate({ plan }, {
+          checkout.mutate({ plan, interval }, {
             onSuccess: ({ url }) => {
               window.location.href = url;
             },

@@ -19,7 +19,7 @@ type CtaBandProps = {
 export function CtaBand({
   title,
   description,
-  primaryCta = { label: "Start a video", href: "/signup" },
+  primaryCta = { label: "Start a video", href: "/sign-up" },
   className,
 }: CtaBandProps) {
   const reduced = useReducedMotion();
@@ -32,7 +32,7 @@ export function CtaBand({
             <MotionText
               as="h2"
               text={title}
-              className="marketing-heading text-[2.5rem] sm:text-[3.5rem]"
+              className="marketing-title-section-lg"
             />
             <p className="mx-auto mt-4 max-w-md text-[16px] leading-relaxed text-marketing-muted">
               {description}

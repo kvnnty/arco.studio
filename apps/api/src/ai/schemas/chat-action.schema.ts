@@ -4,6 +4,36 @@ import { z } from 'zod';
 export const chatActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('reply') }),
   z.object({
+    type: z.literal('edit_sound_design'),
+    profile: z
+      .enum([
+        'minimal',
+        'balanced',
+        'energetic',
+        'cinematic',
+        'playful',
+        'futuristic',
+        'off',
+      ])
+      .optional(),
+    intensity: z.enum(['softer', 'balanced', 'stronger']).optional(),
+    removeCategories: z
+      .array(
+        z.enum([
+          'pop',
+          'whoosh',
+          'click',
+          'impact',
+          'riser',
+          'glitch',
+          'transition',
+          'texture',
+        ]),
+      )
+      .optional(),
+    instruction: z.string().min(1),
+  }),
+  z.object({
     type: z.literal('refine_all_copy'),
     instruction: z.string().min(1),
   }),

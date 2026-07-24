@@ -1,13 +1,18 @@
 import type { ArcoProject } from "@arco/project-schema";
 import type { AxiosRequestConfig } from "axios";
 
-import { ApiError, createApiClient } from "@/lib/api/axios";
+import {
+  ApiError,
+  createApiClient,
+  resolveAccessToken,
+} from "@/lib/api/axios";
 import { getApiUrl } from "@/lib/api/config";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 
 export { ApiError, getApiUrl };
 
 type ApiRequestOptions = {
-  token?: string;
+  token?: AccessTokenSource;
   method?: string;
   body?: unknown;
   formData?: FormData;
@@ -18,13 +23,7 @@ async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
-  const {
-    token,
-    method = "GET",
-    body,
-    formData,
-    onUploadProgress,
-  } = options;
+  const { token, method = "GET", body, formData, onUploadProgress } = options;
 
   const client = createApiClient(token);
   const config: AxiosRequestConfig = {
@@ -47,118 +46,6 @@ async function apiRequest<T>(
   }
 
   return response.data;
-}
-
-export type AuthResponse = AuthTokensResponse;
-
-export type AuthTokensResponse = {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  tokenType: "Bearer";
-  user: {
-    id: string;
-    email: string;
-    name: string | null;
-    emailVerified: boolean;
-    onboardingCompleted: boolean;
-    onboardingStep: string;
-  };
-};
-
-export async function apiRequestMagicLink(email: string, referralCode?: string) {
-  return apiRequest<{ sent: boolean }>(
-    "/auth/magic-link",
-    {
-      method: "POST",
-      body: {
-        email: email.trim().toLowerCase(),
-        ...(referralCode ? { referralCode } : {}),
-      },
-    },
-  );
-}
-
-export async function apiVerifyMagicLink(
-  token: string,
-): Promise<AuthTokensResponse> {
-  return apiRequest<AuthTokensResponse>("/auth/magic-link/verify", {
-    method: "POST",
-    body: { token },
-  });
-}
-
-export async function apiLogin(input: {
-  email: string;
-  password: string;
-}): Promise<AuthTokensResponse> {
-  return apiRequest<AuthTokensResponse>("/auth/login", {
-    method: "POST",
-    body: {
-      email: input.email.trim().toLowerCase(),
-      password: input.password,
-    },
-  });
-}
-
-export async function apiRegister(input: {
-  email: string;
-  password: string;
-  referralCode?: string;
-}): Promise<{ sent: boolean; message: string }> {
-  return apiRequest("/auth/register", {
-    method: "POST",
-    body: {
-      email: input.email.trim().toLowerCase(),
-      password: input.password,
-      ...(input.referralCode ? { referralCode: input.referralCode } : {}),
-    },
-  });
-}
-
-export async function apiForgotPassword(email: string) {
-  return apiRequest<{ sent: boolean; message: string }>(
-    "/auth/password/forgot",
-    {
-      method: "POST",
-      body: { email: email.trim().toLowerCase() },
-    },
-  );
-}
-
-export async function apiResetPassword(input: {
-  token: string;
-  password: string;
-}) {
-  return apiRequest("/auth/password/reset", {
-    method: "POST",
-    body: input,
-  });
-}
-
-export async function apiCompleteOAuth(token: string) {
-  return apiRequest<AuthTokensResponse>("/auth/oauth/complete", {
-    method: "POST",
-    body: { token },
-  });
-}
-
-export async function apiCompleteOnboarding(
-  token: string,
-  input: { name?: string; step?: string },
-) {
-  return apiRequest("/auth/onboarding", {
-    token,
-    method: "PATCH",
-    body: input,
-  });
-}
-
-export async function apiLogout(refreshToken: string) {
-  return apiRequest("/auth/logout", {
-    method: "POST",
-    body: { refreshToken },
-  });
 }
 
 export type ApiProjectRecord = {
@@ -192,20 +79,20 @@ export function parseProjectData(raw: string | ArcoProject): ArcoProject {
 }
 
 export async function apiGetProject(
-  token: string,
+  token: AccessTokenSource,
   projectId: string,
 ): Promise<ApiProjectRecord> {
   return apiRequest<ApiProjectRecord>(`/projects/${projectId}`, { token });
 }
 
 export async function apiListProjects(
-  token: string,
+  token: AccessTokenSource,
 ): Promise<ApiProjectRecord[]> {
   return apiRequest<ApiProjectRecord[]>("/projects", { token });
 }
 
 export async function apiCreateProject(
-  token: string,
+  token: AccessTokenSource,
   input: {
     title: string;
     platform: string;
@@ -225,7 +112,7 @@ export async function apiCreateProject(
 }
 
 export async function apiUpdateProject(
-  token: string,
+  token: AccessTokenSource,
   projectId: string,
   input: {
     title?: string;
@@ -246,7 +133,7 @@ export async function apiUpdateProject(
 }
 
 export async function apiDeleteProject(
-  token: string,
+  token: AccessTokenSource,
   projectId: string,
 ): Promise<{ deleted: boolean }> {
   return apiRequest<{ deleted: boolean }>(`/projects/${projectId}`, {
@@ -256,7 +143,7 @@ export async function apiDeleteProject(
 }
 
 export async function uploadRecordingWithProgress(
-  token: string,
+  token: AccessTokenSource,
   file: File,
   durationMs: number,
   onProgress?: (percent: number) => void,
@@ -274,7 +161,7 @@ export async function uploadRecordingWithProgress(
 }
 
 export async function uploadThumbnail(
-  token: string,
+  token: AccessTokenSource,
   file: File,
 ): Promise<{ key: string; url: string }> {
   const formData = new FormData();
@@ -288,7 +175,7 @@ export async function uploadThumbnail(
 }
 
 export async function uploadImageWithProgress(
-  token: string,
+  token: AccessTokenSource,
   file: File,
   onProgress?: (percent: number) => void,
 ): Promise<{ key: string; url: string }> {
@@ -304,7 +191,7 @@ export async function uploadImageWithProgress(
 }
 
 export async function uploadMusic(
-  token: string,
+  token: AccessTokenSource,
   file: File,
 ): Promise<{ key: string; url: string; filename: string }> {
   const formData = new FormData();
@@ -324,11 +211,12 @@ export type GenerateStoryboardResponse = {
   scenes: import("@arco/project-schema").ScreenshotScene[];
   stylePreset: import("@arco/project-schema").StylePreset;
   creativeDirection?: import("@arco/project-schema").ArcoProject["creativeDirection"];
+  soundDesign: import("@arco/project-schema").SoundDesign;
   source: "llm" | "heuristic";
 };
 
 export async function apiGenerateStoryboard(
-  token: string,
+  token: AccessTokenSource,
   input: {
     title: string;
     imageUrls: string[];
@@ -359,7 +247,7 @@ export async function apiListVoices(): Promise<ArcoVoice[]> {
 }
 
 export async function apiPreviewVoice(
-  token: string,
+  token: AccessTokenSource,
   input: { voiceId: string; text?: string },
 ): Promise<{ audioBase64: string; contentType: string }> {
   return apiRequest<{ audioBase64: string; contentType: string }>(
@@ -369,7 +257,7 @@ export async function apiPreviewVoice(
 }
 
 export async function apiGenerateVoice(
-  token: string,
+  token: AccessTokenSource,
   input: {
     voiceId?: string;
     scenes: Array<{ id: string; voScript: string }>;
@@ -403,8 +291,12 @@ export type GenerateDraftResponse = {
 };
 
 export async function apiCreateRender(
-  token: string,
-  input: { projectId: string; quality?: "720p" | "1080p" | "4k"; format?: string },
+  token: AccessTokenSource,
+  input: {
+    projectId: string;
+    quality?: "720p" | "1080p" | "4k";
+    format?: string;
+  },
 ): Promise<RenderJobRecord> {
   return apiRequest<RenderJobRecord>("/renders", {
     token,
@@ -414,14 +306,14 @@ export async function apiCreateRender(
 }
 
 export async function apiGetRender(
-  token: string,
+  token: AccessTokenSource,
   jobId: string,
 ): Promise<RenderJobRecord> {
   return apiRequest<RenderJobRecord>(`/renders/${jobId}`, { token });
 }
 
 export async function apiGenerateDraft(
-  token: string,
+  token: AccessTokenSource,
   input: {
     title: string;
     durationMs: number;
@@ -435,6 +327,7 @@ export async function apiGenerateDraft(
       sceneCount: number;
       sceneHints: string[];
       stylePreset: string;
+      soundProfile: import("@arco/project-schema").SoundDesignProfile;
     };
     brandContext?: {
       title?: string;
@@ -458,7 +351,7 @@ export type RegenerateMarkerResponse = {
 };
 
 export async function apiRegenerateMarker(
-  token: string,
+  token: AccessTokenSource,
   input: {
     title: string;
     durationMs: number;
@@ -494,7 +387,7 @@ export type RefineProjectResponse = {
 };
 
 export async function apiRefineProject(
-  token: string,
+  token: AccessTokenSource,
   input: {
     title: string;
     instruction: string;
@@ -527,7 +420,7 @@ export type ChatResponse = {
 };
 
 export async function apiChat(
-  token: string,
+  token: AccessTokenSource,
   input: {
     projectId: string;
     message: string;
@@ -556,6 +449,11 @@ export async function apiChat(
       selectedMarkerIndex?: number;
       selectedSceneIndex?: number;
       playheadMs?: number;
+      soundDesign?: {
+        decision: "include" | "silence";
+        profile: string;
+        cueCount: number;
+      };
     };
   },
 ): Promise<ChatResponse> {
@@ -580,7 +478,7 @@ export type BrandKitResponse = {
 };
 
 export async function apiAnalyzeBrandUrl(
-  token: string,
+  token: AccessTokenSource,
   url: string,
 ): Promise<BrandKitResponse> {
   return apiRequest<BrandKitResponse>("/brand/analyze-url", {
@@ -591,7 +489,7 @@ export async function apiAnalyzeBrandUrl(
 }
 
 export async function apiPreviewBrandUrl(
-  token: string,
+  token: AccessTokenSource,
   url: string,
 ): Promise<BrandKitResponse> {
   return apiRequest<BrandKitResponse>("/brand/preview-url", {
@@ -648,11 +546,13 @@ export type BillingUsage = {
   ledger: CreditLedgerItem[];
 };
 
-export async function apiGetBillingStatus(token: string): Promise<BillingStatus> {
+export async function apiGetBillingStatus(
+  token: AccessTokenSource,
+): Promise<BillingStatus> {
   return apiRequest<BillingStatus>("/billing/status", { token });
 }
 
-export async function apiGetBillingUsage(token: string): Promise<BillingUsage> {
+export async function apiGetBillingUsage(token: AccessTokenSource): Promise<BillingUsage> {
   return apiRequest<BillingUsage>("/billing/usage", { token });
 }
 
@@ -660,7 +560,7 @@ export type CheckoutPlan = "trial" | "pro" | "studio";
 export type BillingInterval = "monthly" | "annual";
 
 export async function apiCreateBillingCheckout(
-  token: string,
+  token: AccessTokenSource,
   plan: CheckoutPlan,
   interval: BillingInterval = "monthly",
 ): Promise<{ url: string }> {
@@ -672,7 +572,7 @@ export async function apiCreateBillingCheckout(
 }
 
 export async function apiCreateBillingPortal(
-  token: string,
+  token: AccessTokenSource,
 ): Promise<{ url: string }> {
   return apiRequest<{ url: string }>("/billing/portal-session", {
     token,
@@ -682,7 +582,7 @@ export async function apiCreateBillingPortal(
 }
 
 export async function apiCreateTopUpCheckout(
-  token: string,
+  token: AccessTokenSource,
 ): Promise<{ url: string }> {
   return apiRequest<{ url: string }>("/billing/top-up-checkout", {
     token,
@@ -691,7 +591,7 @@ export async function apiCreateTopUpCheckout(
   });
 }
 
-export async function apiGetBillingCredits(token: string): Promise<{
+export async function apiGetBillingCredits(token: AccessTokenSource): Promise<{
   balance: BillingStatus["credits"] & {
     creditsPeriodStart: string | null;
     creditsPeriodEnd: string | null;
@@ -722,21 +622,12 @@ export type ReferralSummary = {
   invites: ReferralInvite[];
 };
 
-export async function apiGetReferrals(token: string): Promise<ReferralSummary> {
+export async function apiGetReferrals(token: AccessTokenSource): Promise<ReferralSummary> {
   return apiRequest<ReferralSummary>("/referrals", { token });
 }
 
-export type AuthSessionRecord = {
-  id: string;
-  deviceLabel: string | null;
-  ipAddress: string | null;
-  lastUsedAt: string;
-  createdAt: string;
-  current: boolean;
-};
-
 export async function apiUpdateProfile(
-  token: string,
+  token: AccessTokenSource,
   input: { name?: string },
 ) {
   return apiRequest("/users/me", {
@@ -746,19 +637,8 @@ export async function apiUpdateProfile(
   });
 }
 
-export async function apiListSessions(token: string) {
-  return apiRequest<AuthSessionRecord[]>("/auth/sessions", { token });
-}
-
-export async function apiRevokeSession(token: string, sessionId: string) {
-  return apiRequest(`/auth/sessions/${sessionId}`, {
-    token,
-    method: "DELETE",
-  });
-}
-
 export async function apiChatStream(
-  token: string,
+  token: AccessTokenSource,
   input: Parameters<typeof apiChat>[1],
   onChunk: (chunk: {
     token?: string;
@@ -766,10 +646,13 @@ export async function apiChatStream(
     error?: string;
   }) => void,
 ): Promise<void> {
+  const resolvedToken = await resolveAccessToken(token);
+  if (!resolvedToken) throw new ApiError(401, "Authentication required");
+
   const response = await fetch(`${getApiUrl()}/ai/chat/stream`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${resolvedToken}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(input),

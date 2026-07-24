@@ -18,7 +18,7 @@ export function LegalPageLayout({ document }: LegalPageLayoutProps) {
       <div className="marketing-container">
         <MotionReveal>
           <header className="border-b border-marketing-border pb-8">
-            <h1 className="marketing-heading text-[3rem] sm:text-[3.75rem]">
+            <h1 className="marketing-title-legal">
               {document.title}
             </h1>
             <p className="mt-3 text-[14px] text-marketing-muted">
@@ -58,7 +58,7 @@ export function LegalPageLayout({ document }: LegalPageLayoutProps) {
                   id={section.id}
                   className="scroll-mt-24 border-b border-marketing-border py-10 last:border-0"
                 >
-                  <h2 className="marketing-heading text-[1.5rem]">
+                  <h2 className="marketing-title-legal-section">
                     <span className="mr-2 text-marketing-subtle">{section.number}.</span>
                     {section.title}
                   </h2>

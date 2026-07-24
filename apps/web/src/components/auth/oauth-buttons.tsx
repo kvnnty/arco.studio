@@ -1,46 +1,139 @@
 "use client";
 
+import { useSignIn, useSignUp } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+import {
+  authErrorMessage,
+  CLERK_SSO_CALLBACK_PATH,
+  CLERK_SIGN_IN_CONTINUE_PATH,
+  CLERK_SIGN_IN_PATH,
+} from "@/components/auth/auth-flow-utils";
 import { LastUsedBadge } from "@/components/auth/last-used-badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useLastUsedAuthMethod } from "@/lib/auth/last-used-method";
+import { createAuthNavigate } from "@/lib/auth/auth-navigate";
+import { stashAuthMethod } from "@/lib/auth/last-used-method";
+import { useLastUsedAuthMethod } from "@/lib/auth/use-last-used-auth-method";
 import {
-  getOAuthStartUrl,
-  type OAuthProviderId,
-} from "@/lib/auth/oauth";
-import { readReferralCode } from "@/lib/referral";
+  DEFAULT_AFTER_SIGN_IN,
+  readReturnTo,
+} from "@/lib/auth/return-to";
 
-const ALL_PROVIDERS: OAuthProviderId[] = ["google", "github"];
+type Provider = "google" | "github";
 
-export function OAuthButtons() {
-  const { lastUsed, remember } = useLastUsedAuthMethod();
+/** Clerk OAuthStrategy values — see clerk.com/docs/.../oauth-connections */
+const STRATEGIES = {
+  google: "oauth_google",
+  github: "oauth_github",
+} as const;
+
+/**
+ * Clerk Core 3 OAuth custom flow:
+ * https://clerk.com/docs/nextjs/guides/development/custom-flows/authentication/oauth-connections
+ */
+export function OAuthButtons({
+  intent,
+  onError,
+}: {
+  intent: "sign-in" | "sign-up";
+  onError: (message: string) => void;
+}) {
+  const router = useRouter();
+  const { signIn } = useSignIn();
+  const { signUp } = useSignUp();
+  const { lastUsed } = useLastUsedAuthMethod();
+  const [pending, setPending] = useState<Provider | null>(null);
+
+  const start = async (provider: Provider) => {
+    setPending(provider);
+    onError("");
+    stashAuthMethod(provider);
+
+    const strategy = STRATEGIES[provider];
+    const ssoParams = {
+      strategy,
+      redirectCallbackUrl: CLERK_SSO_CALLBACK_PATH,
+      redirectUrl: readReturnTo() ?? DEFAULT_AFTER_SIGN_IN,
+    } as const;
+
+    const result =
+      intent === "sign-in"
+        ? await signIn.sso(ssoParams)
+        : await signUp.sso(ssoParams);
+
+    if (result.error) {
+      onError(authErrorMessage(result.error));
+      setPending(null);
+      return;
+    }
+
+    const flow = intent === "sign-in" ? signIn : signUp;
+
+    if (flow.status === "complete") {
+      const finalize = intent === "sign-in" ? signIn.finalize : signUp.finalize;
+      const finalized = await finalize({
+        navigate: createAuthNavigate(router),
+      });
+      if (finalized.error) onError(authErrorMessage(finalized.error));
+      setPending(null);
+      return;
+    }
+
+    if (flow.status === "needs_second_factor") {
+      setPending(null);
+      router.push(`${CLERK_SIGN_IN_PATH}?resume=1`);
+      return;
+    }
+
+    if (flow.status === "needs_client_trust") {
+      setPending(null);
+      router.push(`${CLERK_SIGN_IN_PATH}?resume=1`);
+      return;
+    }
+
+    if (flow.status === "missing_requirements") {
+      setPending(null);
+      router.push(CLERK_SIGN_IN_CONTINUE_PATH);
+      return;
+    }
+
+    onError(
+      "Sign-in could not be completed. Check Clerk Dashboard → SSO connections.",
+    );
+    setPending(null);
+  };
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        {ALL_PROVIDERS.map((provider) => {
-          const label = provider === "google" ? "Google" : "GitHub";
-
-          return (
-            <Button
-              key={provider}
-              variant="outline"
-              type="button"
-              className="relative w-full"
-              title={`Continue with ${label}`}
-              onClick={() => {
-                remember(provider);
-              }}
-              render={
-                <a href={getOAuthStartUrl(provider, readReferralCode())} />
-              }
-            >
-              <LastUsedBadge show={lastUsed === provider} />
-              {provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
-              {label}
-            </Button>
-          );
-        })}
+        <Button
+          variant="outline"
+          type="button"
+          className="relative h-11 w-full"
+          disabled={pending !== null}
+          onClick={() => void start("google")}
+        >
+          <LastUsedBadge show={lastUsed === "google"} />
+          <GoogleIcon />
+          <span className="ml-2">
+            {pending === "google" ? "Redirecting…" : "Google"}
+          </span>
+        </Button>
+        <Button
+          variant="outline"
+          type="button"
+          className="relative h-11 w-full"
+          disabled={pending !== null}
+          onClick={() => void start("github")}
+        >
+          <LastUsedBadge show={lastUsed === "github"} />
+          <GitHubIcon />
+          <span className="ml-2">
+            {pending === "github" ? "Redirecting…" : "GitHub"}
+          </span>
+        </Button>
       </div>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -58,7 +151,7 @@ export function OAuthButtons() {
 
 function GoogleIcon() {
   return (
-    <svg className="size-4" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="size-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
       <path
         fill="currentColor"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -81,7 +174,12 @@ function GoogleIcon() {
 
 function GitHubIcon() {
   return (
-    <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg
+      className="size-4 shrink-0"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
       <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.395-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
     </svg>
   );

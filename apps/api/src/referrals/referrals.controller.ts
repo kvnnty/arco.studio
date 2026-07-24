@@ -1,6 +1,6 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { ReferralsService } from './referrals.service';
 
 type AuthedRequest = Request & { user: { id: string } };
@@ -9,7 +9,7 @@ type AuthedRequest = Request & { user: { id: string } };
 export class ReferralsController {
   constructor(private readonly referrals: ReferralsService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ClerkAuthGuard)
   @Get()
   getSummary(@Req() req: AuthedRequest) {
     return this.referrals.getSummary(req.user.id);

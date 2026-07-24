@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { NotFoundContent } from "@/components/errors/error-boundary";
 
 export const metadata: Metadata = {
-  title: "Page not found — Arco",
+  title: "Page not found",
   description: "The page you requested could not be found.",
 };
 

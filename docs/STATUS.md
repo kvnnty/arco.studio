@@ -1,6 +1,6 @@
 # Status
 
-Updated: 20 July 2026.
+Updated: 22 July 2026.
 
 ## Product Direction
 
@@ -14,6 +14,15 @@ complete brief -> approve direction -> review storyboard -> refine draft
 
 Screenshots and real product media remain primary. Recording is supported as a
 secondary walkthrough path.
+
+## Active Week Milestones
+
+| Milestone | Status |
+|-----------|--------|
+| M1 - Brief to animatic | Partial: production API startup and strict storyboard output are fixed; failure persistence, duration preflight, and exact retry errors are implemented. Heuristic storyboard stages pass. Live VO plus browser create -> theater -> preview still require approved provider QA. |
+| M2 - Motion polish | Complete: device frames, varied transitions, per-scene VO ducking, BGM staging, and reviewed 16:9 / 9:16 H.264/AAC exports pass. |
+| M3 - Revision loop | Open |
+| M4 - Trust | Open |
 
 ## Implemented
 
@@ -30,7 +39,7 @@ secondary walkthrough path.
 | Asset handling | Local logo, image, recording, voice, music, and font staging |
 | Quality gate | Missing inputs/assets, generic copy, long type, duplicate copy, and visual monotony checks |
 | Render preflight | Strict HyperFrames lint, no warnings, no best-effort media failures |
-| Golden output | 9-second 1280x720 H.264/AAC sample rendered and visually inspected |
+| Golden output | 9-second 1280x720 and 720x1280 H.264/AAC samples rendered and visually inspected |
 | Old engine | Removed from source, app dependencies, and runtime paths |
 
 ## Verified This Migration
@@ -43,6 +52,9 @@ secondary walkthrough path.
 - API production-source TypeScript check passes.
 - HyperFrames lint reports 0 errors and 0 warnings.
 - Golden export contains H.264 video, AAC audio, 1280x720 at 30 fps.
+- Portrait export contains H.264 video, AAC audio, 720x1280 at 30 fps.
+- Timed ducking is compiled per scene: full BGM level on silent scenes and a
+  lower level only on VO scenes.
 - Hook, feature, and CTA frames were inspected for font loading, media loading,
   legibility, hierarchy, and framing.
 
@@ -51,8 +63,8 @@ secondary walkthrough path.
 | Risk | Next action |
 |------|-------------|
 | No automated pixel regression | Save approved frames and compare them in CI |
+| Full live M1 run is not closed | Restore OpenAI quota, approve the configured VO-provider QA call, then run browser create -> theater -> preview |
 | Remote signed media not covered by golden sample | Run an API export with real uploaded screenshot, VO, and music URLs |
-| Full API all-files type check fails in existing billing test mocks | Correct the circular mock typings in `credits.service.spec.ts` |
 | Visual range is still bounded | Build more authored scene families and continuity-aware transitions |
 | Quality scoring is mostly structural | Add rendered-frame checks and human benchmark scoring |
 | Music rights need operational proof | Complete the provenance table in `AUDIO.md` |

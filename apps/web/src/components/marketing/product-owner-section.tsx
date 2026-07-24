@@ -43,7 +43,7 @@ export function ProductOwnerSection({ className }: ProductOwnerSectionProps) {
         </div>
 
         <MotionReveal variant="fade-in" delay={0.2} className="mt-12">
-          <Button size="lg" render={<Link href="/signup" />}>
+          <Button size="lg" render={<Link href="/sign-up" />}>
             Start without hiring
             <ArrowRight className="size-4" data-icon="inline-end" />
           </Button>

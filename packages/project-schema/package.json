@@ -17,6 +17,10 @@
       "types": "./dist/music.d.ts",
       "default": "./dist/music.js"
     },
+    "./sound-design": {
+      "types": "./dist/sound-design.d.ts",
+      "default": "./dist/sound-design.js"
+    },
     "./templates": {
       "types": "./dist/templates.d.ts",
       "default": "./dist/templates.js"

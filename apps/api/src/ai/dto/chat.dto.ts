@@ -110,6 +110,14 @@ class ChatProjectSnapshotDto {
   @Min(0)
   @IsOptional()
   playheadMs?: number;
+
+  @IsObject()
+  @IsOptional()
+  soundDesign?: {
+    decision: 'include' | 'silence';
+    profile: string;
+    cueCount: number;
+  };
 }
 
 export class ChatDto {

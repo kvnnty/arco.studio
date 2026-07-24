@@ -67,7 +67,7 @@ export function VideoTypesSection({
           </p>
           {showCta ? (
             <div className="mt-8">
-              <Button size="lg" render={<Link href="/signup" />}>
+              <Button size="lg" render={<Link href="/sign-up" />}>
                 Make your first video
                 <ArrowRight className="size-4" data-icon="inline-end" />
               </Button>

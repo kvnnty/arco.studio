@@ -14,6 +14,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { uploadMusic } from "@/lib/api/client";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 import { cn } from "@/lib/utils";
 
 export type CustomMusicSelection = {
@@ -22,7 +23,7 @@ export type CustomMusicSelection = {
 };
 
 type CustomMusicUploadProps = {
-  accessToken?: string;
+  accessToken?: AccessTokenSource;
   canUpload: boolean;
   selected: CustomMusicSelection | null;
   onSelect: (selection: CustomMusicSelection | null) => void;

@@ -11,7 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { springSnappy } from "@/lib/motion/presets";
-import type { PricingPlan } from "@/lib/marketing/pricing";
+import {
+  ANNUAL_SAVINGS_LABEL,
+  planAnnualTotal,
+  planDisplayPrice,
+  planHasAnnualDiscount,
+  type PricingPlan,
+} from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
 type PricingCardsProps = {
@@ -25,24 +31,25 @@ export function PricingCards({
   showBillingToggle = true,
   featureLimit,
 }: PricingCardsProps) {
-  const [annual, setAnnual] = useState(false);
+  const [annual, setAnnual] = useState(true);
   const reduced = useReducedMotion();
 
   return (
     <div>
       {showBillingToggle ? (
-      <MotionStagger className="mb-12 flex items-center justify-center gap-3" stagger={0.05}>
-        <MotionStaggerItem>
+      <MotionStagger className="mb-12 flex flex-col items-center gap-3 sm:flex-row sm:justify-center" stagger={0.05}>
+        <MotionStaggerItem className="flex items-center gap-3">
           <span
             className={cn(
               "text-[14px] font-medium",
-              !annual ? "text-foreground" : "text-marketing-muted",
+              annual ? "text-foreground" : "text-marketing-muted",
             )}
           >
-            Monthly
+            Yearly
+            <Badge variant="secondary" className="ml-2 border-primary/20 bg-primary/10 text-primary">
+              {ANNUAL_SAVINGS_LABEL}
+            </Badge>
           </span>
-        </MotionStaggerItem>
-        <MotionStaggerItem>
           <button
             type="button"
             role="switch"
@@ -57,22 +64,19 @@ export function PricingCards({
             <motion.span
               className="absolute top-0.5 left-0.5 size-6 rounded-full bg-foreground"
               animate={{
-                x: annual ? 20 : 0,
+                x: annual ? 0 : 20,
                 backgroundColor: annual ? "var(--primary-foreground)" : undefined,
               }}
               transition={reduced ? { duration: 0 } : springSnappy}
             />
           </button>
-        </MotionStaggerItem>
-        <MotionStaggerItem>
           <span
             className={cn(
               "text-[14px] font-medium",
-              annual ? "text-foreground" : "text-marketing-muted",
+              !annual ? "text-foreground" : "text-marketing-muted",
             )}
           >
-            Yearly
-            <span className="ml-1.5 text-[12px] text-primary">Save 2 months</span>
+            Monthly
           </span>
         </MotionStaggerItem>
       </MotionStagger>
@@ -87,8 +91,9 @@ export function PricingCards({
         stagger={0.1}
       >
         {plans.map((plan) => {
-          const price = annual ? plan.annualPrice : plan.monthlyPrice;
+          const price = planDisplayPrice(plan, annual);
           const isTrial = plan.id === "trial";
+          const hasAnnualDiscount = planHasAnnualDiscount(plan);
           const features = featureLimit
             ? plan.features.slice(0, featureLimit)
             : plan.features;
@@ -107,13 +112,23 @@ export function PricingCards({
                   <Badge className="absolute -top-3 left-6">Most popular</Badge>
                 ) : null}
 
-                <h3 className="text-[18px] font-semibold">{plan.name}</h3>
+                <h3 className="text-[22px] font-semibold">{plan.name}</h3>
                 <p className={cn("mt-2 text-[14px]", plan.popular ? "text-secondary-foreground" : "text-marketing-muted")}>{plan.description}</p>
 
-                <div className="mt-6 flex items-baseline gap-1">
+                <div className="mt-6 flex items-baseline gap-2">
+                  {annual && hasAnnualDiscount ? (
+                    <span
+                      className={cn(
+                        "text-[1.25rem] font-medium line-through",
+                        plan.popular ? "text-secondary-foreground/50" : "text-marketing-muted",
+                      )}
+                    >
+                      ${plan.monthlyPrice}
+                    </span>
+                  ) : null}
                   <motion.span
                     key={price}
-                    className="text-[3rem] font-semibold leading-none tracking-tight"
+                    className="text-[3.6rem] font-semibold leading-none tracking-tight"
                     initial={reduced ? false : { opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={reduced ? { duration: 0 } : springSnappy}
@@ -122,6 +137,12 @@ export function PricingCards({
                   </motion.span>
                   <span className={cn("text-[14px]", plan.popular ? "text-secondary-foreground" : "text-marketing-muted")}>/mo</span>
                 </div>
+
+                {annual && hasAnnualDiscount ? (
+                  <p className={cn("mt-2 text-[12px]", plan.popular ? "text-secondary-foreground/80" : "text-marketing-muted")}>
+                    Billed as ${planAnnualTotal(plan)}/year · {ANNUAL_SAVINGS_LABEL.toLowerCase()}
+                  </p>
+                ) : null}
 
                 {plan.priceNote ? (
                   <p className={cn("mt-2 text-[12px]", plan.popular ? "text-secondary-foreground/80" : "text-marketing-muted")}>

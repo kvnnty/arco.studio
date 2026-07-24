@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  BookOpen,
   ChevronRight,
   HelpCircle,
   Mail,
@@ -16,6 +15,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
+export const metadata = {
+  title: "Help",
+};
 
 const gettingStarted = [
   {
@@ -43,7 +46,7 @@ const faqs = [
   },
   {
     q: "How do credits work?",
-    a: "Your plan includes monthly credits. AI actions, voice generation, and exports spend credits. Top up anytime if you need more before your next billing period.",
+    a: "Your plan includes monthly credits. AI actions and voice generation spend credits — exports are included with your plan. Top up anytime if you need more before your next billing period.",
   },
   {
     q: "Can I edit after generation?",
@@ -59,40 +62,24 @@ export default function HelpPage() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
       <PageHeader
-        title="Help & docs"
+        title="Help"
         description="Get started, find answers, and reach support."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <BookOpen className="mb-2 size-5 text-primary" />
-            <CardTitle className="text-base">Documentation</CardTitle>
-            <CardDescription>
-              Full guides and API reference (coming soon).
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full" disabled>
-              View docs
-            </Button>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <MessageCircle className="mb-2 size-5 text-primary" />
-            <CardTitle className="text-base">Community</CardTitle>
-            <CardDescription>
-              Join other creators building with Arco.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full" disabled>
-              Join Discord
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <MessageCircle className="mb-2 size-5 text-primary" />
+          <CardTitle className="text-base">Community</CardTitle>
+          <CardDescription>
+            Join other creators building with Arco.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" className="w-full" disabled>
+            Join Discord
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card className="rounded-2xl">
         <CardHeader>

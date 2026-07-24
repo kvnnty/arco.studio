@@ -1,7 +1,35 @@
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export function buildWeeklyExportChart(
-  events: Array<{ type: string; createdAt: string }>,
+/** Action types that spend credits (not exports — those are plan-included). */
+const CREDIT_SPEND_TYPES = new Set([
+  "ai_draft",
+  "ai_storyboard",
+  "ai_chat",
+  "ai_refine",
+  "ai_regenerate",
+  "voice_generate",
+  "voice_preview",
+]);
+
+function parseEventAmount(metadata: string | Record<string, unknown> | null | undefined): number {
+  if (!metadata) return 1;
+  try {
+    const parsed =
+      typeof metadata === "string" ? (JSON.parse(metadata) as Record<string, unknown>) : metadata;
+    const amount = parsed.amount;
+    return typeof amount === "number" && amount > 0 ? amount : 1;
+  } catch {
+    return 1;
+  }
+}
+
+export function isCreditSpendEventType(type: string): boolean {
+  return CREDIT_SPEND_TYPES.has(type);
+}
+
+/** Credits spent per day over the last 7 days (AI + voice only). */
+export function buildWeeklyCreditSpendChart(
+  events: Array<{ type: string; metadata?: string; createdAt: string }>,
 ): Array<{ day: string; credits: number }> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -19,7 +47,7 @@ export function buildWeeklyExportChart(
   }
 
   for (const event of events) {
-    if (event.type !== "export") continue;
+    if (!isCreditSpendEventType(event.type)) continue;
 
     const created = new Date(event.createdAt);
     created.setHours(0, 0, 0, 0);
@@ -28,7 +56,7 @@ export function buildWeeklyExportChart(
       (item) => item.date.getTime() === created.getTime(),
     );
     if (bucket) {
-      bucket.credits += 1;
+      bucket.credits += parseEventAmount(event.metadata);
     }
   }
 

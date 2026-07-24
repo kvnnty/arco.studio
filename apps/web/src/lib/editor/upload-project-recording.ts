@@ -1,5 +1,6 @@
 import type { ArcoProject, ExportFormat, StylePreset } from "@arco/project-schema";
 import { applyStylePreset } from "@arco/project-schema/style-presets";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 import {
   applyTemplateToProject,
   getTemplate,
@@ -22,7 +23,7 @@ import {
 } from "@/lib/editor/create-project";
 
 export type UploadProjectRecordingInput = {
-  accessToken: string;
+  accessToken: AccessTokenSource;
   projectId: string;
   projectName: string;
   platform: string;
@@ -46,7 +47,7 @@ export type UploadProjectRecordingResult = {
 };
 
 async function captureAndUploadThumbnail(
-  accessToken: string,
+  accessToken: AccessTokenSource,
   recordingUrl: string,
   file: File,
 ): Promise<string | undefined> {

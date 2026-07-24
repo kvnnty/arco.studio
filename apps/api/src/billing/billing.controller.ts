@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { BillingService } from './billing.service';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 
@@ -42,25 +42,25 @@ function resolveCustomerIp(req: Request): string | undefined {
 export class BillingController {
   constructor(private readonly billing: BillingService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ClerkAuthGuard)
   @Get('status')
   getStatus(@Req() req: AuthedRequest) {
     return this.billing.getStatus(req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ClerkAuthGuard)
   @Get('usage')
   getUsage(@Req() req: AuthedRequest) {
     return this.billing.getUsageBreakdown(req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ClerkAuthGuard)
   @Get('credits')
   getCredits(@Req() req: AuthedRequest) {
     return this.billing.getCredits(req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ClerkAuthGuard)
   @Post('top-up-checkout')
   createTopUpCheckout(@Req() req: AuthedRequest) {
     return this.billing.createTopUpCheckout(
@@ -70,19 +70,19 @@ export class BillingController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ClerkAuthGuard)
   @Post('checkout-session')
   createCheckout(@Req() req: AuthedRequest, @Body() body: CreateCheckoutDto) {
     return this.billing.createCheckoutSession(
       req.user.id,
       req.user.email,
       body.plan,
-      body.interval ?? 'monthly',
+      body.interval ?? 'annual',
       resolveCustomerIp(req),
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ClerkAuthGuard)
   @Post('portal-session')
   createPortal(@Req() req: AuthedRequest) {
     return this.billing.createPortalSession(req.user.id);

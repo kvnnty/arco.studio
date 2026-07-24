@@ -11,15 +11,19 @@ import {
   type CheckoutPlan,
 } from "@/lib/api/client";
 import { useApiClient } from "@/lib/api/hooks/use-api-client";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { queryKeys } from "@/lib/api/query-keys";
+import type { AccessTokenSource } from "@/lib/auth/constants";
+
+const SESSION_RECOVERY_ERROR =
+  "We could not renew your session. Check your connection and try again.";
 
 function useAuthenticatedBillingQuery<T>(
   queryKey: readonly unknown[],
-  queryFn: (token: string) => Promise<T>,
+  queryFn: (token: AccessTokenSource) => Promise<T>,
 ) {
   const { token, loading: authLoading } = useApiClient();
-  const { refresh } = useAuth();
+  const { refresh } = useManagedAuth();
 
   const query = useQuery({
     queryKey,
@@ -32,7 +36,7 @@ function useAuthenticatedBillingQuery<T>(
         }
         const next = await refresh({ silent: true });
         if (!next?.accessToken) {
-          throw error;
+          throw new Error(SESSION_RECOVERY_ERROR);
         }
         return queryFn(next.accessToken);
       }
@@ -67,24 +71,25 @@ export function useBillingUsage() {
 
 export function useCheckoutMutation() {
   const { token } = useApiClient();
-  const { refresh } = useAuth();
+  const { refresh } = useManagedAuth();
 
   return useMutation({
     mutationFn: async ({
       plan,
-      interval = "monthly",
+      interval = "annual",
     }: {
       plan: CheckoutPlan;
       interval?: BillingInterval;
     }) => {
-      const activeToken = token ?? (await refresh({ silent: true }))?.accessToken;
+      const activeToken =
+        token ?? (await refresh({ silent: true }))?.accessToken;
       if (!activeToken) throw new Error("Not authenticated");
       try {
         return await apiCreateBillingCheckout(activeToken, plan, interval);
       } catch (error) {
         if (!(error instanceof ApiError) || error.status !== 401) throw error;
         const next = await refresh({ silent: true });
-        if (!next?.accessToken) throw error;
+        if (!next?.accessToken) throw new Error(SESSION_RECOVERY_ERROR);
         return apiCreateBillingCheckout(next.accessToken, plan, interval);
       }
     },
@@ -93,18 +98,19 @@ export function useCheckoutMutation() {
 
 export function useBillingPortalMutation() {
   const { token } = useApiClient();
-  const { refresh } = useAuth();
+  const { refresh } = useManagedAuth();
 
   return useMutation({
     mutationFn: async () => {
-      const activeToken = token ?? (await refresh({ silent: true }))?.accessToken;
+      const activeToken =
+        token ?? (await refresh({ silent: true }))?.accessToken;
       if (!activeToken) throw new Error("Not authenticated");
       try {
         return await apiCreateBillingPortal(activeToken);
       } catch (error) {
         if (!(error instanceof ApiError) || error.status !== 401) throw error;
         const next = await refresh({ silent: true });
-        if (!next?.accessToken) throw error;
+        if (!next?.accessToken) throw new Error(SESSION_RECOVERY_ERROR);
         return apiCreateBillingPortal(next.accessToken);
       }
     },
@@ -113,18 +119,19 @@ export function useBillingPortalMutation() {
 
 export function useTopUpCheckoutMutation() {
   const { token } = useApiClient();
-  const { refresh } = useAuth();
+  const { refresh } = useManagedAuth();
 
   return useMutation({
     mutationFn: async () => {
-      const activeToken = token ?? (await refresh({ silent: true }))?.accessToken;
+      const activeToken =
+        token ?? (await refresh({ silent: true }))?.accessToken;
       if (!activeToken) throw new Error("Not authenticated");
       try {
         return await apiCreateTopUpCheckout(activeToken);
       } catch (error) {
         if (!(error instanceof ApiError) || error.status !== 401) throw error;
         const next = await refresh({ silent: true });
-        if (!next?.accessToken) throw error;
+        if (!next?.accessToken) throw new Error(SESSION_RECOVERY_ERROR);
         return apiCreateTopUpCheckout(next.accessToken);
       }
     },

@@ -22,7 +22,7 @@ export function ProductWorkflow() {
           <p className="text-[12px] font-semibold uppercase text-marketing-subtle">
             From source to story
           </p>
-          <h2 className="marketing-heading mt-3 max-w-md text-[2.75rem] leading-[1.02] sm:text-[3.5rem]">
+          <h2 className="marketing-title-section-lg mt-3 max-w-md">
             Creative direction without the production drag.
           </h2>
           <p className="mt-5 max-w-md text-[16px] leading-relaxed text-marketing-muted">
@@ -49,7 +49,7 @@ export function ProductWorkflow() {
                   {step.step}
                 </span>
                 <div>
-                  <h3 className="text-[19px] font-semibold text-foreground">
+                  <h3 className="text-[23px] font-semibold text-foreground">
                     {step.title}
                   </h3>
                   <p className="mt-2 max-w-lg text-[14px] leading-relaxed text-marketing-muted">

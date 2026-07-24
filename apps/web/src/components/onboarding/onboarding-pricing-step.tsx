@@ -2,12 +2,19 @@
 
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { CheckoutPlan } from "@/lib/api/client";
+import type { BillingInterval, CheckoutPlan } from "@/lib/api/client";
 import { ONBOARDING_PLAN_SUMMARY } from "@/lib/onboarding/constants";
-import { pricingPlans } from "@/lib/marketing/pricing";
+import {
+  ANNUAL_SAVINGS_LABEL,
+  planAnnualTotal,
+  planDisplayPrice,
+  planHasAnnualDiscount,
+  pricingPlans,
+} from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
 const checkoutPlanById: Record<string, CheckoutPlan> = {
@@ -19,7 +26,7 @@ const checkoutPlanById: Record<string, CheckoutPlan> = {
 type OnboardingPricingStepProps = {
   pending: boolean;
   error: string | null;
-  onSelectPlan: (plan: CheckoutPlan) => void;
+  onSelectPlan: (plan: CheckoutPlan, interval: BillingInterval) => void;
   onSkip: () => void;
   onBack: () => void;
 };
@@ -31,6 +38,9 @@ export function OnboardingPricingStep({
   onSkip,
   onBack,
 }: OnboardingPricingStepProps) {
+  const [annual, setAnnual] = useState(true);
+  const billingInterval: BillingInterval = annual ? "annual" : "monthly";
+
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -38,15 +48,60 @@ export function OnboardingPricingStep({
           Choose your plan
         </h1>
         <p className="mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-          Ship launch videos without hiring a motion designer. Pick a plan to
-          start — cancel anytime.
+          Ship launch videos without hiring a motion designer. Annual billing
+          saves 17% — cancel anytime.
         </p>
+      </div>
+
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              "text-sm font-medium",
+              annual ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            Yearly
+            <Badge variant="secondary" className="ml-2 border-primary/20 bg-primary/10 text-primary">
+              {ANNUAL_SAVINGS_LABEL}
+            </Badge>
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={annual}
+            aria-label="Toggle annual billing"
+            className={cn(
+              "relative h-7 w-12 rounded-full border transition-colors",
+              annual ? "border-primary bg-primary" : "border-border bg-muted",
+            )}
+            onClick={() => setAnnual((value) => !value)}
+          >
+            <span
+              className={cn(
+                "absolute top-0.5 left-0.5 size-6 rounded-full bg-background transition-transform",
+                annual ? "translate-x-0" : "translate-x-5",
+              )}
+            />
+          </button>
+          <span
+            className={cn(
+              "text-sm font-medium",
+              !annual ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            Monthly
+          </span>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {pricingPlans.map((plan) => {
           const checkoutPlan = checkoutPlanById[plan.id];
           const features = plan.features.slice(0, 4);
+          const price = planDisplayPrice(plan, annual);
+          const hasAnnualDiscount = planHasAnnualDiscount(plan);
+          const isTrial = plan.id === "trial";
 
           return (
             <div
@@ -67,12 +122,29 @@ export function OnboardingPricingStep({
                 {plan.description}
               </p>
 
-              <div className="mt-5 flex items-baseline gap-1">
+              <div className="mt-5 flex items-baseline gap-2">
+                {annual && hasAnnualDiscount ? (
+                  <span className="text-lg font-medium text-muted-foreground line-through">
+                    ${plan.monthlyPrice}
+                  </span>
+                ) : null}
                 <span className="text-4xl font-semibold tracking-tight">
-                  ${plan.monthlyPrice}
+                  ${price}
                 </span>
                 <span className="text-sm text-muted-foreground">/mo</span>
               </div>
+
+              {annual && hasAnnualDiscount ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Billed as ${planAnnualTotal(plan)}/year · {ANNUAL_SAVINGS_LABEL.toLowerCase()}
+                </p>
+              ) : null}
+
+              {isTrial && annual ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Intro is billed monthly only
+                </p>
+              ) : null}
 
               {plan.priceNote ? (
                 <p className="mt-2 text-xs text-muted-foreground">{plan.priceNote}</p>
@@ -94,7 +166,13 @@ export function OnboardingPricingStep({
                 className="mt-6 w-full"
                 variant={plan.popular ? "default" : "outline"}
                 disabled={pending || !checkoutPlan}
-                onClick={() => checkoutPlan && onSelectPlan(checkoutPlan)}
+                onClick={() =>
+                  checkoutPlan &&
+                  onSelectPlan(
+                    checkoutPlan,
+                    isTrial ? "monthly" : billingInterval,
+                  )
+                }
               >
                 Select plan
               </Button>

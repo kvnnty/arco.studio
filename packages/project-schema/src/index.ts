@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { soundDesignSchema } from "./sound-design.js";
 
 export const effectTypeSchema = z.enum([
   "smooth-zoom",
@@ -161,6 +162,7 @@ export const arcoProjectSchema = z.object({
       voiceId: z.string().optional(),
       voiceEnabled: z.boolean().optional(),
       duckUnderVoice: z.boolean().optional(),
+      soundDesign: soundDesignSchema.optional(),
     })
     .optional(),
   brief: z
@@ -209,6 +211,27 @@ export type FocusRegion = z.infer<typeof focusRegionSchema>;
 export type MarkerEffect = z.infer<typeof markerEffectSchema>;
 export type Marker = z.infer<typeof markerSchema>;
 export type ArcoProject = z.infer<typeof arcoProjectSchema>;
+
+export {
+  createHeuristicSoundDesign,
+  getMotionSound,
+  MOTION_SOUND_IDS,
+  MOTION_SOUNDS,
+  resolveSoundCueStartMs,
+  soundCategorySchema,
+  soundCueSchema,
+  soundDesignProfileSchema,
+  soundDesignSchema,
+  soundsForCategory,
+} from "./sound-design.js";
+export type {
+  MotionSound,
+  MotionSoundId,
+  SoundCategory,
+  SoundCue,
+  SoundDesign,
+  SoundDesignProfile,
+} from "./sound-design.js";
 
 export const DEFAULT_FOCUS: FocusRegion = {
   x: 0.5,
@@ -309,9 +332,7 @@ export function projectDurationMs(project: ArcoProject): number {
 
 export function projectHasVoiceover(project: ArcoProject): boolean {
   if (project.audio?.voiceEnabled === false) return false;
-  return (
-    project.scenes?.some((scene) => Boolean(scene.voAudioSrc)) ?? false
-  );
+  return project.scenes?.some((scene) => Boolean(scene.voAudioSrc)) ?? false;
 }
 
 export function projectHasCustomMusic(project: ArcoProject): boolean {
@@ -345,17 +366,25 @@ function roundEven(value: number): number {
   return rounded % 2 === 0 ? rounded : rounded + 1;
 }
 
-/** Scale project canvas to export resolution while preserving native aspect ratio. */
+const EXPORT_ASPECT_RATIO: Record<ExportFormat, [number, number]> = {
+  "16:9": [16, 9],
+  "1:1": [1, 1],
+  "9:16": [9, 16],
+};
+
+/** Scale the canvas to export resolution and, when set, the delivery format. */
 export function getExportDimensions(
   quality: ExportQuality,
   sourceWidth: number,
   sourceHeight: number,
+  format?: ExportFormat,
 ): {
   width: number;
   height: number;
 } {
-  const width = Math.max(1, sourceWidth);
-  const height = Math.max(1, sourceHeight);
+  const [width, height] = format
+    ? EXPORT_ASPECT_RATIO[format]
+    : [Math.max(1, sourceWidth), Math.max(1, sourceHeight)];
   const longEdge = EXPORT_LONG_EDGE[quality] ?? EXPORT_LONG_EDGE["1080p"];
   const sourceLong = Math.max(width, height);
   const scale = longEdge / sourceLong;
@@ -405,7 +434,8 @@ export function effectsFromClickEffect(
 
 export function clickEffectFromMarker(marker: Marker): ClickEffect {
   if (marker.clickEffect) return marker.clickEffect;
-  if (marker.effects.some((e) => e.type === "feature-callout")) return "callout";
+  if (marker.effects.some((e) => e.type === "feature-callout"))
+    return "callout";
   if (marker.effects.some((e) => e.type === "pulse")) return "pulse";
   if (marker.effects.some((e) => e.type === "glow")) return "glow";
   if (marker.effects.some((e) => e.type === "spotlight")) return "spotlight";

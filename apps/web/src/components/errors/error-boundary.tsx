@@ -53,8 +53,8 @@ export function NotFoundContent({ context = "root" }: { context?: ErrorContext }
       description="The page you're looking for doesn't exist or may have been moved."
       primaryAction={home}
       secondaryAction={{
-        label: "View docs",
-        href: "/docs",
+        label: "Browse blog",
+        href: "/blog",
       }}
     />
   );

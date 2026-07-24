@@ -6,6 +6,35 @@ export const metadataBase = new URL(siteConfig.url);
 
 const defaultOpenGraphImage = "/opengraph-image";
 
+export const titleTemplate = `%s — ${siteConfig.name}`;
+
+export const defaultTitle = `${siteConfig.name} — ${siteConfig.tagline}`;
+
+function stripBrandSuffix(title: string): string {
+  for (const separator of [" — ", " - "]) {
+    const suffix = `${separator}${siteConfig.name}`;
+    if (title.endsWith(suffix)) {
+      return title.slice(0, -suffix.length);
+    }
+  }
+
+  return title;
+}
+
+function formatFullTitle(title: string): string {
+  const shortTitle = stripBrandSuffix(title);
+
+  if (
+    shortTitle === siteConfig.name ||
+    shortTitle.startsWith(`${siteConfig.name} —`) ||
+    shortTitle.startsWith(`${siteConfig.name} -`)
+  ) {
+    return shortTitle.replace(" - ", " — ");
+  }
+
+  return `${shortTitle} — ${siteConfig.name}`;
+}
+
 type CreatePageMetadataOptions = {
   title: string;
   description: string;
@@ -18,19 +47,17 @@ export function createPageMetadata({
   path,
 }: CreatePageMetadataOptions): Metadata {
   const canonicalPath = path ?? "/";
-  const fullTitle =
-    title === siteConfig.name || title.startsWith(`${siteConfig.name} —`)
-      ? title
-      : `${title} — ${siteConfig.name}`;
+  const fullTitle = formatFullTitle(title);
+  const isHome = canonicalPath === "/";
 
   return {
-    title: fullTitle,
+    title: isHome ? { absolute: fullTitle.replace(" - ", " — ") } : stripBrandSuffix(title),
     description,
     alternates: {
       canonical: canonicalPath,
     },
     openGraph: {
-      title: fullTitle,
+      title: fullTitle.replace(" - ", " — "),
       description,
       url: canonicalPath,
       siteName: siteConfig.name,
@@ -46,18 +73,46 @@ export function createPageMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: fullTitle,
+      title: fullTitle.replace(" - ", " — "),
       description,
       images: [defaultOpenGraphImage],
     },
   };
 }
 
+export function createAppPageMetadata(title: string, description?: string): Metadata {
+  return description ? { title, description } : { title };
+}
+
 export const rootMetadata: Metadata = {
   metadataBase,
-  ...createPageMetadata({
-    title: `${siteConfig.name} — ${siteConfig.tagline}`,
+  title: {
+    default: defaultTitle,
+    template: titleTemplate,
+  },
+  description: siteConfig.description,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: defaultTitle,
     description: siteConfig.description,
-    path: "/",
-  }),
+    url: "/",
+    siteName: siteConfig.name,
+    type: "website",
+    images: [
+      {
+        url: defaultOpenGraphImage,
+        width: 1200,
+        height: 630,
+        alt: `${siteConfig.name} — ${siteConfig.tagline}`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: siteConfig.description,
+    images: [defaultOpenGraphImage],
+  },
 };

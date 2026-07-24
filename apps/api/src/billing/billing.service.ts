@@ -306,8 +306,12 @@ export class BillingService implements OnModuleInit {
     userId: string,
     renderJobId: string,
     quality: string,
-  ) {
+  ): Promise<{ id: string } | null> {
     const cost = creditCostForExport(quality);
+    // Plan-included exports (cost 0) skip the credit ledger entirely.
+    if (cost <= 0) {
+      return null;
+    }
     return this.credits.reserveCredits({
       userId,
       amount: cost,
@@ -379,20 +383,28 @@ export class BillingService implements OnModuleInit {
       this.credits.getLedger(userId, 100),
     ]);
 
+    // Exports are plan-included (not metered). Only credit-backed actions count.
     const counts: Record<string, number> = {};
-    for (const event of events) {
-      if (event.type === 'export_refund') continue;
+    const meteredEvents = events.filter((event) => {
+      if (
+        event.type === 'export_refund' ||
+        event.type === 'export' ||
+        event.type.startsWith('export_')
+      ) {
+        return false;
+      }
       counts[event.type] = (counts[event.type] ?? 0) + 1;
-    }
+      return true;
+    });
 
-    return { events, counts, ledger };
+    return { events: meteredEvents, counts, ledger };
   }
 
   async createCheckoutSession(
     userId: string,
     email: string,
     plan: CheckoutPlan,
-    interval: BillingInterval = 'monthly',
+    interval: BillingInterval = 'annual',
     customerIpAddress?: string,
   ): Promise<{ url: string }> {
     const polar = this.requirePolar();

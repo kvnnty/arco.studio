@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/providers/auth-provider";
+import { Switch } from "@/components/ui/switch";
+import { useManagedAuth } from "@/hooks/use-managed-auth";
 import { apiPreviewVoice, type ArcoVoice } from "@/lib/api/client";
+import { creditCostHint } from "@/lib/editor/generation-credits";
 import { cn } from "@/lib/utils";
 
 type VoiceGridProps = {
@@ -24,10 +26,11 @@ export function VoiceGrid({
   onSelectVoice,
   onToggleEnabled,
 }: VoiceGridProps) {
-  const { session } = useAuth();
+  const { session } = useManagedAuth();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const voiceCreditsPerScene = creditCostHint("voice_generate");
 
   useEffect(() => {
     return () => {
@@ -72,21 +75,20 @@ export function VoiceGrid({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between rounded-xl border border-border p-3">
-        <div>
-          <p className="text-sm font-medium">Voiceover</p>
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-border p-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">AI voiceover</p>
           <p className="text-xs text-muted-foreground">
-            AI narration per scene (included in subscription)
+            {voiceEnabled
+              ? `On — uses ~${voiceCreditsPerScene} credits per scene`
+              : "Off — music and on-screen text only (no voice credits)"}
           </p>
         </div>
-        <Button
-          type="button"
-          variant={voiceEnabled ? "secondary" : "outline"}
-          size="sm"
-          onClick={() => onToggleEnabled(!voiceEnabled)}
-        >
-          {voiceEnabled ? "On" : "Off"}
-        </Button>
+        <Switch
+          checked={voiceEnabled}
+          onCheckedChange={onToggleEnabled}
+          aria-label="Toggle AI voiceover"
+        />
       </div>
 
       {previewError ? (

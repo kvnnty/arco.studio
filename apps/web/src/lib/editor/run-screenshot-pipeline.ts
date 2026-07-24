@@ -4,20 +4,21 @@ import type {
   ScreenshotScene,
   StylePreset,
 } from "@arco/project-schema";
+import type { AccessTokenSource } from "@/lib/auth/constants";
 import {
   createScreenshotPendingProject,
   screenshotProjectDurationMs,
 } from "@arco/project-schema";
-import { applyStylePreset, STYLE_PRESETS } from "@arco/project-schema/style-presets";
+import {
+  applyStylePreset,
+  STYLE_PRESETS,
+} from "@arco/project-schema/style-presets";
 import {
   applyTemplateToProject,
   getTemplate,
 } from "@arco/project-schema/templates";
 
-import {
-  apiGenerateStoryboard,
-  apiGetBillingStatus,
-} from "@/lib/api/client";
+import { apiGenerateStoryboard, apiGetBillingStatus } from "@/lib/api/client";
 import type { BrandKit } from "@/lib/api/hooks/brand";
 import { assertWithinDurationLimit } from "@/lib/billing/duration-limits";
 import {
@@ -78,7 +79,8 @@ function defaultMotionForIndex(
     "ken-burns-in",
   ];
   if (preset === "apple") return index % 2 === 0 ? "ken-burns-in" : "static";
-  if (preset === "startup") return motions[index % motions.length] ?? "ken-burns-in";
+  if (preset === "startup")
+    return motions[index % motions.length] ?? "ken-burns-in";
   return motions[index % 3] ?? "ken-burns-in";
 }
 
@@ -86,7 +88,10 @@ function defaultTransitionForIndex(
   index: number,
   preset: StylePreset,
 ): NonNullable<ScreenshotScene["transition"]> {
-  const byPreset: Record<StylePreset, Array<NonNullable<ScreenshotScene["transition"]>["type"]>> = {
+  const byPreset: Record<
+    StylePreset,
+    Array<NonNullable<ScreenshotScene["transition"]>["type"]>
+  > = {
     linear: ["fade", "slide", "fade"],
     stripe: ["fade", "push", "scale"],
     apple: ["fade", "blur", "fade"],
@@ -101,7 +106,7 @@ function defaultTransitionForIndex(
  * Each step does real work (no cosmetic delays except tiny UI pacing).
  */
 export async function runScreenshotPipeline(
-  accessToken: string,
+  accessToken: AccessTokenSource,
   baseProject: ArcoProject,
   callbacks: ScreenshotPipelineCallbacks,
 ): Promise<ScreenshotPipelineResult> {
@@ -116,6 +121,7 @@ export async function runScreenshotPipeline(
   let project = { ...baseProject };
   let brandKit: BrandKit | undefined;
   const productUrl = project.brief?.productUrl?.trim();
+  const billing = await apiGetBillingStatus(accessToken);
 
   // --- Analyze ---
   if (productUrl) {
@@ -165,7 +171,11 @@ export async function runScreenshotPipeline(
     brand: project.brand,
     template: project.template,
     exportFormat: project.exportFormat,
-    audio: project.audio,
+    audio: {
+      ...project.audio,
+      volume: project.audio?.volume ?? 0.25,
+      soundDesign: storyboard.soundDesign,
+    },
     creativeDirection: storyboard.creativeDirection,
     stylePreset: suggestedPreset,
     pipelineStatus: "pending",
@@ -182,13 +192,13 @@ export async function runScreenshotPipeline(
       audio: {
         ...project.audio,
         ...baseProject.audio,
-        musicId:
-          baseProject.audio?.customMusicSrc
-            ? undefined
-            : (baseProject.audio?.musicId ??
-              STYLE_PRESETS[suggestedPreset].audioId),
+        musicId: baseProject.audio?.customMusicSrc
+          ? undefined
+          : (baseProject.audio?.musicId ??
+            STYLE_PRESETS[suggestedPreset].audioId),
         customMusicSrc: baseProject.audio?.customMusicSrc,
         volume: baseProject.audio?.volume ?? 0.25,
+        soundDesign: storyboard.soundDesign,
       },
       brand: brandKit
         ? {
@@ -205,6 +215,12 @@ export async function runScreenshotPipeline(
     scenes.reduce((sum, s) => sum + s.durationMs, 0) / 1000,
   );
 
+  assertWithinDurationLimit(
+    scenes.reduce((sum, scene) => sum + scene.durationMs, 0),
+    billing.maxProjectDurationMs,
+    billing.plan,
+  );
+
   pipeline = advancePipeline(pipeline, "draft", {
     sceneCount: scenes.length,
     targetDurationSec,
@@ -212,15 +228,16 @@ export async function runScreenshotPipeline(
   callbacks.onPipelineChange(pipeline, draftMarkers);
   callbacks.onProjectPatch?.({ ...project, scenes });
 
-  // --- Voice ---
+  // --- Voice (skipped entirely when voiceEnabled === false) ---
+  const voiceEnabled = project.audio?.voiceEnabled !== false;
+  const voiceId = project.audio?.voiceId ?? getDefaultVoiceId();
+
   pipeline = advancePipeline(pipeline, "voice", {
     sceneCount: scenes.length,
     targetDurationSec,
+    voiceSkipped: !voiceEnabled,
   });
   callbacks.onPipelineChange(pipeline, draftMarkers);
-
-  const voiceEnabled = project.audio?.voiceEnabled !== false;
-  const voiceId = project.audio?.voiceId ?? getDefaultVoiceId();
 
   if (voiceEnabled && voiceId) {
     try {
@@ -275,15 +292,9 @@ export async function runScreenshotPipeline(
       voiceId: voiceEnabled ? voiceId : undefined,
       voiceEnabled,
       duckUnderVoice: true,
+      soundDesign: storyboard.soundDesign,
     },
   };
-
-  const billing = await apiGetBillingStatus(accessToken);
-  assertWithinDurationLimit(
-    project.recording.durationMs,
-    billing.maxProjectDurationMs,
-    billing.plan,
-  );
 
   // --- Stitch ---
   pipeline = advancePipeline(pipeline, "stitch", {
@@ -292,14 +303,7 @@ export async function runScreenshotPipeline(
   });
   pipeline = {
     ...pipeline,
-    completedSteps: [
-      "analyze",
-      "draft",
-      "voice",
-      "layout",
-      "scenes",
-      "stitch",
-    ],
+    completedSteps: ["analyze", "draft", "voice", "layout", "scenes", "stitch"],
   };
   callbacks.onPipelineChange(pipeline, draftMarkers);
   callbacks.onProjectPatch?.(project);

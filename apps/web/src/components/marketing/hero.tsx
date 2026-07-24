@@ -4,8 +4,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, CirclePlay } from "lucide-react";
 
+import { AnimatedGradient } from "@/components/marketing/motion/animated-gradient";
 import { Button } from "@/components/ui/button";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { galleryFeatured } from "@/lib/marketing/gallery";
 import {
   fadeUp,
   staggerContainer,
@@ -22,15 +24,12 @@ type HeroProps = {
   className?: string;
 };
 
-const HERO_VIDEO =
-  "https://storage.googleapis.com/motion-studio-assets/studio/mosaic-launch.mp4";
-
 export function Hero({
   title,
   titleAccent,
   description,
-  primaryCta = { label: "Create your first video", href: "/signup" },
-  secondaryCta = { label: "Watch examples", href: "#examples" },
+  primaryCta = { label: "Start a video", href: "/sign-up" },
+  secondaryCta = { label: "View gallery", href: "/gallery" },
   className,
 }: HeroProps) {
   const reduced = useReducedMotion();
@@ -38,37 +37,38 @@ export function Hero({
   return (
     <section
       className={cn(
-        "relative overflow-hidden border-b border-marketing-border py-12 sm:py-16 lg:py-20",
+        "relative overflow-hidden border-b border-marketing-border py-14 sm:py-20 lg:py-24",
         className,
       )}
     >
+      <AnimatedGradient />
+
       <motion.div
         className="marketing-container relative flex flex-col"
         initial={reduced ? false : "hidden"}
         animate="visible"
         variants={staggerContainer(0.1, 0.05)}
       >
-        <div className="max-w-4xl">
-          <motion.div
-            className="mb-6 inline-flex w-fit items-center gap-2 border border-marketing-border bg-marketing-surface px-3 py-1.5 text-[12px] font-medium text-marketing-muted"
+        <div className="max-w-3xl">
+          <motion.p
+            className="text-[12px] font-semibold uppercase tracking-[0.14em] text-marketing-subtle"
             variants={fadeUp}
           >
-            <span className="size-1.5 rounded-full bg-primary" />
-            Product motion studio
-          </motion.div>
+            Product launch videos
+          </motion.p>
 
           <motion.h1
-            className="marketing-heading text-[3.25rem] leading-[0.98] sm:text-[4.5rem] lg:text-[5.25rem]"
+            className="marketing-title-hero mt-5"
             variants={fadeUp}
           >
             {title}
             {titleAccent ? (
-              <span className="block text-marketing-muted">{titleAccent}</span>
+              <span className="block text-primary">{titleAccent}</span>
             ) : null}
           </motion.h1>
 
           <motion.p
-            className="mt-6 max-w-xl text-pretty text-[17px] leading-relaxed text-marketing-muted sm:text-[18px]"
+            className="mt-5 max-w-xl text-pretty text-[16px] leading-relaxed text-marketing-muted sm:text-[17px]"
             variants={fadeUp}
             transition={{ ...transitionMedium, delay: 0.18 }}
           >
@@ -76,7 +76,7 @@ export function Hero({
           </motion.p>
 
           <motion.div
-            className="mt-8 flex flex-col gap-3 sm:flex-row"
+            className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
             variants={fadeUp}
             transition={{ ...transitionMedium, delay: 0.25 }}
           >
@@ -87,7 +87,7 @@ export function Hero({
             <Button
               variant="outline"
               size="lg"
-              className="border-marketing-border bg-transparent"
+              className="border-marketing-border bg-marketing-bg/80 backdrop-blur-sm"
               render={<Link href={secondaryCta.href} />}
             >
               <CirclePlay className="size-4" data-icon="inline-start" />
@@ -101,29 +101,21 @@ export function Hero({
           variants={fadeUp}
           transition={{ ...transitionMedium, delay: 0.15 }}
         >
-          <div className="overflow-hidden border border-white/10 bg-[#0c0c0d] shadow-[0_28px_80px_-34px_rgba(0,0,0,0.55)]">
-            <div className="flex h-10 items-center justify-between border-b border-white/10 px-4 text-[11px] text-white/60">
-              <span>Arco output / Mosaic launch</span>
-              <span className="flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-primary" />
-                Playing
-              </span>
-            </div>
+          <div className="marketing-media overflow-hidden border border-marketing-border bg-[#0c0c0d] shadow-[0_24px_64px_-32px_rgba(0,0,0,0.45)]">
             <video
               className="aspect-video w-full bg-black object-cover"
-              src={HERO_VIDEO}
+              src={galleryFeatured.src}
               autoPlay={!reduced}
               muted
               loop
               playsInline
               preload="auto"
-              aria-label="Mosaic product launch video created with Arco"
+              aria-label={`${galleryFeatured.name} ${galleryFeatured.type} made with Arco`}
             />
           </div>
-          <div className="mt-3 flex items-center justify-between text-[11px] text-marketing-subtle">
-            <span>Real product UI. Directed motion.</span>
-            <span>1080p export</span>
-          </div>
+          <p className="mt-3 text-[12px] text-marketing-subtle">
+            Sample output · {galleryFeatured.name} · 1080p
+          </p>
         </motion.div>
       </motion.div>
     </section>

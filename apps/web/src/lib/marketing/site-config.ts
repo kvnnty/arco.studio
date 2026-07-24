@@ -17,7 +17,7 @@ export type NavItem = {
 };
 
 export const mainNav: NavItem[] = [
-  { label: "Examples", href: "/#examples" },
+  { label: "Gallery", href: "/gallery" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "Pricing", href: "/pricing" },
   { label: "Features", href: "/features" },
@@ -32,7 +32,7 @@ export const footerColumns: FooterColumn[] = [
   {
     title: "Product",
     links: [
-      { label: "Examples", href: "/#examples" },
+      { label: "Gallery", href: "/gallery" },
       { label: "Features", href: "/features" },
       { label: "Pricing", href: "/pricing" },
       { label: "Changelog", href: "/changelog" },
@@ -46,9 +46,8 @@ export const footerColumns: FooterColumn[] = [
   {
     title: "Resources",
     links: [
-      { label: "Documentation", href: "/docs" },
       { label: "Blog", href: "/blog" },
-      { label: "Help Center", href: "/docs/help" },
+      { label: "Changelog", href: "/changelog" },
     ],
   },
   {
@@ -62,7 +61,7 @@ export const footerColumns: FooterColumn[] = [
 ];
 
 export const announcement = {
-  enabled: false,
+  enabled: true,
   badge: "Launch offer",
   message: "Make your first Pro video for $9.",
   href: "/pricing",
